@@ -6,6 +6,7 @@ use App\Repository\ProduitRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity(repositoryClass: ProduitRepository::class)]
 #[ORM\Table(name: 'produit')]
@@ -17,15 +18,21 @@ class Produit
     private ?int $idProduit = null;
 
     #[ORM\Column(type: 'string', nullable: true)]
+    #[Assert\NotBlank(message: 'Le nom du produit est obligatoire.')]
+    #[Assert\Length(min: 3, max: 255)]
     private ?string $nom = null;
 
     #[ORM\Column(type: 'string', nullable: true)]
+    #[Assert\NotBlank(message: 'La description est obligatoire.')]
     private ?string $description = null;
 
     #[ORM\Column(type: 'float', nullable: true)]
+    #[Assert\NotBlank(message: 'Le prix est obligatoire.')]
+    #[Assert\Positive(message: 'Le prix doit être un nombre positif.')]
     private ?float $prix = null;
 
     #[ORM\Column(type: 'string', nullable: true)]
+    #[Assert\NotBlank(message: 'La catégorie est obligatoire.')]
     private ?string $categorie = null;
 
     #[ORM\Column(type: 'boolean', nullable: true)]
@@ -104,7 +111,6 @@ class Produit
     public function removeCommande(Commande $commande): static
     {
         if ($this->commandes->removeElement($commande)) {
-            // set the owning side to null (unless already changed)
             if ($commande->getProduit() === $this) {
                 $commande->setProduit(null);
             }
@@ -115,12 +121,10 @@ class Produit
 
     public function setStock(?Stock $stock): static
     {
-        // unset the owning side of the relation if necessary
         if ($stock === null && $this->stock !== null) {
             $this->stock->setProduit(null);
         }
 
-        // set the owning side of the relation if necessary
         if ($stock !== null && $stock->getProduit() !== $this) {
             $stock->setProduit($this);
         }

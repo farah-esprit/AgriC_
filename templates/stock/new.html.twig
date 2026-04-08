@@ -1,0 +1,178 @@
+{% extends 'fournisseur.html.twig' %}
+
+{% block title %}Ajouter un Stock{% endblock %}
+
+{% block body %}
+
+<section style="padding: 120px 0 60px;">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-6">
+
+                <div class="card shadow border-0" style="border-radius: 15px;">
+                    <div class="card-header text-white text-center py-4"
+                         style="background: linear-gradient(to right, #4a7c3a, #66bb6a); border-radius: 15px 15px 0 0;">
+                        <h3>📦 Ajouter un Stock</h3>
+                    </div>
+
+                    <div class="card-body p-5">
+
+                        {% for message in app.flashes('danger') %}
+                            <div class="alert alert-danger alert-dismissible fade show">
+                                {{ message }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                            </div>
+                        {% endfor %}
+
+                        <form method="post" id="formStock" novalidate>
+
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">🌿 Produit *</label>
+                                <select name="produit_id" id="produit_id" class="form-select" required>
+                                    <option value="">-- Choisir un produit --</option>
+                                    {% for produit in produits %}
+                                        <option value="{{ produit.idProduit }}">
+                                            {{ produit.nom }}
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                                <div class="invalid-feedback">Veuillez choisir un produit.</div>
+                                <div class="valid-feedback">✅ Correct !</div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">📊 Quantité *</label>
+                                <input type="text" name="quantite" id="quantite"
+                                       class="form-control" placeholder="Ex: 100"
+                                       inputmode="numeric" required>
+                                <div class="invalid-feedback">La quantité doit être un entier positif.</div>
+                                <div class="valid-feedback">✅ Correct !</div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">✅ Disponible *</label>
+                                <input type="text" name="disponible" id="disponible"
+                                       class="form-control" placeholder="Ex: 80"
+                                       inputmode="numeric" required>
+                                <div class="invalid-feedback">Le disponible doit être positif et ≤ quantité.</div>
+                                <div class="valid-feedback">✅ Correct !</div>
+                            </div>
+
+                            <div class="mb-4">
+                                <label class="form-label fw-bold">⚠️ Seuil d'alerte *</label>
+                                <input type="text" name="seuilAlert" id="seuilAlert"
+                                       class="form-control" placeholder="Ex: 10"
+                                       inputmode="numeric" required>
+                                <div class="invalid-feedback">Le seuil doit être un entier positif.</div>
+                                <div class="valid-feedback">✅ Correct !</div>
+                            </div>
+
+                            <div class="d-flex gap-2">
+                                <button type="submit" class="btn btn-success flex-grow-1">
+                                    <i class="bi bi-check-circle"></i> Ajouter
+                                </button>
+                                <a href="{{ path('app_stock_index') }}" class="btn btn-outline-secondary">
+                                    <i class="bi bi-arrow-left"></i> Retour
+                                </a>
+                            </div>
+
+                        </form>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</section>
+
+{% endblock %}
+
+{% block javascripts %}
+<script>
+document.getElementById('produit_id').addEventListener('change', function() {
+    if (this.value === '') {
+        this.classList.add('is-invalid');
+        this.classList.remove('is-valid');
+    } else {
+        this.classList.add('is-valid');
+        this.classList.remove('is-invalid');
+    }
+});
+
+document.getElementById('quantite').addEventListener('input', function() {
+    this.value = this.value.replace(/[^0-9]/g, '');
+    const val = parseInt(this.value);
+    if (isNaN(val) || val < 0) {
+        this.classList.add('is-invalid');
+        this.classList.remove('is-valid');
+    } else {
+        this.classList.add('is-valid');
+        this.classList.remove('is-invalid');
+        validerDisponible();
+    }
+});
+
+document.getElementById('disponible').addEventListener('input', function() {
+    this.value = this.value.replace(/[^0-9]/g, '');
+    validerDisponible();
+});
+
+function validerDisponible() {
+    const quantite = parseInt(document.getElementById('quantite').value);
+    const disponible = parseInt(document.getElementById('disponible').value);
+    const input = document.getElementById('disponible');
+
+    if (isNaN(disponible) || disponible < 0 || disponible > quantite) {
+        input.classList.add('is-invalid');
+        input.classList.remove('is-valid');
+    } else {
+        input.classList.add('is-valid');
+        input.classList.remove('is-invalid');
+    }
+}
+
+document.getElementById('seuilAlert').addEventListener('input', function() {
+    this.value = this.value.replace(/[^0-9]/g, '');
+    const val = parseInt(this.value);
+    if (isNaN(val) || val < 0) {
+        this.classList.add('is-invalid');
+        this.classList.remove('is-valid');
+    } else {
+        this.classList.add('is-valid');
+        this.classList.remove('is-invalid');
+    }
+});
+
+document.getElementById('formStock').addEventListener('submit', function(e) {
+    let valid = true;
+
+    if (document.getElementById('produit_id').value === '') {
+        document.getElementById('produit_id').classList.add('is-invalid');
+        valid = false;
+    }
+
+    const quantite = parseInt(document.getElementById('quantite').value);
+    if (isNaN(quantite) || quantite < 0) {
+        document.getElementById('quantite').classList.add('is-invalid');
+        valid = false;
+    }
+
+    const disponible = parseInt(document.getElementById('disponible').value);
+    if (isNaN(disponible) || disponible < 0 || disponible > quantite) {
+        document.getElementById('disponible').classList.add('is-invalid');
+        valid = false;
+    }
+
+    const seuilAlert = parseInt(document.getElementById('seuilAlert').value);
+    if (isNaN(seuilAlert) || seuilAlert < 0) {
+        document.getElementById('seuilAlert').classList.add('is-invalid');
+        valid = false;
+    }
+
+    if (!valid) {
+        e.preventDefault();
+        window.scrollTo(0, 0);
+    }
+});
+</script>
+{% endblock %}

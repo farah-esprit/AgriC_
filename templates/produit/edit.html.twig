@@ -1,0 +1,197 @@
+{% extends 'fournisseur.html.twig' %}
+
+{% block title %}Modifier un Produit{% endblock %}
+
+{% block body %}
+
+<section style="padding: 120px 0 60px;">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+
+                <div class="card shadow border-0" style="border-radius: 15px;">
+                    <div class="card-header text-white text-center py-4"
+                         style="background: linear-gradient(to right, #4a7c3a, #66bb6a); border-radius: 15px 15px 0 0;">
+                        <h3>✏️ Modifier le Produit</h3>
+                    </div>
+
+                    <div class="card-body p-5">
+
+                        {% if erreurs is defined and erreurs|length > 0 %}
+                            <div class="alert alert-danger">
+                                <ul class="mb-0">
+                                    {% for erreur in erreurs %}
+                                        <li>{{ erreur }}</li>
+                                    {% endfor %}
+                                </ul>
+                            </div>
+                        {% endif %}
+
+                        <form method="post" enctype="multipart/form-data" id="formProduit" novalidate>
+
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">📦 Nom du produit *</label>
+                                <input type="text" name="nom" id="nom" class="form-control is-valid"
+                                       value="{{ produit.nom }}"
+                                       minlength="3" maxlength="50" required>
+                                <div class="invalid-feedback">Le nom doit contenir entre 3 et 50 lettres uniquement.</div>
+                                <div class="valid-feedback">✅ Correct !</div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">📝 Description</label>
+                                <textarea name="description" id="description" class="form-control is-valid"
+                                          rows="3" minlength="10" maxlength="500">{{ produit.description }}</textarea>
+                                <div class="invalid-feedback">La description doit contenir entre 10 et 500 caractères.</div>
+                                <div class="valid-feedback">✅ Correct !</div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label fw-bold">💰 Prix (DT) *</label>
+                                    <input type="number" name="prix" id="prix" class="form-control is-valid"
+                                           value="{{ produit.prix }}" step="0.01" min="0.01" max="99999" required>
+                                    <div class="invalid-feedback">Le prix doit être un nombre positif.</div>
+                                    <div class="valid-feedback">✅ Correct !</div>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label fw-bold">🏷️ Catégorie *</label>
+                                    <select name="categorie" id="categorie" class="form-select is-valid" required>
+                                        {% for cat in ['Légumes','Fruits','Céréales','Huiles','Épices','Produits laitiers','Miel','Viandes','Autres'] %}
+                                            <option value="{{ cat }}" {{ produit.categorie == cat ? 'selected' : '' }}>
+                                                {{ cat }}
+                                            </option>
+                                        {% endfor %}
+                                    </select>
+                                    <div class="invalid-feedback">Veuillez choisir une catégorie.</div>
+                                    <div class="valid-feedback">✅ Correct !</div>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">🖼️ Image actuelle</label><br>
+                                {% if produit.imagePath %}
+                                    <img src="{{ asset('uploads/images/' ~ produit.imagePath) }}"
+                                         class="rounded-circle mb-2" width="80" height="80"
+                                         style="object-fit: cover; border: 3px solid #5a8c4a;">
+                                {% else %}
+                                    <span class="text-muted">Aucune image</span>
+                                {% endif %}
+                                <input type="file" name="image" id="image" class="form-control mt-2"
+                                       accept="image/jpeg,image/png,image/gif">
+                                <div class="invalid-feedback">Format accepté : JPG, PNG, GIF uniquement.</div>
+                            </div>
+
+                            <div class="mb-4">
+                                <div class="form-check">
+                                    <input type="checkbox" name="promo" class="form-check-input" id="promo"
+                                           {{ produit.promo ? 'checked' : '' }}>
+                                    <label class="form-check-label fw-bold text-danger" for="promo">
+                                        🔥 Mettre en promotion
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div class="d-flex gap-2">
+                                <button type="submit" class="btn btn-success flex-grow-1">
+                                    <i class="bi bi-check-circle"></i> Modifier
+                                </button>
+                                <a href="{{ path('app_produit_index') }}" class="btn btn-outline-secondary">
+                                    <i class="bi bi-arrow-left"></i> Retour
+                                </a>
+                            </div>
+
+                        </form>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</section>
+
+{% endblock %}
+
+{% block javascripts %}
+<script>
+// ✅ Validation nom - lettres uniquement
+document.getElementById('nom').addEventListener('input', function() {
+    this.value = this.value.replace(/[^a-zA-ZÀ-ÿ\s]/g, '');
+    if (this.value.length < 3 || this.value.length > 50) {
+        this.classList.add('is-invalid');
+        this.classList.remove('is-valid');
+    } else {
+        this.classList.add('is-valid');
+        this.classList.remove('is-invalid');
+    }
+});
+
+// ✅ Validation prix - chiffres uniquement
+document.getElementById('prix').addEventListener('input', function() {
+    const val = parseFloat(this.value);
+    if (isNaN(val) || val <= 0) {
+        this.classList.add('is-invalid');
+        this.classList.remove('is-valid');
+    } else {
+        this.classList.add('is-valid');
+        this.classList.remove('is-invalid');
+    }
+});
+
+// ✅ Validation description
+document.getElementById('description').addEventListener('input', function() {
+    if (this.value.length > 0 && (this.value.length < 10 || this.value.length > 500)) {
+        this.classList.add('is-invalid');
+        this.classList.remove('is-valid');
+    } else if (this.value.length >= 10) {
+        this.classList.add('is-valid');
+        this.classList.remove('is-invalid');
+    }
+});
+
+// ✅ Validation image
+document.getElementById('image').addEventListener('change', function() {
+    const file = this.files[0];
+    if (file) {
+        const allowedTypes = ['image/jpeg', 'image/png', 'image/gif'];
+        if (!allowedTypes.includes(file.type)) {
+            this.classList.add('is-invalid');
+            this.classList.remove('is-valid');
+            this.value = '';
+            alert('❌ Format non accepté ! Utilisez JPG, PNG ou GIF.');
+        } else {
+            this.classList.add('is-valid');
+            this.classList.remove('is-invalid');
+        }
+    }
+});
+
+// ✅ Validation formulaire à la soumission
+document.getElementById('formProduit').addEventListener('submit', function(e) {
+    const nom = document.getElementById('nom').value.trim();
+    const prix = document.getElementById('prix').value;
+    const categorie = document.getElementById('categorie').value;
+    let valid = true;
+
+    if (nom.length < 3 || nom.length > 50) {
+        document.getElementById('nom').classList.add('is-invalid');
+        valid = false;
+    }
+
+    if (!prix || parseFloat(prix) <= 0) {
+        document.getElementById('prix').classList.add('is-invalid');
+        valid = false;
+    }
+
+    if (categorie === '') {
+        document.getElementById('categorie').classList.add('is-invalid');
+        valid = false;
+    }
+
+    if (!valid) {
+        e.preventDefault();
+        window.scrollTo(0, 0);
+    }
+});
+</script>
+{% endblock %}

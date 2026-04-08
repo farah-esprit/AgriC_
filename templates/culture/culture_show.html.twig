@@ -1,0 +1,59 @@
+{% extends 'agriculteur.html.twig' %}
+
+{% block title %}Détail Culture{% endblock %}
+
+{% block body %}
+<section style="padding: 120px 0 60px;">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-6">
+
+                <div class="card shadow border-0" style="border-radius: 15px;">
+                    <div class="card-header text-white text-center py-4"
+                         style="background: linear-gradient(to right, #4a7c3a, #66bb6a); border-radius: 15px 15px 0 0;">
+                        <h3>🌱 {{ culture.nom }}</h3>
+                    </div>
+
+                    <div class="card-body p-5">
+                        <table class="table table-bordered">
+                            <tr>
+                                <th style="color: #4a7c3a;">🌿 Nom</th>
+                                <td>{{ culture.nom }}</td>
+                            </tr>
+                            <tr>
+                                <th style="color: #4a7c3a;">📂 Type</th>
+                                <td>
+                                    <span class="badge" style="background-color: #66bb6a;">{{ culture.type }}</span>
+                                </td>
+                            </tr>
+                            <tr>
+                                <th style="color: #4a7c3a;">📐 Superficie</th>
+                                <td>{{ culture.superficie }} ha</td>
+                            </tr>
+                            <tr>
+                                <th style="color: #4a7c3a;">📍 Localisation</th>
+                                <td>{{ culture.localisation }}</td>
+                            </tr>
+                            <tr>
+                                <th style="color: #4a7c3a;">👤 ID Utilisateur</th>
+                                <td>{{ culture.userId }}</td>
+                            </tr>
+                        </table>
+
+                        <div class="d-flex gap-2 mt-3">
+                            <a href="{{ path('app_culture_edit', {'id': culture.idCulture}) }}"
+                               class="btn btn-warning flex-grow-1">
+                                <i class="bi bi-pencil"></i> Modifier
+                            </a>
+                            <a href="{{ path('app_culture_index') }}" class="btn btn-outline-secondary">
+                                <i class="bi bi-arrow-left"></i> Retour
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

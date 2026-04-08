@@ -1,0 +1,138 @@
+{% extends 'agriculteur.html.twig' %}
+
+{% block title %}Modifier un Diagnostic{% endblock %}
+
+{% block body %}
+<section style="padding: 120px 0 60px;">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-6">
+
+                <div class="card shadow border-0" style="border-radius: 15px;">
+                    <div class="card-header text-white text-center py-4"
+                         style="background: linear-gradient(to right, #4a7c3a, #66bb6a); border-radius: 15px 15px 0 0;">
+                        <h3>✏️ Modifier le Diagnostic</h3>
+                    </div>
+
+                    <div class="card-body p-5">
+
+                        {% if erreurs is defined and erreurs|length > 0 %}
+                            <div class="alert alert-danger">
+                                <ul class="mb-0">
+                                    {% for erreur in erreurs %}
+                                        <li>{{ erreur }}</li>
+                                    {% endfor %}
+                                </ul>
+                            </div>
+                        {% endif %}
+
+                        <form method="post" id="formDiagnostic" novalidate>
+
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">📅 Date du diagnostic *</label>
+                                <input type="date" name="dateDiagnostic" id="dateDiagnostic"
+                                       class="form-control is-valid"
+                                       value="{{ diagnostic.dateDiagnostic }}" required
+                                       max="{{ "now"|date("Y-m-d") }}">
+                                <div class="invalid-feedback">La date est obligatoire et ne peut pas être dans le futur.</div>
+                                <div class="valid-feedback">✅ Correct !</div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">🌿 Culture concernée *</label>
+                                <select name="idCulture" id="idCulture" class="form-select is-valid" required>
+                                    <option value="">-- Choisir une culture --</option>
+                                    {% for culture in cultures %}
+                                        <option value="{{ culture.idCulture }}"
+                                            {{ diagnostic.idCulture == culture.idCulture ? 'selected' : '' }}>
+                                            {{ culture.nom }} ({{ culture.type }})
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                                <div class="invalid-feedback">Veuillez sélectionner une culture.</div>
+                                <div class="valid-feedback">✅ Correct !</div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">🤒 Symptômes *</label>
+                                <textarea name="symptomes" id="symptomes" class="form-control is-valid"
+                                          rows="3" minlength="5" required>{{ diagnostic.symptomes }}</textarea>
+                                <div class="invalid-feedback">Les symptômes sont obligatoires (minimum 5 caractères).</div>
+                                <div class="valid-feedback">✅ Correct !</div>
+                            </div>
+
+                            <div class="mb-4">
+                                <label class="form-label fw-bold">📝 Informations complémentaires</label>
+                                <textarea name="informationsComplementaires" id="informationsComplementaires"
+                                          class="form-control" rows="3">{{ diagnostic.informationsComplementaires }}</textarea>
+                            </div>
+
+                            <div class="d-flex gap-2">
+                                <button type="submit" class="btn btn-success flex-grow-1">
+                                    <i class="bi bi-check-circle"></i> Modifier
+                                </button>
+                                <a href="{{ path('app_diagnostic_index') }}" class="btn btn-outline-secondary">
+                                    <i class="bi bi-arrow-left"></i> Retour
+                                </a>
+                            </div>
+
+                        </form>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block javascripts %}
+<script>
+const today = new Date().toISOString().split('T')[0];
+
+document.getElementById('dateDiagnostic').addEventListener('change', function() {
+    if (!this.value || this.value > today) {
+        this.classList.add('is-invalid'); this.classList.remove('is-valid');
+    } else {
+        this.classList.add('is-valid'); this.classList.remove('is-invalid');
+    }
+});
+
+document.getElementById('idCulture').addEventListener('change', function() {
+    if (this.value === '') {
+        this.classList.add('is-invalid'); this.classList.remove('is-valid');
+    } else {
+        this.classList.add('is-valid'); this.classList.remove('is-invalid');
+    }
+});
+
+document.getElementById('symptomes').addEventListener('input', function() {
+    if (this.value.trim().length < 5) {
+        this.classList.add('is-invalid'); this.classList.remove('is-valid');
+    } else {
+        this.classList.add('is-valid'); this.classList.remove('is-invalid');
+    }
+});
+
+document.getElementById('formDiagnostic').addEventListener('submit', function(e) {
+    let valid = true;
+
+    const date = document.getElementById('dateDiagnostic');
+    if (!date.value || date.value > today) {
+        date.classList.add('is-invalid'); valid = false;
+    }
+
+    const culture = document.getElementById('idCulture');
+    if (culture.value === '') {
+        culture.classList.add('is-invalid'); valid = false;
+    }
+
+    const symptomes = document.getElementById('symptomes');
+    if (symptomes.value.trim().length < 5) {
+        symptomes.classList.add('is-invalid'); valid = false;
+    }
+
+    if (!valid) { e.preventDefault(); window.scrollTo(0, 0); }
+});
+</script>
+{% endblock %}

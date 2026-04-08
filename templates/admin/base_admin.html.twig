@@ -1,0 +1,89 @@
+{% extends 'base.html.twig' %}
+
+{% block body %}
+<div style="display:flex; min-height:calc(100vh - 80px);">
+
+    <!-- ── SIDEBAR ── -->
+    <nav style="
+        width: 220px;
+        min-width: 220px;
+        background: #1b2b1c;
+        padding: 30px 0;
+        position: sticky;
+        top: 80px;
+        height: calc(100vh - 80px);
+        overflow-y: auto;
+    ">
+        <!-- Brand -->
+        <div style="padding: 0 20px 24px; border-bottom: 1px solid rgba(255,255,255,0.08);">
+            <div style="color:#fff; font-weight:700; font-size:1rem;">
+                <i class="fas fa-user-shield" style="color:#4caf50;"></i>
+                &nbsp;Espace Admin
+            </div>
+            <div style="color:#a5d6a7; font-size:0.78rem; margin-top:4px;">
+                {{ app.session.get('admin_prenom') }} {{ app.session.get('admin_nom') }}
+            </div>
+        </div>
+
+        <!-- Nav -->
+        <div style="padding-top:16px;">
+
+            <div style="padding:6px 20px; font-size:0.68rem; font-weight:700; letter-spacing:1.5px; color:#558b2f; text-transform:uppercase;">Navigation</div>
+
+            <a href="{{ path('admin_dashboard') }}" style="
+                display:flex; align-items:center; gap:10px;
+                padding:11px 22px; color:#c8e6c9; text-decoration:none; font-size:0.9rem;
+                border-left: 3px solid {{ app.request.get('_route') == 'admin_dashboard' ? '#4caf50' : 'transparent' }};
+                background: {{ app.request.get('_route') == 'admin_dashboard' ? 'rgba(76,175,80,0.12)' : 'transparent' }};
+            ">
+                <i class="fas fa-chart-line" style="width:16px;"></i> Tableau de bord
+            </a>
+
+            <div style="padding:6px 20px; font-size:0.68rem; font-weight:700; letter-spacing:1.5px; color:#558b2f; text-transform:uppercase; margin-top:8px;">Gestion</div>
+
+            <a href="{{ path('admin_users') }}" style="
+                display:flex; align-items:center; gap:10px;
+                padding:11px 22px; color:#c8e6c9; text-decoration:none; font-size:0.9rem;
+                border-left: 3px solid {{ app.request.get('_route') starts with 'admin_user' ? '#4caf50' : 'transparent' }};
+                background: {{ app.request.get('_route') starts with 'admin_user' ? 'rgba(76,175,80,0.12)' : 'transparent' }};
+            ">
+                <i class="fas fa-users" style="width:16px;"></i> Utilisateurs
+            </a>
+
+            <div style="padding:6px 20px; font-size:0.68rem; font-weight:700; letter-spacing:1.5px; color:#558b2f; text-transform:uppercase; margin-top:8px;">Compte</div>
+
+            <a href="{{ path('admin_profile') }}" style="
+                display:flex; align-items:center; gap:10px;
+                padding:11px 22px; color:#c8e6c9; text-decoration:none; font-size:0.9rem;
+                border-left: 3px solid {{ app.request.get('_route') == 'admin_profile' ? '#4caf50' : 'transparent' }};
+                background: {{ app.request.get('_route') == 'admin_profile' ? 'rgba(76,175,80,0.12)' : 'transparent' }};
+            ">
+                <i class="fas fa-user-edit" style="width:16px;"></i> Mon profil
+            </a>
+
+
+        </div>
+    </nav>
+
+    <!-- ── MAIN CONTENT ── -->
+    <main style="flex:1; padding:30px; background:#f4f6f8; overflow-y:auto;">
+
+        {% for message in app.flashes('success') %}
+            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        {% endfor %}
+
+        {% for message in app.flashes('error') %}
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        {% endfor %}
+
+        {% block admin_content %}{% endblock %}
+
+    </main>
+</div>
+{% endblock %}

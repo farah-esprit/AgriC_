@@ -1,0 +1,25 @@
+{% extends 'fournisseur.html.twig' %}
+
+{% block title %}Paiement Réussi{% endblock %}
+
+{% block body %}
+<section style="padding: 120px 0 60px;">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-6 text-center">
+                <div class="card shadow border-0 p-5" style="border-radius: 15px;">
+                    <div style="font-size: 80px;">✅</div>
+                    <h2 class="text-success fw-bold mt-3">Paiement Réussi !</h2>
+                    <p class="text-muted">Votre commande a été payée avec succès.</p>
+                    <hr>
+                    <p><strong>Produit :</strong> {{ commande.produit ? commande.produit.nom : 'N/A' }}</p>
+                    <p><strong>Total payé :</strong> <span class="text-success fw-bold">{{ commande.prixTotal|number_format(2) }} DT</span></p>
+                    <a href="{{ path('app_commande_index') }}" class="btn btn-success mt-3">
+                        <i class="bi bi-arrow-left"></i> Retour aux commandes
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

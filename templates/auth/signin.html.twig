@@ -1,0 +1,63 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Connexion - AgriConnect{% endblock %}
+
+{% block body %}
+<section style="padding: 120px 0 60px;">
+    <div class="container">
+
+        {% for message in app.flashes('success') %}
+            <div class="alert alert-success alert-dismissible fade show text-center fw-bold">
+                {{ message }}<button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        {% endfor %}
+
+        {% for message in app.flashes('error') %}
+            <div class="alert alert-danger alert-dismissible fade show text-center fw-bold">
+                {{ message }}<button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        {% endfor %}
+
+        <div class="row justify-content-center">
+            <div class="col-md-5">
+
+                <div class="card shadow border-0" style="border-radius:15px;">
+                    <div class="card-header text-white text-center py-4" style="background: linear-gradient(135deg,#4a7c3a,#66bb6a); border-radius:15px 15px 0 0;">
+                        <h4 class="mb-0 fw-bold">AgriConnect</h4>
+                        <small class="opacity-75">Connectez-vous à votre espace</small>
+                    </div>
+
+                    <div class="card-body p-5">
+                        {{ form_start(form, {'attr': {'novalidate': 'novalidate'}}) }}
+
+                        <div class="mb-3">
+                            {{ form_label(form.email, 'Email', {'label_attr': {'class': 'form-label fw-semibold'}}) }}
+                            {{ form_widget(form.email, {'attr': {'class': 'form-control'}}) }}
+                            <div class="text-danger small mt-1">{{ form_errors(form.email) }}</div>
+                        </div>
+
+                        <div class="mb-4">
+                            {{ form_label(form.password, 'Mot de passe', {'label_attr': {'class': 'form-label fw-semibold'}}) }}
+                            {{ form_widget(form.password, {'attr': {'class': 'form-control'}}) }}
+                            <div class="text-danger small mt-1">{{ form_errors(form.password) }}</div>
+                        </div>
+
+                        {{ form_widget(form.submit, {'attr': {'class': 'btn btn-success w-100', 'style':'background:linear-gradient(135deg,#4a7c3a,#66bb6a);border:none;'}}) }}
+
+                        {{ form_end(form) }}
+
+                        <hr class="my-4">
+
+                        <p class="text-center text-muted small mb-0">
+                            Pas encore de compte ?
+                            <a href="{{ path('app_signup') }}" class="fw-bold text-success text-decoration-none">S'inscrire</a>
+                        </p>
+
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

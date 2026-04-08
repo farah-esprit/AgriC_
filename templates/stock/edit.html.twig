@@ -1,0 +1,148 @@
+{% extends 'fournisseur.html.twig' %}
+
+{% block title %}Modifier un Stock{% endblock %}
+
+{% block body %}
+
+<section style="padding: 120px 0 60px;">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-7">
+                <div class="card shadow border-0" style="border-radius: 15px;">
+                    <div class="card-header text-white text-center py-4"
+                         style="background: linear-gradient(to right, #4a7c3a, #66bb6a); border-radius: 15px 15px 0 0;">
+                        <h3>✏️ Modifier le Stock</h3>
+                        {% if stock.produit %}
+                            <p class="mb-0 opacity-75">{{ stock.produit.nom }}</p>
+                        {% endif %}
+                    </div>
+                    <div class="card-body p-5">
+
+                        <form method="post" id="formStockEdit" novalidate>
+
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">📊 Quantité totale *</label>
+                                <input type="number" name="quantite" id="quantite" class="form-control"
+                                       value="{{ stock.quantite }}" min="0" max="99999" required>
+                                <div class="invalid-feedback">La quantité doit être un nombre entre 0 et 99999.</div>
+                                <div class="valid-feedback">✅ Correct !</div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">✅ Quantité disponible *</label>
+                                <input type="number" name="disponible" id="disponible" class="form-control"
+                                       value="{{ stock.disponible }}" min="0" max="99999" required>
+                                <div class="invalid-feedback">La disponible doit être entre 0 et la quantité totale.</div>
+                                <div class="valid-feedback">✅ Correct !</div>
+                            </div>
+
+                            <div class="mb-4">
+                                <label class="form-label fw-bold">⚠️ Seuil d'alerte *</label>
+                                <input type="number" name="seuilAlert" id="seuilAlert" class="form-control"
+                                       value="{{ stock.seuilAlert }}" min="0" max="99999" required>
+                                <div class="invalid-feedback">Le seuil doit être entre 0 et la quantité totale.</div>
+                                <div class="valid-feedback">✅ Correct !</div>
+                            </div>
+
+                            <div class="d-flex gap-2">
+                                <button type="submit" class="btn btn-success flex-grow-1">
+                                    <i class="bi bi-check-circle"></i> Enregistrer
+                                </button>
+                                <a href="{{ path('app_stock_index') }}" class="btn btn-outline-secondary">
+                                    <i class="bi bi-arrow-left"></i> Retour
+                                </a>
+                            </div>
+
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+{% endblock %}
+
+{% block javascripts %}
+<script>
+const quantiteInput = document.getElementById('quantite');
+const disponibleInput = document.getElementById('disponible');
+const seuilInput = document.getElementById('seuilAlert');
+
+quantiteInput.addEventListener('input', function() {
+    const val = parseInt(this.value);
+    if (isNaN(val) || val < 0) {
+        this.classList.add('is-invalid');
+        this.classList.remove('is-valid');
+    } else {
+        this.classList.add('is-valid');
+        this.classList.remove('is-invalid');
+    }
+    validerDisponible();
+    validerSeuil();
+});
+
+disponibleInput.addEventListener('input', function() {
+    validerDisponible();
+});
+
+seuilInput.addEventListener('input', function() {
+    validerSeuil();
+});
+
+function validerDisponible() {
+    const quantite = parseInt(quantiteInput.value) || 0;
+    const disponible = parseInt(disponibleInput.value);
+    if (isNaN(disponible) || disponible < 0 || disponible > quantite) {
+        disponibleInput.classList.add('is-invalid');
+        disponibleInput.classList.remove('is-valid');
+        disponibleInput.nextElementSibling.textContent =
+            'La disponible doit être entre 0 et ' + quantite + '.';
+    } else {
+        disponibleInput.classList.add('is-valid');
+        disponibleInput.classList.remove('is-invalid');
+    }
+}
+
+function validerSeuil() {
+    const quantite = parseInt(quantiteInput.value) || 0;
+    const seuil = parseInt(seuilInput.value);
+    if (isNaN(seuil) || seuil < 0 || seuil > quantite) {
+        seuilInput.classList.add('is-invalid');
+        seuilInput.classList.remove('is-valid');
+        seuilInput.nextElementSibling.textContent =
+            'Le seuil doit être entre 0 et ' + quantite + '.';
+    } else {
+        seuilInput.classList.add('is-valid');
+        seuilInput.classList.remove('is-invalid');
+    }
+}
+
+document.getElementById('formStockEdit').addEventListener('submit', function(e) {
+    let valid = true;
+
+    const quantite = parseInt(quantiteInput.value);
+    if (isNaN(quantite) || quantite < 0) {
+        quantiteInput.classList.add('is-invalid');
+        valid = false;
+    }
+
+    const disponible = parseInt(disponibleInput.value);
+    if (isNaN(disponible) || disponible < 0 || disponible > quantite) {
+        disponibleInput.classList.add('is-invalid');
+        valid = false;
+    }
+
+    const seuil = parseInt(seuilInput.value);
+    if (isNaN(seuil) || seuil < 0 || seuil > quantite) {
+        seuilInput.classList.add('is-invalid');
+        valid = false;
+    }
+
+    if (!valid) {
+        e.preventDefault();
+        window.scrollTo(0, 0);
+    }
+});
+</script>
+{% endblock %}

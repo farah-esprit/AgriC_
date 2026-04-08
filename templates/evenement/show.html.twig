@@ -1,0 +1,61 @@
+{% extends 'agriculteur.html.twig' %}
+
+{% block title %}Détails de l'Événement{% endblock %}
+
+{% block body %}
+<div class="container mt-5 pt-5 mb-5">
+    <div class="card shadow border-0" style="border-radius:15px;">
+        <div class="card-header text-white px-4 py-3" style="background: linear-gradient(to right,#4a7c3a,#66bb6a); border-radius:15px 15px 0 0;">
+            <h4 class="mb-0">Détails de l'Événement: {{ evenement.titre }}</h4>
+        </div>
+        <div class="card-body p-4">
+            <table class="table table-bordered">
+                <tbody>
+                    <tr>
+                        <th style="width: 200px;">Id</th>
+                        <td>{{ evenement.idEvenement }}</td>
+                    </tr>
+                    <tr>
+                        <th>Titre</th>
+                        <td>{{ evenement.titre }}</td>
+                    </tr>
+                    <tr>
+                        <th>Description</th>
+                        <td>{{ evenement.description }}</td>
+                    </tr>
+                    <tr>
+                        <th>Date de début</th>
+                        <td>{{ evenement.dateDebut }}</td>
+                    </tr>
+                    <tr>
+                        <th>Date de fin</th>
+                        <td>{{ evenement.dateFin }}</td>
+                    </tr>
+                    <tr>
+                        <th>Lieu</th>
+                        <td>{{ evenement.lieu }}</td>
+                    </tr>
+                    <tr>
+                        <th>Capacité maximale</th>
+                        <td>{{ evenement.capaciteMax }}</td>
+                    </tr>
+                    <tr>
+                        <th>ID Organisateur</th>
+                        <td>{{ evenement.organisateurId }}</td>
+                    </tr>
+                </tbody>
+            </table>
+            
+            <div class="d-flex gap-2 mt-4">
+                <a href="{{ path('app_evenement_index') }}" class="btn btn-secondary">Retour à la liste</a>
+                <a href="{{ path('app_evenement_edit', {'idEvenement': evenement.idEvenement}) }}" class="btn btn-warning">Modifier</a>
+                
+                <form method="post" action="{{ path('app_evenement_delete', {'idEvenement': evenement.idEvenement}) }}" onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer cet événement ?');" style="display:inline-block;">
+                    <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ evenement.idEvenement) }}">
+                    <button class="btn btn-danger">Supprimer</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

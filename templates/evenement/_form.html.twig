@@ -1,0 +1,59 @@
+{{ form_start(form, {'attr': {'class': 'row g-4'}}) }}
+    <div class="text-danger col-12">{{ form_errors(form) }}</div>
+    <div class="col-md-12">
+        <label class="form-label fw-bold text-dark"><i class="bi bi-type me-2 text-agri"></i> Titre de l'événement</label>
+        {{ form_widget(form.titre, {'attr': {'class': 'form-control form-control-agri'}}) }}
+        <div class="text-danger small mt-1">
+            {{ form_errors(form.titre) }}
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <label class="form-label fw-bold text-dark"><i class="bi bi-calendar-event me-2 text-agri"></i> Date de début</label>
+        {{ form_widget(form.dateDebut) }} {# La classe js-flatpickr-time est déjà dans le FormType #}
+        <div class="text-danger small mt-1">
+            {{ form_errors(form.dateDebut) }}
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <label class="form-label fw-bold text-dark"><i class="bi bi-calendar-check me-2 text-agri"></i> Date de fin</label>
+        {{ form_widget(form.dateFin) }}
+        <div class="text-danger small mt-1">
+            {{ form_errors(form.dateFin) }}
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <label class="form-label fw-bold text-dark"><i class="bi bi-geo-alt me-2 text-agri"></i> Lieu</label>
+        {{ form_widget(form.lieu, {'attr': {'class': 'form-control form-control-agri'}}) }}
+        <div class="text-danger small mt-1">
+            {{ form_errors(form.lieu) }}
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <label class="form-label fw-bold text-dark"><i class="bi bi-people me-2 text-agri"></i> Capacité maximale</label>
+        {{ form_widget(form.capaciteMax, {'attr': {'class': 'form-control form-control-agri'}}) }}
+        <div class="text-danger small mt-1">
+            {{ form_errors(form.capaciteMax) }}
+        </div>
+    </div>
+
+    <div class="col-md-12">
+        <label class="form-label fw-bold text-dark"><i class="bi bi-justify-left me-2 text-agri"></i> Description détaillée</label>
+        {{ form_widget(form.description, {'attr': {'class': 'form-control form-control-agri', 'rows': 5}}) }}
+        <div class="text-danger small mt-1">
+            {{ form_errors(form.description) }}
+        </div>
+    </div>
+
+    <div class="col-12 mt-5 pt-4 border-top d-flex justify-content-between">
+        <a href="{{ path('app_evenement_index') }}" class="btn btn-agri-outline">
+            <i class="bi bi-x-circle me-1"></i> Annuler
+        </a>
+        <button type="submit" class="btn btn-agri">
+            <i class="bi bi-check-circle me-1"></i> {{ button_label|default('Enregistrer l\'événement') }}
+        </button>
+    </div>
+{{ form_end(form) }}

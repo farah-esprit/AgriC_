@@ -1,0 +1,154 @@
+{% extends 'fournisseur.html.twig' %}
+
+{% block title %}Mon Profil - AgriConnect{% endblock %}
+
+{% block stylesheets %}
+    <link href="{{ asset('assets/css/forum.css') }}" rel="stylesheet">
+{% endblock %}
+
+
+{% block body %}
+
+<section style="padding: 120px 0 60px;">
+    <div class="container">
+
+        {% for message in app.flashes('success') %}
+            <div class="alert alert-success alert-dismissible fade show text-center fw-bold">
+                {{ message }}<button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        {% endfor %}
+
+        <div class="row justify-content-center">
+            <div class="col-lg-7">
+
+                <div class="card shadow border-0" style="border-radius:15px;">
+                    <div class="card-header text-white text-center py-4"
+                         style="background:linear-gradient(to right,#4a7c3a,#66bb6a);border-radius:15px 15px 0 0;">
+                        <h3>👤 Mon Profil</h3>
+                    </div>
+                    <div class="card-body p-5">
+
+                        {# Avatar #}
+                        <div class="text-center mb-4">
+                            {% if profil.image %}
+                                <img src="{{ asset('uploads/profils/' ~ profil.image) }}"
+                                     style="width:110px;height:110px;border-radius:50%;object-fit:cover;border:4px solid #66bb6a;">
+                            {% else %}
+                                <div style="width:110px;height:110px;border-radius:50%;background:linear-gradient(135deg,#4a7c3a,#66bb6a);display:flex;align-items:center;justify-content:center;font-size:2.5rem;color:white;font-weight:700;margin:0 auto;">
+                                    {{ user.nom|first|upper }}
+                                </div>
+                            {% endif %}
+                            <h4 class="mt-3 fw-bold">{{ user.nom }}</h4>
+                            <span class="badge bg-success">{{ user.role }}</span>
+                        </div>
+
+                        <hr>
+
+                        {# Infos #}
+                        <div class="mb-3">
+                            <span class="fw-bold">📧 Email :</span>
+                            <span class="text-muted ms-2">{{ user.email }}</span>
+                        </div>
+
+                        {% if user.telephone %}
+                        <div class="mb-3">
+                            <span class="fw-bold">📞 Téléphone :</span>
+                            <span class="text-muted ms-2">{{ user.telephone }}</span>
+                        </div>
+                        {% endif %}
+
+                        {% if profil.bio %}
+                        <div class="mb-3">
+                            <span class="fw-bold">📝 Bio :</span>
+                            <p class="text-muted mt-1 fst-italic">{{ profil.bio }}</p>
+                        </div>
+                        {% else %}
+                        <div class="mb-3">
+                            <span class="fw-bold">📝 Bio :</span>
+                            <span class="text-muted ms-2 fst-italic">Aucune bio renseignée</span>
+                        </div>
+                        {% endif %}
+
+                        {% if can_access_forum %}
+                        <hr>
+
+                        {# Activité Forum #}
+                        <div class="activity-section mt-4">
+                            <h5 class="fw-bold mb-3 d-flex align-items-center gap-2">
+                                <i class="bi bi-graph-up-arrow text-success"></i> Statistiques d'activité
+                            </h5>
+                            <div class="row g-3">
+                                <div class="col-6 col-md-3">
+                                    <div class="stat-box">
+                                        <span class="stat-number">{{ stats.threads }}</span>
+                                        <span class="stat-label">Sujets créés</span>
+                                    </div>
+                                </div>
+                                <div class="col-6 col-md-3">
+                                    <div class="stat-box">
+                                        <span class="stat-number">{{ stats.responses }}</span>
+                                        <span class="stat-label">Réponses</span>
+                                    </div>
+                                </div>
+                                <div class="col-6 col-md-3">
+                                    <div class="stat-box">
+                                        <span class="stat-number">{{ stats.likes_received }}</span>
+                                        <span class="stat-label">J'aime reçus</span>
+                                    </div>
+                                </div>
+                                <div class="col-6 col-md-3">
+                                    <div class="stat-box">
+                                        <span class="stat-number">{{ stats.likes_given }}</span>
+                                        <span class="stat-label">Attribués</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        <hr class="mt-4">
+
+                        {# Boutons #}
+                        <div class="d-flex gap-3 mt-4">
+                            <a href="{{ path('user_profil_edit') }}" class="btn btn-success flex-grow-1">
+                                ✏️ Modifier mon profil
+                            </a>
+                            <button type="button" class="btn btn-outline-danger"
+                                    data-bs-toggle="modal" data-bs-target="#deleteModal">
+                                🗑️ Supprimer
+                            </button>
+                        </div>
+
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</section>
+
+{# Modal suppression #}
+<div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="border-radius:15px;border:0;">
+            <div class="modal-header border-0">
+                <h5 class="modal-title text-danger fw-bold">⚠️ Confirmer la suppression</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body text-center text-muted">
+                ⚠️ Voulez-vous vraiment supprimer <strong>définitivement</strong> votre compte ?
+                Cette action est <strong>irréversible</strong>. Toutes vos données seront effacées.
+            </div>
+            <div class="modal-footer border-0 justify-content-center gap-2">
+                <button type="button" class="btn btn-secondary px-4" data-bs-dismiss="modal">Annuler</button>
+                {# ✅ token aligné avec le controller : delete_account #}
+                <form method="POST" action="{{ path('user_profil_delete') }}">
+                    <input type="hidden" name="_token" value="{{ csrf_token('delete_account') }}">
+                    <button type="submit" class="btn btn-danger px-4">🗑️ Confirmer la suppression</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

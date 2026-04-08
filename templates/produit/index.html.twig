@@ -1,0 +1,117 @@
+{% extends 'fournisseur.html.twig' %}
+
+{% block title %}Gestion des Produits{% endblock %}
+
+{% block body %}
+
+<section class="hero-section" style="background: linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), url('{{ asset('assets/img/hero_1.jpg') }}'); background-size: cover; padding: 120px 0 60px;">
+    <div class="container text-center text-white">
+        <h1>🌾 Gestion des Produits</h1>
+        <p>Gérez votre catalogue agricole</p>
+    </div>
+</section>
+
+<section class="py-5">
+    <div class="container">
+
+        {% for message in app.flashes('success') %}
+            <div class="alert alert-success alert-dismissible fade show">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        {% endfor %}
+
+        <!-- Barre actions -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2 class="text-success">📦 Nos Produits</h2>
+            <div class="d-flex gap-2">
+                <input type="text" id="recherche" class="form-control" placeholder="🔍 Rechercher..." style="width: 250px;">
+                <a href="{{ path('app_produit_new') }}" class="btn btn-success">
+                    <i class="bi bi-plus-circle"></i> Ajouter
+                </a>
+                <a href="{{ path('app_produit_export') }}" class="btn btn-outline-success">
+                    <i class="bi bi-download"></i> CSV
+                </a>
+            </div>
+        </div>
+
+        <!-- Cards Produits -->
+        <div class="row" id="produits-container">
+            {% for produit in produits %}
+            <div class="col-lg-3 col-md-4 col-sm-6 mb-4 produit-card" data-nom="{{ produit.nom|lower }}">
+                <div class="card h-100 shadow-sm border-0 {{ produit.promo ? 'border border-danger' : '' }}" style="border-radius: 15px;">
+
+                    {% if produit.promo %}
+                    <div class="position-absolute top-0 end-0 m-2">
+                        <span class="badge bg-danger">🔥 PROMO -{{ produit.tauxPromo }}%</span>
+                    </div>
+                    {% endif %}
+
+                    <!-- Image -->
+                    <div class="text-center pt-3">
+                        {% if produit.imagePath %}
+                            <img src="{{ asset('uploads/images/' ~ produit.imagePath) }}"
+                                 class="rounded-circle" width="100" height="100"
+                                 style="object-fit: cover; border: 3px solid #5a8c4a;">
+                        {% else %}
+                            <div class="rounded-circle bg-success d-inline-flex align-items-center justify-content-center"
+                                 style="width:100px; height:100px; font-size:40px;">
+                                🌿
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="card-body text-center">
+                        <span class="badge bg-success mb-2">{{ produit.categorie }}</span>
+                        <h5 class="card-title fw-bold">{{ produit.nom }}</h5>
+                        <p class="text-muted small">{{ produit.description|slice(0, 60) }}...</p>
+
+                        {% if produit.promo and produit.tauxPromo %}
+                            <p class="mb-0">
+                                <span class="text-muted text-decoration-line-through small">{{ produit.prix|number_format(2) }} DT</span>
+                            </p>
+                            <h4 class="text-danger fw-bold">{{ produit.prixPromo|number_format(2) }} DT</h4>
+                        {% else %}
+                            <h4 class="text-success fw-bold">{{ produit.prix|number_format(2) }} DT</h4>
+                        {% endif %}
+                    </div>
+
+                    <div class="card-footer bg-transparent border-0 text-center pb-3">
+                        <a href="{{ path('app_produit_edit', {'id': produit.idProduit}) }}"
+                           class="btn btn-sm btn-outline-success me-1">
+                            <i class="bi bi-pencil"></i> Modifier
+                        </a>
+                        <form method="post" action="{{ path('app_produit_delete', {'id': produit.idProduit}) }}"
+                              style="display:inline"
+                              onsubmit="return confirm('Supprimer ce produit ?')">
+                            <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ produit.idProduit) }}">
+                            <button class="btn btn-sm btn-outline-danger">
+                                <i class="bi bi-trash"></i> Supprimer
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            {% else %}
+            <div class="col-12 text-center py-5">
+                <h4 class="text-muted">Aucun produit trouvé 🌱</h4>
+                <a href="{{ path('app_produit_new') }}" class="btn btn-success mt-3">Ajouter un produit</a>
+            </div>
+            {% endfor %}
+        </div>
+
+    </div>
+</section>
+
+{% endblock %}
+
+{% block javascripts %}
+<script>
+document.getElementById('recherche').addEventListener('input', function() {
+    const val = this.value.toLowerCase();
+    document.querySelectorAll('.produit-card').forEach(card => {
+        card.style.display = card.dataset.nom.includes(val) ? '' : 'none';
+    });
+});
+</script>
+{% endblock %}

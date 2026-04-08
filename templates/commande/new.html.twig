@@ -1,0 +1,177 @@
+{% extends 'fournisseur.html.twig' %}
+
+{% block title %}Ajouter une Commande{% endblock %}
+
+{% block body %}
+<section style="padding: 120px 0 60px;">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-7">
+                <div class="card shadow border-0" style="border-radius: 15px;">
+                    <div class="card-header text-white text-center py-4"
+                         style="background: linear-gradient(to right, #4a7c3a, #66bb6a); border-radius: 15px 15px 0 0;">
+                        <h3>🛒 Ajouter une Commande</h3>
+                    </div>
+                    <div class="card-body p-5">
+
+                        {% for message in app.flashes('danger') %}
+                            <div class="alert alert-danger alert-dismissible fade show">
+                                {{ message }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                            </div>
+                        {% endfor %}
+
+                        <form method="post" id="formCommande" novalidate>
+
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">🌿 Produit *</label>
+                                <select name="produit_id" id="produit_id" class="form-select" required>
+                                    <option value="">-- Choisir un produit --</option>
+                                    {% for produit in produits %}
+                                        <option value="{{ produit.idProduit }}">
+                                            {{ produit.nom }} — {{ produit.prix|number_format(2) }} DT
+                                            {% if produit.promo %}🔥 PROMO{% endif %}
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                                <div class="invalid-feedback">Veuillez choisir un produit.</div>
+                                <div class="valid-feedback">✅ Correct !</div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">📦 Quantité commandée *</label>
+                                <input type="number" name="quantiteCommandee" id="quantiteCommandee"
+                                       class="form-control" placeholder="Ex: 5" min="1" max="9999" required>
+                                <div class="invalid-feedback">La quantité doit être un entier supérieur à 0.</div>
+                                <div class="valid-feedback">✅ Correct !</div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">📅 Date de commande *</label>
+                                <input type="date" name="dateCommande" id="dateCommande"
+                                       class="form-control" required>
+                                <div class="invalid-feedback">La date ne peut pas être dans le passé.</div>
+                                <div class="valid-feedback">✅ Correct !</div>
+                            </div>
+
+                            <div class="mb-4">
+                                <label class="form-label fw-bold">🔄 Statut *</label>
+                                <select name="statut" id="statut" class="form-select" required>
+                                    <option value="">-- Choisir un statut --</option>
+                                    <option value="EN_ATTENTE">⏳ En attente</option>
+                                    <option value="VALIDEE">✅ Validée</option>
+                                    <option value="EXPEDIEE">🚚 Expédiée</option>
+                                    <option value="LIVREE">📦 Livrée</option>
+                                    <option value="ANNULEE">❌ Annulée</option>
+                                </select>
+                                <div class="invalid-feedback">Veuillez choisir un statut.</div>
+                                <div class="valid-feedback">✅ Correct !</div>
+                            </div>
+
+                            <div class="d-flex gap-2">
+                                <button type="submit" class="btn btn-success flex-grow-1">
+                                    <i class="bi bi-check-circle"></i> Enregistrer
+                                </button>
+                                <a href="{{ path('app_commande_index') }}" class="btn btn-outline-secondary">
+                                    <i class="bi bi-arrow-left"></i> Retour
+                                </a>
+                            </div>
+
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block javascripts %}
+<script>
+// Date minimale = aujourd'hui
+document.addEventListener('DOMContentLoaded', function() {
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('dateCommande').min = today;
+});
+
+// Validation produit
+document.getElementById('produit_id').addEventListener('change', function() {
+    if (this.value === '') {
+        this.classList.add('is-invalid');
+        this.classList.remove('is-valid');
+    } else {
+        this.classList.add('is-valid');
+        this.classList.remove('is-invalid');
+    }
+});
+
+// Validation quantité - entiers uniquement
+document.getElementById('quantiteCommandee').addEventListener('input', function() {
+    this.value = this.value.replace(/[^0-9]/g, '');
+    const val = parseInt(this.value);
+    if (isNaN(val) || val < 1) {
+        this.classList.add('is-invalid');
+        this.classList.remove('is-valid');
+    } else {
+        this.classList.add('is-valid');
+        this.classList.remove('is-invalid');
+    }
+});
+
+// Validation date
+document.getElementById('dateCommande').addEventListener('change', function() {
+    const today = new Date().toISOString().split('T')[0];
+    if (this.value === '' || this.value < today) {
+        this.classList.add('is-invalid');
+        this.classList.remove('is-valid');
+    } else {
+        this.classList.add('is-valid');
+        this.classList.remove('is-invalid');
+    }
+});
+
+// Validation statut
+document.getElementById('statut').addEventListener('change', function() {
+    if (this.value === '') {
+        this.classList.add('is-invalid');
+        this.classList.remove('is-valid');
+    } else {
+        this.classList.add('is-valid');
+        this.classList.remove('is-invalid');
+    }
+});
+
+// Validation à la soumission
+document.getElementById('formCommande').addEventListener('submit', function(e) {
+    let valid = true;
+
+    if (document.getElementById('produit_id').value === '') {
+        document.getElementById('produit_id').classList.add('is-invalid');
+        valid = false;
+    }
+
+    const qte = parseInt(document.getElementById('quantiteCommandee').value);
+    if (isNaN(qte) || qte < 1) {
+        document.getElementById('quantiteCommandee').classList.add('is-invalid');
+        valid = false;
+    }
+
+    const today = new Date().toISOString().split('T')[0];
+    const date = document.getElementById('dateCommande').value;
+    if (date === '' || date < today) {
+        document.getElementById('dateCommande').classList.add('is-invalid');
+        valid = false;
+    }
+
+    if (document.getElementById('statut').value === '') {
+        document.getElementById('statut').classList.add('is-invalid');
+        valid = false;
+    }
+
+    if (!valid) {
+        e.preventDefault();
+        window.scrollTo(0, 0);
+    }
+});
+</script>
+{% endblock %}

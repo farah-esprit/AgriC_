@@ -1,0 +1,270 @@
+{% extends 'fournisseur.html.twig' %}
+
+{% block title %}Ajouter un Produit{% endblock %}
+
+{% block body %}
+
+<section style="padding: 120px 0 60px;">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+
+                <div class="card shadow border-0" style="border-radius: 15px;">
+                    <div class="card-header text-white text-center py-4"
+                         style="background: linear-gradient(to right, #4a7c3a, #66bb6a); border-radius: 15px 15px 0 0;">
+                        <h3>🌿 Ajouter un Produit</h3>
+                    </div>
+
+                    <div class="card-body p-5">
+
+                        {% for message in app.flashes('danger') %}
+                            <div class="alert alert-danger alert-dismissible fade show">
+                                {{ message }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                            </div>
+                        {% endfor %}
+
+                        <form method="post" enctype="multipart/form-data" id="formProduit" novalidate>
+
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">📦 Nom du produit *</label>
+                                <input type="text" name="nom" id="nom" class="form-control"
+                                       placeholder="Min 3 caractères, lettres uniquement"
+                                       minlength="3" maxlength="50" required>
+                                <div class="invalid-feedback">Le nom doit contenir entre 3 et 50 lettres uniquement.</div>
+                                <div class="valid-feedback">✅ Correct !</div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">📝 Description</label>
+                                <textarea name="description" id="description" class="form-control"
+                                          rows="3" placeholder="Description du produit..."
+                                          minlength="10" maxlength="500"></textarea>
+                                <div class="invalid-feedback">La description doit contenir entre 10 et 500 caractères.</div>
+                                <div class="valid-feedback">✅ Correct !</div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label fw-bold">💰 Prix (DT) *</label>
+                                    <input type="text" name="prix" id="prix" class="form-control"
+                                           placeholder="Ex: 25"
+                                           inputmode="numeric" required
+                                           style="-moz-appearance: textfield;">
+                                    <div class="invalid-feedback">Le prix doit être un nombre entier positif.</div>
+                                    <div class="valid-feedback">✅ Correct !</div>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label fw-bold">🏷️ Catégorie *</label>
+                                    <select name="categorie" id="categorie" class="form-select" required>
+                                        <option value="">Choisir...</option>
+                                        <option value="Légumes">Légumes</option>
+                                        <option value="Fruits">Fruits</option>
+                                        <option value="Céréales">Céréales</option>
+                                        <option value="Huiles">Huiles</option>
+                                        <option value="Épices">Épices</option>
+                                        <option value="Produits laitiers">Produits laitiers</option>
+                                        <option value="Miel">Miel</option>
+                                        <option value="Viandes">Viandes</option>
+                                        <option value="Autres">Autres</option>
+                                    </select>
+                                    <div class="invalid-feedback">Veuillez choisir une catégorie.</div>
+                                    <div class="valid-feedback">✅ Correct !</div>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">🖼️ Image du produit</label>
+                                <input type="file" name="image" id="image" class="form-control"
+                                       accept="image/jpeg,image/png,image/gif">
+                                <div class="invalid-feedback">Format accepté : JPG, PNG, GIF uniquement.</div>
+                            </div>
+
+                            <div class="mb-3">
+                                <div class="form-check">
+                                    <input type="checkbox" name="promo" class="form-check-input" id="promo">
+                                    <label class="form-check-label fw-bold text-danger" for="promo">
+                                        🔥 Mettre en promotion
+                                    </label>
+                                </div>
+                            </div>
+
+                            <!-- Champ remise visible seulement si promo cochée -->
+                            <div class="mb-4" id="remise-container" style="display:none;">
+                                <label class="form-label fw-bold text-danger">🏷️ Remise (%) *</label>
+                                <input type="text" name="tauxPromo" id="tauxPromo" class="form-control"
+                                       placeholder="Ex: 20 (entre 1 et 99%)"
+                                       inputmode="numeric">
+                                <div class="invalid-feedback">La remise doit être un entier entre 1 et 99.</div>
+                                <div class="valid-feedback">✅ Correct !</div>
+                                <div id="prix-promo-preview" class="text-success fw-bold mt-2" style="display:none;"></div>
+                            </div>
+
+                            <div class="d-flex gap-2">
+                                <button type="submit" class="btn btn-success flex-grow-1">
+                                    <i class="bi bi-check-circle"></i> Ajouter
+                                </button>
+                                <a href="{{ path('app_produit_index') }}" class="btn btn-outline-secondary">
+                                    <i class="bi bi-arrow-left"></i> Retour
+                                </a>
+                            </div>
+
+                        </form>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</section>
+
+{% endblock %}
+
+{% block javascripts %}
+<script>
+// ✅ Nom - lettres uniquement
+document.getElementById('nom').addEventListener('input', function() {
+    this.value = this.value.replace(/[^a-zA-ZÀ-ÿ\s]/g, '');
+    if (this.value.length < 3 || this.value.length > 50) {
+        this.classList.add('is-invalid');
+        this.classList.remove('is-valid');
+    } else {
+        this.classList.add('is-valid');
+        this.classList.remove('is-invalid');
+    }
+});
+
+// ✅ Prix - entiers uniquement sans flèches
+document.getElementById('prix').addEventListener('input', function() {
+    // Supprimer tout ce qui n'est pas un chiffre
+    this.value = this.value.replace(/[^0-9]/g, '');
+    const val = parseInt(this.value);
+    if (isNaN(val) || val <= 0) {
+        this.classList.add('is-invalid');
+        this.classList.remove('is-valid');
+    } else {
+        this.classList.add('is-valid');
+        this.classList.remove('is-invalid');
+    }
+    // Recalculer prix promo si promo cochée
+    calculerPrixPromo();
+});
+
+// ✅ Description
+document.getElementById('description').addEventListener('input', function() {
+    if (this.value.length > 0 && (this.value.length < 10 || this.value.length > 500)) {
+        this.classList.add('is-invalid');
+        this.classList.remove('is-valid');
+    } else if (this.value.length >= 10) {
+        this.classList.add('is-valid');
+        this.classList.remove('is-invalid');
+    }
+});
+
+// ✅ Catégorie
+document.getElementById('categorie').addEventListener('change', function() {
+    if (this.value === '') {
+        this.classList.add('is-invalid');
+        this.classList.remove('is-valid');
+    } else {
+        this.classList.add('is-valid');
+        this.classList.remove('is-invalid');
+    }
+});
+
+// ✅ Image
+document.getElementById('image').addEventListener('change', function() {
+    const file = this.files[0];
+    if (file) {
+        const allowedTypes = ['image/jpeg', 'image/png', 'image/gif'];
+        if (!allowedTypes.includes(file.type)) {
+            this.classList.add('is-invalid');
+            this.classList.remove('is-valid');
+            this.value = '';
+            alert('❌ Format non accepté ! Utilisez JPG, PNG ou GIF.');
+        } else {
+            this.classList.add('is-valid');
+            this.classList.remove('is-invalid');
+        }
+    }
+});
+
+// ✅ Promo checkbox - afficher/cacher champ remise
+document.getElementById('promo').addEventListener('change', function() {
+    const remiseContainer = document.getElementById('remise-container');
+    if (this.checked) {
+        remiseContainer.style.display = 'block';
+    } else {
+        remiseContainer.style.display = 'none';
+        document.getElementById('tauxPromo').value = '';
+        document.getElementById('prix-promo-preview').style.display = 'none';
+        document.getElementById('tauxPromo').classList.remove('is-valid', 'is-invalid');
+    }
+});
+
+// ✅ Remise - entiers uniquement entre 1 et 99
+document.getElementById('tauxPromo').addEventListener('input', function() {
+    this.value = this.value.replace(/[^0-9]/g, '');
+    const val = parseInt(this.value);
+    if (isNaN(val) || val < 1 || val > 99) {
+        this.classList.add('is-invalid');
+        this.classList.remove('is-valid');
+        document.getElementById('prix-promo-preview').style.display = 'none';
+    } else {
+        this.classList.add('is-valid');
+        this.classList.remove('is-invalid');
+        calculerPrixPromo();
+    }
+});
+
+// ✅ Calculer et afficher prix après remise
+function calculerPrixPromo() {
+    const prix = parseInt(document.getElementById('prix').value);
+    const taux = parseInt(document.getElementById('tauxPromo').value);
+    const preview = document.getElementById('prix-promo-preview');
+
+    if (!isNaN(prix) && prix > 0 && !isNaN(taux) && taux >= 1 && taux <= 99) {
+        const prixPromo = prix - (prix * taux / 100);
+        preview.textContent = '💰 Prix après remise : ' + prixPromo.toFixed(2) + ' DT';
+        preview.style.display = 'block';
+    } else {
+        preview.style.display = 'none';
+    }
+}
+
+// ✅ Validation à la soumission
+document.getElementById('formProduit').addEventListener('submit', function(e) {
+    const nom = document.getElementById('nom').value.trim();
+    const prix = parseInt(document.getElementById('prix').value);
+    const categorie = document.getElementById('categorie').value;
+    const promo = document.getElementById('promo').checked;
+    const taux = parseInt(document.getElementById('tauxPromo').value);
+    let valid = true;
+
+    if (nom.length < 3 || nom.length > 50) {
+        document.getElementById('nom').classList.add('is-invalid');
+        valid = false;
+    }
+
+    if (isNaN(prix) || prix <= 0) {
+        document.getElementById('prix').classList.add('is-invalid');
+        valid = false;
+    }
+
+    if (categorie === '') {
+        document.getElementById('categorie').classList.add('is-invalid');
+        valid = false;
+    }
+
+    if (promo && (isNaN(taux) || taux < 1 || taux > 99)) {
+        document.getElementById('tauxPromo').classList.add('is-invalid');
+        valid = false;
+    }
+
+    if (!valid) {
+        e.preventDefault();
+        window.scrollTo(0, 0);
+    }
+});
+</script>
+{% endblock %}

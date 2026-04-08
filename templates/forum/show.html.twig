@@ -1,0 +1,209 @@
+{% extends 'agriculteur.html.twig' %}
+
+{% block title %}{{ thread.title }} - Forum AgriConnect{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <link href="{{ asset('assets/css/forum.css') }}" rel="stylesheet">
+{% endblock %}
+
+{% block body %}
+<div class="forum-header">
+    <div class="container">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb mb-4">
+                <li class="breadcrumb-item"><a href="{{ path('thread_index') }}" class="text-white opacity-75 text-decoration-none">Forum</a></li>
+                <li class="breadcrumb-item active text-white" aria-current="page">{{ thread.category }}</li>
+            </ol>
+        </nav>
+        <h1 class="forum-title">{{ thread.title }}</h1>
+        <div class="d-flex align-items-center gap-3 mt-3">
+            <span class="category-tag bg-white text-success">{{ thread.category }}</span>
+            <span class="text-white opacity-75"><i class="bi bi-clock me-1"></i> Publié le {{ thread.createdAt|date('d M Y à H:i') }}</span>
+        </div>
+    </div>
+</div>
+
+<div class="container pb-5">
+    <div class="row g-4">
+        {# Main Thread Content #}
+        <div class="col-lg-8">
+            <div class="thread-content-card">
+                <div class="d-flex justify-content-between align-items-center mb-4 pb-3 border-bottom">
+                    <div class="thread-user-info">
+                        <div class="avatar-initial" style="width: 45px; height: 45px; font-size: 1.2rem;">
+                            {{ thread.user.nom|first|upper }}
+                        </div>
+                        <div>
+                            <div class="fw-bold text-dark fs-5">{{ thread.user.nom }}</div>
+                            <div class="small text-success fw-bold">Auteur du sujet</div>
+                        </div>
+                    </div>
+                    
+                    {% if thread.user.userId == app.session.get('user_id') or app.session.get('user_role') == 'EXPERT' %}
+                        <div class="dropdown">
+                            <button class="btn btn-outline-secondary btn-sm rounded-pill px-3" type="button" data-bs-toggle="dropdown">
+                                <i class="bi bi-three-dots"></i> Options
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end shadow-sm">
+                                <li><a class="dropdown-item" href="{{ path('thread_edit', {'id': thread.id}) }}"><i class="bi bi-pencil me-2"></i> Modifier</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li>
+                                    <form method="post" action="{{ path('thread_delete', {'id': thread.id}) }}" onsubmit="return confirm('Supprimer ce sujet définitivement ?');">
+                                        <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ thread.id) }}">
+                                        <button class="dropdown-item text-danger"><i class="bi bi-trash me-2"></i> Supprimer</button>
+                                    </form>
+                                </li>
+                            </ul>
+                        </div>
+                    {% endif %}
+                </div>
+
+                <div class="thread-body text-dark py-3" style="font-size: 1.1rem; line-height: 1.8;">
+                    {{ thread.content|nl2br }}
+                </div>
+
+                <div class="d-flex mt-5 pt-4 border-top">
+                    <button id="like-btn" data-url="{{ path('thread_like', {'id': thread.id}) }}" class="btn px-4 rounded-pill border-1 border-secondary-subtle transition-all">
+                        <i class="bi bi-heart me-2 text-danger"></i> <span id="like-count">{{ thread.likeCount }}</span> J'aime
+                    </button>
+                    <button class="btn ms-3 px-4 rounded-pill border-1 border-secondary-subtle">
+                        <i class="bi bi-share me-2"></i> Partager
+                    </button>
+                </div>
+            </div>
+
+            {# Responses Section #}
+            <h4 class="fw-bold text-dark mt-5 mb-4">Réponses ({{ thread.responses|length }})</h4>
+            
+            {% for response in thread.responses %}
+                {% if not response.parentResponse %}
+                    <div class="response-item">
+                        <div class="d-flex justify-content-between align-items-start mb-3">
+                            <div class="d-flex align-items-center gap-2">
+                                <div class="avatar-initial" style="width: 35px; height: 35px; background: #e8f5e9; color: var(--agri-primary);">
+                                    {{ response.user.nom|first|upper }}
+                                </div>
+                                <div>
+                                    <span class="response-author">{{ response.user.nom }}</span>
+                                    <div class="small text-muted" style="font-size: 0.75rem;">{{ response.createdAt|date('d M Y à H:i') }}</div>
+                                </div>
+                            </div>
+
+                            {% if response.user.userId == app.session.get('user_id') or app.session.get('user_role') == 'EXPERT' %}
+                                <div class="dropdown">
+                                    <button class="btn btn-link text-muted p-0" type="button" data-bs-toggle="dropdown">
+                                        <i class="bi bi-three-dots-vertical"></i>
+                                    </button>
+                                    <ul class="dropdown-menu dropdown-menu-end shadow-sm">
+                                        <li><a class="dropdown-item" href="{{ path('response_edit', {'id': response.id}) }}"><i class="bi bi-pencil me-2"></i> Modifier</a></li>
+                                        <li>
+                                            <form method="post" action="{{ path('response_delete', {'id': response.id}) }}" onsubmit="return confirm('Supprimer cette réponse ?');">
+                                                <input type="hidden" name="_token" value="{{ csrf_token('delete_response' ~ response.id) }}">
+                                                <button class="dropdown-item text-danger"><i class="bi bi-trash me-2"></i> Supprimer</button>
+                                            </form>
+                                        </li>
+                                    </ul>
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="response-text text-dark ps-2">
+                            {{ response.content|nl2br }}
+                        </div>
+                    </div>
+                {% endif %}
+            {% else %}
+                <div class="text-center py-4 bg-white rounded-4 shadow-sm">
+                    <p class="text-muted mb-0">Aucune réponse pour le moment. Soyez le premier à répondre !</p>
+                </div>
+            {% endfor %}
+
+            {# Quick Reply Form #}
+            <div class="form-premium-card mt-5">
+                <h5 class="fw-bold text-dark mb-4">Votre réponse</h5>
+                {{ form_start(form) }}
+                    <div class="text-danger mb-3">{{ form_errors(form) }}</div>
+                    <div class="mb-4">
+                        {{ form_widget(form.content, {'attr': {'class': 'form-control form-control-agri', 'placeholder': 'Écrivez votre message ici...', 'rows': '5'}}) }}
+                        <div class="text-danger small mt-1">{{ form_errors(form.content) }}</div>
+                    </div>
+                    <button type="submit" class="btn btn-agri px-5 py-3">
+                        <i class="bi bi-send me-2"></i> Publier la réponse
+                    </button>
+                {{ form_end(form) }}
+            </div>
+        </div>
+
+        {# Sidebar #}
+        <div class="col-lg-4">
+            <div class="sidebar-card">
+                <h5 class="fw-bold mb-3">À propos de l'auteur</h5>
+                <div class="text-center py-3">
+                    <div class="avatar-initial mx-auto mb-3" style="width: 80px; height: 80px; font-size: 2rem;">
+                        {{ thread.user.nom|first|upper }}
+                    </div>
+                    <h6 class="fw-bold">{{ thread.user.nom }}</h6>
+                    <span class="badge bg-soft-success text-success rounded-pill px-3">{{ thread.user.role }}</span>
+                </div>
+                
+                <hr class="my-4">
+                
+                <h6 class="fw-bold mb-3">Conseils de la communauté</h6>
+                <div class="small text-muted">
+                    <p><i class="bi bi-shield-check text-success me-2"></i> Soyez respectueux envers les autres membres.</p>
+                    <p><i class="bi bi-lightbulb text-success me-2"></i> Partagez vos expériences concrètes.</p>
+                    <p><i class="bi bi-bookmark text-success me-2"></i> Précisez votre région pour des conseils adaptés.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .bg-soft-success { background: #e8f5e9; }
+</style>
+{% endblock %}
+
+{% block javascripts %}
+{{ parent() }}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const likeBtn = document.getElementById('like-btn');
+    if (likeBtn) {
+        likeBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            
+            // Optional: prevent double click spam
+            likeBtn.disabled = true;
+
+            fetch(likeBtn.dataset.url, {
+                method: 'POST',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.likes !== undefined) {
+                    document.getElementById('like-count').textContent = data.likes;
+                    
+                    // Add a tiny animation to the heart
+                    const icon = likeBtn.querySelector('.bi-heart');
+                    icon.classList.remove('bi-heart');
+                    icon.classList.add('bi-heart-fill');
+                    icon.style.transform = 'scale(1.2)';
+                    setTimeout(() => icon.style.transform = 'scale(1)', 200);
+                } else if (data.error) {
+                    alert(data.error);
+                }
+            })
+            .catch(error => console.error('Error:', error))
+            .finally(() => {
+                likeBtn.disabled = false;
+            });
+        });
+    }
+});
+</script>
+{% endblock %}

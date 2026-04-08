@@ -1,0 +1,59 @@
+{{ form_start(form, {'attr': {'class': 'row g-4'}}) }}
+    <div class="text-danger col-12">{{ form_errors(form) }}</div>
+    <div class="col-md-12">
+        <label class="form-label fw-bold text-dark"><i class="bi bi-tag me-2 text-agri"></i> Objet de la réclamation</label>
+        {{ form_widget(form.objet, {'attr': {'class': 'form-control form-control-agri'}}) }}
+        <div class="text-danger small mt-1">
+            {{ form_errors(form.objet) }}
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <label class="form-label fw-bold text-dark"><i class="bi bi-calendar-date me-2 text-agri"></i> Date de création</label>
+        {{ form_widget(form.dateCreation) }} {# La classe js-flatpickr est déjà dans le FormType #}
+        <div class="text-danger small mt-1">
+            {{ form_errors(form.dateCreation) }}
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <label class="form-label fw-bold text-dark"><i class="bi bi-list-task me-2 text-agri"></i> Type de réclamation</label>
+        {{ form_widget(form.type, {'attr': {'class': 'form-select form-control-agri'}}) }}
+        <div class="text-danger small mt-1">
+            {{ form_errors(form.type) }}
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <label class="form-label fw-bold text-dark"><i class="bi bi-flag me-2 text-agri"></i> Priorité</label>
+        {{ form_widget(form.priorite, {'attr': {'class': 'form-select form-control-agri'}}) }}
+        <div class="text-danger small mt-1">
+            {{ form_errors(form.priorite) }}
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <label class="form-label fw-bold text-dark"><i class="bi bi-info-circle me-2 text-agri"></i> Statut actuel</label>
+        {{ form_widget(form.statut, {'attr': {'class': 'form-select form-control-agri'}}) }}
+        <div class="text-danger small mt-1">
+            {{ form_errors(form.statut) }}
+        </div>
+    </div>
+
+    <div class="col-md-12">
+        <label class="form-label fw-bold text-dark"><i class="bi bi-chat-left-text me-2 text-agri"></i> Description détaillée</label>
+        {{ form_widget(form.description, {'attr': {'class': 'form-control form-control-agri', 'rows': 5}}) }}
+        <div class="text-danger small mt-1">
+            {{ form_errors(form.description) }}
+        </div>
+    </div>
+
+    <div class="col-12 mt-5 pt-4 border-top d-flex justify-content-between">
+        <a href="{{ path('app_reclamation_index') }}" class="btn btn-agri-outline">
+            <i class="bi bi-x-circle me-1"></i> Annuler
+        </a>
+        <button type="submit" class="btn btn-agri" style="background-color: {% if button_label|default('') == 'Mettre à jour' %}var(--agri-primary){% else %}#dc3545{% endif %};">
+            <i class="bi bi-send me-1"></i> {{ button_label|default('Soumettre la réclamation') }}
+        </button>
+    </div>
+{{ form_end(form) }}

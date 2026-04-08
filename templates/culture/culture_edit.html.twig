@@ -1,0 +1,121 @@
+{% extends 'agriculteur.html.twig' %}
+
+{% block title %}Modifier une Culture{% endblock %}
+
+{% block body %}
+<section style="padding: 120px 0 60px;">
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-lg-6">
+
+            <div class="card shadow border-0" style="border-radius: 15px;">
+                <div class="card-header text-white text-center py-4"
+                     style="background: linear-gradient(to right, #4a7c3a, #66bb6a); border-radius: 15px 15px 0 0;">
+                    <h3>✏️ Modifier la Culture</h3>
+                </div>
+
+                <div class="card-body p-5">
+
+                    {% if erreurs is defined and erreurs|length > 0 %}
+                        <div class="alert alert-danger">
+                            <ul class="mb-0">
+                                {% for erreur in erreurs %}
+                                    <li>{{ erreur }}</li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    {% endif %}
+
+                    <form method="post" id="formCulture" novalidate>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">🌿 Nom *</label>
+                            <input type="text" name="nom" id="nom" class="form-control"
+                                   value="{{ culture.nom }}" required>
+                            <div class="invalid-feedback">Le nom est obligatoire et doit contenir seulement des lettres.</div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">📂 Type *</label>
+                            <select name="type" id="type" class="form-select" required>
+                                <option value="">-- Choisir un type --</option>
+                                {% for option in ['Céréales','Légumes','Fruits','Oléagineux','Fourragères','Autre'] %}
+                                    <option value="{{ option }}" {{ culture.type == option ? 'selected' : '' }}>
+                                        {{ option }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                            <div class="invalid-feedback">Veuillez choisir un type.</div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">📐 Superficie (hectares) *</label>
+                            <input type="number" step="0.01" name="superficie" id="superficie" class="form-control"
+                                   value="{{ culture.superficie }}" min="0.01" required>
+                            <div class="invalid-feedback">La superficie doit être positive.</div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">📍 Localisation *</label>
+                            <input type="text" name="localisation" id="localisation" class="form-control"
+                                   value="{{ culture.localisation }}" required>
+                            <div class="invalid-feedback">La localisation est obligatoire et doit contenir seulement des lettres.</div>
+                        </div>
+
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-success flex-grow-1">
+                                <i class="bi bi-check-circle"></i> Modifier
+                            </button>
+                            <a href="{{ path('app_culture_index') }}" class="btn btn-outline-secondary">
+                                <i class="bi bi-arrow-left"></i> Retour
+                            </a>
+                        </div>
+                    </form>
+
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+</section>
+{% endblock %}
+
+{% block javascripts %}
+<script>
+const lettersRegex = /^[a-zA-ZÀ-ÿ\s\-]+$/;
+
+['nom','localisation'].forEach(id => {
+    document.getElementById(id).addEventListener('input', function() {
+        if(this.value.trim() === '' || !lettersRegex.test(this.value)) {
+            this.classList.add('is-invalid'); this.classList.remove('is-valid');
+        } else {
+            this.classList.add('is-valid'); this.classList.remove('is-invalid');
+        }
+    });
+});
+
+['type','superficie'].forEach(id => {
+    document.getElementById(id).addEventListener('input', function() {
+        if(this.value === '' || (id==='superficie' && parseFloat(this.value)<=0)) {
+            this.classList.add('is-invalid'); this.classList.remove('is-valid');
+        } else {
+            this.classList.add('is-valid'); this.classList.remove('is-invalid');
+        }
+    });
+});
+
+document.getElementById('formCulture').addEventListener('submit', function(e) {
+    let valid = true;
+    ['nom','localisation'].forEach(id=>{
+        const el = document.getElementById(id);
+        if(el.value.trim()==='' || !lettersRegex.test(el.value)) { el.classList.add('is-invalid'); valid=false; }
+    });
+    const type = document.getElementById('type');
+    if(type.value===''){ type.classList.add('is-invalid'); valid=false; }
+    const sup = parseFloat(document.getElementById('superficie').value);
+    if(isNaN(sup)||sup<=0){ document.getElementById('superficie').classList.add('is-invalid'); valid=false; }
+
+    if(!valid){ e.preventDefault(); window.scrollTo(0,0); }
+});
+</script>
+{% endblock %}

@@ -85,55 +85,146 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\OneToMany(mappedBy: 'user', targetEntity: Response::class)]
     private Collection $responses;
 
+    #[ORM\OneToMany(mappedBy: 'user', targetEntity: Commande::class)]
+    private Collection $commandes;
+
     public function __construct()
     {
-        $this->evenements   = new ArrayCollection();
+        $this->evenements = new ArrayCollection();
         $this->reclamations = new ArrayCollection();
-        $this->threads      = new ArrayCollection();
-        $this->responses    = new ArrayCollection();
+        $this->threads = new ArrayCollection();
+        $this->responses = new ArrayCollection();
+        $this->commandes = new ArrayCollection();
         $this->dateCreation = new \DateTime();
     }
 
-    // ════════════════════════════════════════════════════════════
-    // GETTERS & SETTERS
-    // ════════════════════════════════════════════════════════════
+    public function getUserId(): ?int
+    {
+        return $this->userId;
+    }
 
-    public function getUserId(): ?int { return $this->userId; }
+    public function getNom(): ?string
+    {
+        return $this->nom;
+    }
 
-    public function getNom(): ?string { return $this->nom; }
-    public function setNom(?string $nom): self { $this->nom = $nom; return $this; }
+    public function setNom(?string $nom): self
+    {
+        $this->nom = $nom;
+        return $this;
+    }
 
-    public function getEmail(): ?string { return $this->email; }
-    public function setEmail(?string $email): self { $this->email = $email; return $this; }
+    public function getEmail(): ?string
+    {
+        return $this->email;
+    }
 
-    public function getTelephone(): ?string { return $this->telephone; }
-    public function setTelephone(?string $telephone): self { $this->telephone = $telephone; return $this; }
+    public function setEmail(?string $email): self
+    {
+        $this->email = $email;
+        return $this;
+    }
 
-    public function getMotDePasse(): ?string { return $this->motDePasse; }
-    public function setMotDePasse(?string $motDePasse): self { $this->motDePasse = $motDePasse; return $this; }
+    public function getTelephone(): ?string
+    {
+        return $this->telephone;
+    }
 
-    public function getPlainPassword(): ?string { return $this->plainPassword; }
-    public function setPlainPassword(?string $plainPassword): self { $this->plainPassword = $plainPassword; return $this; }
+    public function setTelephone(?string $telephone): self
+    {
+        $this->telephone = $telephone;
+        return $this;
+    }
 
-    public function getRole(): ?string { return $this->role; }
-    public function setRole(?string $role): self { $this->role = $role; return $this; }
+    public function getMotDePasse(): ?string
+    {
+        return $this->motDePasse;
+    }
 
-    public function getEtatCompte(): ?string { return $this->etatCompte; }
-    public function setEtatCompte(?string $etatCompte): self { $this->etatCompte = $etatCompte; return $this; }
+    public function setMotDePasse(?string $motDePasse): self
+    {
+        $this->motDePasse = $motDePasse;
+        return $this;
+    }
 
-    public function getDateCreation(): ?\DateTimeInterface { return $this->dateCreation; }
-    public function setDateCreation(?\DateTimeInterface $dateCreation): self { $this->dateCreation = $dateCreation; return $this; }
+    public function getPlainPassword(): ?string
+    {
+        return $this->plainPassword;
+    }
 
-    // ════════════════════════════════════════════════════════════
-    // COLLECTIONS — Evenements
-    // ════════════════════════════════════════════════════════════
+    public function setPlainPassword(?string $plainPassword): self
+    {
+        $this->plainPassword = $plainPassword;
+        return $this;
+    }
 
-    public function getEvenements(): Collection { return $this->evenements; }
+    public function getRole(): ?string
+    {
+        return $this->role;
+    }
+
+    public function setRole(?string $role): self
+    {
+        $this->role = $role;
+        return $this;
+    }
+
+    public function getEtatCompte(): ?string
+    {
+        return $this->etatCompte;
+    }
+
+    public function setEtatCompte(?string $etatCompte): self
+    {
+        $this->etatCompte = $etatCompte;
+        return $this;
+    }
+
+    public function getDateCreation(): ?\DateTimeInterface
+    {
+        return $this->dateCreation;
+    }
+
+    public function setDateCreation(?\DateTimeInterface $dateCreation): self
+    {
+        $this->dateCreation = $dateCreation;
+        return $this;
+    }
+
+    public function getUserIdentifier(): string
+    {
+        return (string) $this->email;
+    }
+
+    public function getRoles(): array
+    {
+        $roles = [$this->role ?: 'ROLE_USER'];
+        $roles[] = 'ROLE_USER';
+        return array_unique($roles);
+    }
+
+    public function getPassword(): ?string
+    {
+        return $this->motDePasse;
+    }
+
+    public function eraseCredentials(): void
+    {
+        $this->plainPassword = null;
+    }
+
+    /**
+     * @return Collection<int, Evenement>
+     */
+    public function getEvenements(): Collection
+    {
+        return $this->evenements;
+    }
 
     public function addEvenement(Evenement $evenement): self
     {
         if (!$this->evenements->contains($evenement)) {
-            $this->evenements[] = $evenement;
+            $this->evenements->add($evenement);
             $evenement->setOrganisateur($this);
         }
         return $this;
@@ -149,16 +240,18 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         return $this;
     }
 
-    // ════════════════════════════════════════════════════════════
-    // COLLECTIONS — Reclamations
-    // ════════════════════════════════════════════════════════════
-
-    public function getReclamations(): Collection { return $this->reclamations; }
+    /**
+     * @return Collection<int, Reclamation>
+     */
+    public function getReclamations(): Collection
+    {
+        return $this->reclamations;
+    }
 
     public function addReclamation(Reclamation $reclamation): self
     {
         if (!$this->reclamations->contains($reclamation)) {
-            $this->reclamations[] = $reclamation;
+            $this->reclamations->add($reclamation);
             $reclamation->setUtilisateur($this);
         }
         return $this;
@@ -174,16 +267,18 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         return $this;
     }
 
-    // ════════════════════════════════════════════════════════════
-    // COLLECTIONS — Threads
-    // ════════════════════════════════════════════════════════════
-
-    public function getThreads(): Collection { return $this->threads; }
+    /**
+     * @return Collection<int, Thread>
+     */
+    public function getThreads(): Collection
+    {
+        return $this->threads;
+    }
 
     public function addThread(Thread $thread): self
     {
         if (!$this->threads->contains($thread)) {
-            $this->threads[] = $thread;
+            $this->threads->add($thread);
             $thread->setUser($this);
         }
         return $this;
@@ -199,16 +294,18 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         return $this;
     }
 
-    // ════════════════════════════════════════════════════════════
-    // COLLECTIONS — Responses
-    // ════════════════════════════════════════════════════════════
-
-    public function getResponses(): Collection { return $this->responses; }
+    /**
+     * @return Collection<int, Response>
+     */
+    public function getResponses(): Collection
+    {
+        return $this->responses;
+    }
 
     public function addResponse(Response $response): self
     {
         if (!$this->responses->contains($response)) {
-            $this->responses[] = $response;
+            $this->responses->add($response);
             $response->setUser($this);
         }
         return $this;
@@ -224,35 +321,30 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         return $this;
     }
 
-    // ════════════════════════════════════════════════════════════
-    // MÉTHODES SYMFONY SECURITY
-    // ════════════════════════════════════════════════════════════
-
     /**
-     * Identifiant unique pour l'authentification (remplace getUsername()).
+     * @return Collection<int, Commande>
      */
-    public function getUserIdentifier(): string
+    public function getCommandes(): Collection
     {
-        return (string) $this->email;
+        return $this->commandes;
     }
 
-    public function getRoles(): array
+    public function addCommande(Commande $commande): self
     {
-        $roles = [$this->role ?: 'ROLE_USER'];
-        $roles[] = 'ROLE_USER';
-        return array_unique($roles);
+        if (!$this->commandes->contains($commande)) {
+            $this->commandes->add($commande);
+            $commande->setUser($this);
+        }
+        return $this;
     }
 
-    /**
-     * Retourne le mot de passe hashé (requis par PasswordAuthenticatedUserInterface).
-     */
-    public function getPassword(): ?string
+    public function removeCommande(Commande $commande): self
     {
-        return $this->motDePasse;
-    }
-
-    public function eraseCredentials(): void
-    {
-        $this->plainPassword = null;
+        if ($this->commandes->removeElement($commande)) {
+            if ($commande->getUser() === $this) {
+                $commande->setUser(null);
+            }
+        }
+        return $this;
     }
 }

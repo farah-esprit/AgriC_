@@ -80,4 +80,53 @@ class Produit
         }
         return $this->prix;
     }
+
+    public function isActif(): ?bool
+    {
+        return $this->actif;
+    }
+
+    public function isPromo(): ?bool
+    {
+        return $this->promo;
+    }
+
+    public function addCommande(Commande $commande): static
+    {
+        if (!$this->commandes->contains($commande)) {
+            $this->commandes->add($commande);
+            $commande->setProduit($this);
+        }
+
+        return $this;
+    }
+
+    public function removeCommande(Commande $commande): static
+    {
+        if ($this->commandes->removeElement($commande)) {
+            // set the owning side to null (unless already changed)
+            if ($commande->getProduit() === $this) {
+                $commande->setProduit(null);
+            }
+        }
+
+        return $this;
+    }
+
+    public function setStock(?Stock $stock): static
+    {
+        // unset the owning side of the relation if necessary
+        if ($stock === null && $this->stock !== null) {
+            $this->stock->setProduit(null);
+        }
+
+        // set the owning side of the relation if necessary
+        if ($stock !== null && $stock->getProduit() !== $this) {
+            $stock->setProduit($this);
+        }
+
+        $this->stock = $stock;
+
+        return $this;
+    }
 }

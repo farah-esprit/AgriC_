@@ -41,11 +41,10 @@ class Admin implements UserInterface, PasswordAuthenticatedUserInterface
         $this->dateCreation = new \DateTime();
     }
 
-    // =========================
-    // GETTERS / SETTERS
-    // =========================
-
-    public function getId(): ?int { return $this->id; }
+    public function getId(): ?int
+    {
+        return $this->id;
+    }
 
     public function getNom(): ?string { return $this->nom; }
     public function setNom(string $nom): self { $this->nom = $nom; return $this; }
@@ -63,11 +62,11 @@ class Admin implements UserInterface, PasswordAuthenticatedUserInterface
     public function setTelephone(?string $telephone): self { $this->telephone = $telephone; return $this; }
 
     public function getDateCreation(): ?\DateTimeInterface { return $this->dateCreation; }
-    public function setDateCreation(?\DateTimeInterface $dateCreation): self { $this->dateCreation = $dateCreation; return $this; }
-
-    // =========================
-    // USER INTERFACE METHODS
-    // =========================
+    public function setDateCreation(?\DateTimeInterface $dateCreation): self
+    {
+        $this->dateCreation = $dateCreation;
+        return $this;
+    }
 
     /**
      * Identifiant unique de l'utilisateur (remplace getUsername() en Symfony 6)

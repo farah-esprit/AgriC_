@@ -4,6 +4,7 @@ namespace App\Entity;
 
 use App\Repository\CommandeRepository;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity(repositoryClass: CommandeRepository::class)]
 #[ORM\Table(name: 'commande')]
@@ -15,23 +16,31 @@ class Commande
     private ?int $idCommande = null;
 
     #[ORM\Column(type: 'string', nullable: true)]
+    #[Assert\NotBlank(message: 'La date de commande est obligatoire.')]
     private ?string $dateCommande = null;
 
     #[ORM\Column(type: 'string', nullable: true)]
+    #[Assert\NotBlank(message: 'Le statut est obligatoire.')]
     private ?string $statut = null;
 
     #[ORM\Column(type: 'integer', nullable: true)]
+    #[Assert\NotBlank(message: 'La quantité est obligatoire.')]
+    #[Assert\PositiveOrZero(message: 'La quantité doit être positive ou nulle.')]
     private ?int $quantiteCommandee = null;
 
     #[ORM\Column(type: 'float', nullable: true)]
+    #[Assert\NotBlank(message: 'Le prix total est obligatoire.')]
+    #[Assert\PositiveOrZero(message: 'Le prix total doit être positif ou nul.')]
     private ?float $prixTotal = null;
 
     #[ORM\ManyToOne(targetEntity: Produit::class, inversedBy: 'commandes')]
     #[ORM\JoinColumn(name: 'id_produit', referencedColumnName: 'id_produit')]
+    #[Assert\NotBlank(message: 'Le produit est obligatoire.')]
     private ?Produit $produit = null;
 
     #[ORM\ManyToOne(targetEntity: User::class, inversedBy: 'commandes')]
     #[ORM\JoinColumn(name: 'user_id', referencedColumnName: 'user_id')]
+    #[Assert\NotBlank(message: "L'utilisateur est obligatoire.")]
     private ?User $user = null;
 
     public function getIdCommande(): ?int { return $this->idCommande; }

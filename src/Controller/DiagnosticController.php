@@ -3,6 +3,7 @@
 namespace App\Controller;
 
 use App\Entity\Diagnostic;
+use App\Form\DiagnosticType;
 use App\Repository\CultureRepository;
 use App\Repository\DiagnosticRepository;
 use Doctrine\ORM\EntityManagerInterface;
@@ -27,9 +28,9 @@ class DiagnosticController extends AbstractController
         $dateFin       = $request->query->get('dateFin');
 
         $diagnostics = match (true) {
-            (bool) $search                    => $diagnosticRepository->search($search),
-            (bool) $filterCulture             => $diagnosticRepository->filterByCulture($filterCulture),
-            (bool) ($dateDebut && $dateFin)   => $diagnosticRepository->filterByDateRange($dateDebut, $dateFin),
+            (bool) $search                    => $diagnosticRepository->search((string) $search),
+            (bool) $filterCulture             => $diagnosticRepository->filterByCulture((string) $filterCulture),
+            (bool) ($dateDebut && $dateFin)   => $diagnosticRepository->filterByDateRange(new \DateTime((string) $dateDebut), new \DateTime((string) $dateFin)),
             default                           => $diagnosticRepository->findAll(),
         };
 
@@ -55,33 +56,21 @@ class DiagnosticController extends AbstractController
     public function new(
         Request $request,
         EntityManagerInterface $em,
-        ValidatorInterface $validator,
         CultureRepository $cultureRepository
     ): Response {
-        $erreurs = [];
+        $diagnostic = new Diagnostic();
+        $form = $this->createForm(DiagnosticType::class, $diagnostic);
+        $form->handleRequest($request);
 
-        if ($request->isMethod('POST')) {
-            $diagnostic = new Diagnostic();
-            $diagnostic->setDateDiagnostic($request->request->get('dateDiagnostic'));
-            $diagnostic->setSymptomes($request->request->get('symptomes'));
-            $diagnostic->setInformationsComplementaires($request->request->get('informationsComplementaires'));
-            $diagnostic->setIdCulture((int) $request->request->get('idCulture'));
-
-            $violations = $validator->validate($diagnostic);
-            if (count($violations) > 0) {
-                foreach ($violations as $violation) {
-                    $erreurs[] = $violation->getMessage();
-                }
-            } else {
-                $em->persist($diagnostic);
-                $em->flush();
-                $this->addFlash('success', 'Diagnostic ajouté avec succès !');
-                return $this->redirectToRoute('app_diagnostic_index');
-            }
+        if ($form->isSubmitted() && $form->isValid()) {
+            $em->persist($diagnostic);
+            $em->flush();
+            $this->addFlash('success', 'Diagnostic ajouté avec succès !');
+            return $this->redirectToRoute('app_diagnostic_index');
         }
 
         return $this->render('diagnostic/diagnostic_new.html.twig', [
-            'erreurs'  => $erreurs,
+            'form'     => $form->createView(),
             'cultures' => $cultureRepository->findAll(),
         ]);
     }
@@ -104,33 +93,21 @@ class DiagnosticController extends AbstractController
         Request $request,
         Diagnostic $diagnostic,
         EntityManagerInterface $em,
-        ValidatorInterface $validator,
         CultureRepository $cultureRepository
     ): Response {
-        $erreurs = [];
+        $form = $this->createForm(DiagnosticType::class, $diagnostic);
+        $form->handleRequest($request);
 
-        if ($request->isMethod('POST')) {
-            $diagnostic->setDateDiagnostic($request->request->get('dateDiagnostic'));
-            $diagnostic->setSymptomes($request->request->get('symptomes'));
-            $diagnostic->setInformationsComplementaires($request->request->get('informationsComplementaires'));
-            $diagnostic->setIdCulture((int) $request->request->get('idCulture'));
-
-            $violations = $validator->validate($diagnostic);
-            if (count($violations) > 0) {
-                foreach ($violations as $violation) {
-                    $erreurs[] = $violation->getMessage();
-                }
-            } else {
-                $em->flush();
-                $this->addFlash('success', 'Diagnostic modifié avec succès !');
-                return $this->redirectToRoute('app_diagnostic_index');
-            }
+        if ($form->isSubmitted() && $form->isValid()) {
+            $em->flush();
+            $this->addFlash('success', 'Diagnostic modifié avec succès !');
+            return $this->redirectToRoute('app_diagnostic_index');
         }
 
         return $this->render('diagnostic/diagnostic_edit.html.twig', [
             'diagnostic' => $diagnostic,
+            'form'       => $form->createView(),
             'cultures'   => $cultureRepository->findAll(),
-            'erreurs'    => $erreurs,
         ]);
     }
 

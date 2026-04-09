@@ -1,0 +1,197 @@
+/* AgriConnect Forum - Premium Design System */
+:root {
+    --agri-primary: #1B4332;       /* Vert Forêt profond */
+    --agri-secondary: #7BA00E;     /* Vert Printemps */
+    --agri-accent: #95D5B2;        /* Vert Menthe doux */
+    --agri-bg: #F8FBF8;           /* Fond très légèrement verté */
+    --agri-card-bg: #ffffff;
+    --agri-text-dark: #1a1a1a;
+    --agri-text-muted: #6c757d;
+    --agri-border: #e9ecef;
+    --agri-shadow-sm: 0 2px 8px rgba(0,0,0,0.05);
+    --agri-shadow: 0 10px 30px rgba(0,0,0,0.06);
+    --agri-radius: 16px;
+    --agri-radius-lg: 24px;
+}
+
+body {
+    background-color: var(--agri-bg);
+    color: var(--agri-text-dark);
+}
+
+/* Header & Banner */
+.forum-header {
+    background: linear-gradient(135deg, var(--agri-primary) 0%, #2D6A4F 100%);
+    padding: 120px 0 60px 0;
+    color: white;
+    border-radius: 0 0 var(--agri-radius-lg) var(--agri-radius-lg);
+    margin-bottom: 40px;
+}
+
+.forum-title {
+    font-weight: 800;
+    font-size: 2.8rem;
+    letter-spacing: -1px;
+}
+
+.forum-subtitle {
+    opacity: 0.9;
+    font-size: 1.1rem;
+    max-width: 600px;
+    margin: 10px auto 0;
+}
+
+/* Sidebar Members */
+.sidebar-card {
+    background: white;
+    border-radius: var(--agri-radius);
+    padding: 24px;
+    box-shadow: var(--agri-shadow-sm);
+    position: sticky;
+    top: 100px;
+}
+
+.member-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--agri-border);
+}
+
+.member-item:last-child { border: none; }
+
+.status-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: #4CAF50;
+    border: 2px solid white;
+}
+
+/* Search Bar Floating */
+.search-container {
+    background: white;
+    border-radius: 50px;
+    padding: 8px 12px;
+    box-shadow: var(--agri-shadow);
+    transform: translateY(-50%);
+    margin-bottom: 20px;
+}
+
+.search-input {
+    border: none;
+    padding-left: 15px;
+    font-weight: 500;
+}
+
+.search-input:focus { box-shadow: none; }
+
+/* Forum Cards */
+.forum-card {
+    background: white;
+    border-radius: var(--agri-radius);
+    padding: 28px;
+    height: 100%;
+    border: 1px solid transparent;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: var(--agri-shadow-sm);
+}
+
+.forum-card:hover {
+    transform: translateY(-6px);
+    box-shadow: var(--agri-shadow);
+    border-color: var(--agri-accent);
+}
+
+.category-tag {
+    background: #EAF4EA;
+    color: var(--agri-primary);
+    padding: 4px 14px;
+    border-radius: 50px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+
+.thread-user-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 0.85rem;
+    color: var(--agri-text-muted);
+}
+
+.avatar-initial {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: var(--agri-secondary);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+}
+
+/* Buttons */
+.btn-agri {
+    background-color: var(--agri-secondary);
+    color: white;
+    border: none;
+    border-radius: 50px;
+    padding: 10px 24px;
+    font-weight: 600;
+    transition: all 0.2s;
+}
+
+.btn-agri:hover {
+    background-color: var(--agri-primary);
+    color: white;
+    transform: scale(1.02);
+}
+
+/* Show Thread Page */
+.thread-content-card {
+    background: white;
+    border-radius: var(--agri-radius);
+    padding: 40px;
+    box-shadow: var(--agri-shadow-sm);
+    border: 1px solid var(--agri-border);
+}
+
+.response-item {
+    background: white;
+    border-radius: var(--agri-radius);
+    padding: 20px;
+    margin-bottom: 20px;
+    border-left: 4px solid var(--agri-accent);
+    box-shadow: var(--agri-shadow-sm);
+}
+
+.response-author {
+    font-weight: 700;
+    color: var(--agri-primary);
+}
+
+/* Forms */
+.form-premium-card {
+    background: white;
+    border-radius: var(--agri-radius-lg);
+    padding: 40px;
+    box-shadow: var(--agri-shadow);
+}
+
+.form-control-agri {
+    border-radius: 12px;
+    padding: 14px 20px;
+    border: 1px solid #dee2e6;
+    background: #fcfcfc;
+    transition: all 0.2s;
+}
+
+.form-control-agri:focus {
+    border-color: var(--agri-secondary);
+    box-shadow: 0 0 0 4px rgba(123, 160, 14, 0.1);
+    background: white;
+}

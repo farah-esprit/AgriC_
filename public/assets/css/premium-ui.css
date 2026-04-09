@@ -1,0 +1,102 @@
+/* AgriConnect Premium UI System - Global Styles */
+:root {
+    --agri-primary: #1B4332;
+    --agri-secondary: #7BA00E;
+    --agri-accent: #95D5B2;
+    --agri-bg: #F8FBF8;
+    --agri-card-bg: #ffffff;
+    --agri-text-dark: #1a1a1a;
+    --agri-text-muted: #6c757d;
+    --agri-border: #e9ecef;
+    --agri-shadow-sm: 0 2px 8px rgba(0,0,0,0.05);
+    --agri-shadow: 0 10px 30px rgba(0,0,0,0.06);
+    --agri-radius: 16px;
+    --agri-radius-lg: 24px;
+}
+
+/* Premium Header Banner */
+.premium-header {
+    background: linear-gradient(135deg, var(--agri-primary) 0%, #2D6A4F 100%);
+    padding: 100px 0 50px 0;
+    color: white;
+    border-radius: 0 0 var(--agri-radius-lg) var(--agri-radius-lg);
+    margin-bottom: 40px;
+}
+
+.premium-title {
+    font-weight: 800;
+    font-size: 2.5rem;
+    letter-spacing: -1px;
+}
+
+.premium-subtitle {
+    opacity: 0.9;
+    font-size: 1.1rem;
+    max-width: 600px;
+    margin: 10px auto 0;
+}
+
+/* Premium Form Cards */
+.form-premium-card {
+    background: white;
+    border-radius: var(--agri-radius-lg);
+    padding: 40px;
+    box-shadow: var(--agri-shadow);
+    border: 1px solid rgba(0,0,0,0.05);
+}
+
+.form-control-agri {
+    border-radius: 12px;
+    padding: 12px 18px;
+    border: 1px solid #dee2e6;
+    background: #fcfcfc;
+    transition: all 0.2s;
+    font-size: 1rem;
+}
+
+.form-control-agri:focus {
+    border-color: var(--agri-secondary);
+    box-shadow: 0 0 0 4px rgba(123, 160, 14, 0.1);
+    background: white;
+    outline: none;
+}
+
+/* Buttons */
+.btn-agri {
+    background-color: var(--agri-secondary);
+    color: white;
+    border: none;
+    border-radius: 50px;
+    padding: 12px 32px;
+    font-weight: 600;
+    transition: all 0.2s;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.btn-agri:hover {
+    background-color: var(--agri-primary);
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.btn-agri-outline {
+    background: transparent;
+    color: var(--agri-text-muted);
+    border: 1px solid var(--agri-border);
+    border-radius: 50px;
+    padding: 12px 32px;
+    font-weight: 600;
+    transition: all 0.2s;
+}
+
+.btn-agri-outline:hover {
+    background: #f8f9fa;
+    color: var(--agri-text-dark);
+}
+
+/* Utils */
+.text-agri { color: var(--agri-primary); }
+.bg-soft-agri { background: #EAF4EA; }

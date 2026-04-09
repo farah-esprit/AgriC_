@@ -12,6 +12,13 @@
             <div class="d-flex gap-2 align-items-center flex-wrap">
                 <input type="text" id="searchInput" class="form-control form-control-sm"
                        placeholder="🔍 Rechercher par nom ou email..." style="width:260px;">
+                <select id="roleFilter" class="form-select form-select-sm" style="width: 150px;">
+                    <option value="">Tous les rôles</option>
+                    <option value="agriculteur">Agriculteur</option>
+                    <option value="fournisseur">Fournisseur</option>
+                    <option value="expert">Expert</option>
+                    <option value="admin">Admin</option>
+                </select>
                 <a href="{{ path('admin_users_export_csv') }}" class="btn btn-sm btn-success">
                     <i class="fas fa-file-csv"></i> Exporter CSV
                 </a>
@@ -36,6 +43,7 @@
                         <tr
                             data-nom="{{ user.nom|lower }}"
                             data-email="{{ user.email|lower }}"
+                            data-role="{{ user.role|lower }}"
                         >
                             <td>{{ user.nom }}</td>
                             <td>{{ user.email }}</td>
@@ -92,20 +100,25 @@
 <script>
 document.addEventListener('DOMContentLoaded', function () {
     const searchInput = document.getElementById('searchInput');
-    if (!searchInput) return;
+    const roleFilter = document.getElementById('roleFilter');
+    if (!searchInput || !roleFilter) return;
 
-    searchInput.addEventListener('input', function () {
-        const search = this.value.toLowerCase().trim();
+    function filterTable() {
+        const search = searchInput.value.toLowerCase().trim();
+        const role = roleFilter.value.toLowerCase();
         const rows = document.querySelectorAll('#usersTableBody tr');
         let visibleCount = 0;
 
         rows.forEach(function(row) {
             const nom        = row.getAttribute('data-nom') || '';
             const emailFull  = row.getAttribute('data-email') || '';
-            const emailLocal = emailFull.split('@')[0]; // partie avant le @
+            const emailLocal = emailFull.split('@')[0];
+            const rowRole    = row.getAttribute('data-role') || '';
 
-            // ✅ startsWith : affiche uniquement si le nom OU l'email commence par la recherche
-            if (search === '' || nom.startsWith(search) || emailLocal.startsWith(search)) {
+            const matchSearch = (search === '' || nom.startsWith(search) || emailLocal.startsWith(search));
+            const matchRole   = (role === '' || rowRole === role);
+
+            if (matchSearch && matchRole) {
                 row.style.display = '';
                 visibleCount++;
             } else {
@@ -114,7 +127,10 @@ document.addEventListener('DOMContentLoaded', function () {
         });
 
         document.getElementById('noResults').style.display = visibleCount === 0 ? 'block' : 'none';
-    });
+    }
+
+    searchInput.addEventListener('input', filterTable);
+    roleFilter.addEventListener('change', filterTable);
 });
 </script>
 {% endblock %}

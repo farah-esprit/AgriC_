@@ -12,7 +12,7 @@ class Reclamation
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
-    #[ORM\Column(type: 'integer')]
+    #[ORM\Column(type: 'integer', name: 'id_reclamation')]
     private ?int $idReclamation = null;
 
     #[ORM\Column(type: 'string', nullable: true)]
@@ -38,7 +38,7 @@ class Reclamation
     private ?string $type = null;
 
     #[ORM\ManyToOne(targetEntity: User::class, inversedBy: 'reclamations')]
-    #[ORM\JoinColumn(name: 'user_id', referencedColumnName: 'user_id', nullable: true)]
+    #[ORM\JoinColumn(name: 'id_utilisateur', referencedColumnName: 'user_id', nullable: true)]
     private ?User $utilisateur = null;
 
     public function getIdReclamation(): ?int { return $this->idReclamation; }

@@ -37,7 +37,10 @@
                         </div>
 
                         <div class="mb-4">
-                            {{ form_label(form.password, 'Mot de passe', {'label_attr': {'class': 'form-label fw-semibold'}}) }}
+                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                {{ form_label(form.password, 'Mot de passe', {'label_attr': {'class': 'form-label fw-semibold mb-0'}}) }}
+                                <a href="{{ path('app_forgot_password_request') }}" class="small text-success text-decoration-none fw-bold">Mot de passe oublié ?</a>
+                            </div>
                             {{ form_widget(form.password, {'attr': {'class': 'form-control'}}) }}
                             <div class="text-danger small mt-1">{{ form_errors(form.password) }}</div>
                         </div>
@@ -45,6 +48,15 @@
                         {{ form_widget(form.submit, {'attr': {'class': 'btn btn-success w-100', 'style':'background:linear-gradient(135deg,#4a7c3a,#66bb6a);border:none;'}}) }}
 
                         {{ form_end(form) }}
+
+                        <div class="text-center my-3">
+                            <span class="text-muted small fw-bold">OU</span>
+                        </div>
+                        
+                        <a href="{{ path('connect_google_start') }}" class="btn btn-outline-dark w-100 d-flex align-items-center justify-content-center gap-2 fw-semibold" style="border-radius:8px; padding: 10px;">
+                            <img src="https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_%22G%22_logo.svg" alt="Google Logo" style="width:20px;height:20px;">
+                            Continuer avec Google
+                        </a>
 
                         <hr class="my-4">
 

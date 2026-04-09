@@ -13,6 +13,8 @@ use Symfony\Component\HttpFoundation\Session\SessionInterface;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\String\Slugger\SluggerInterface;
+use Symfony\Component\HttpFoundation\File\Exception\FileException;
 
 class AdminController extends AbstractController
 {
@@ -43,7 +45,8 @@ class AdminController extends AbstractController
         Request $request,
         EntityManagerInterface $em,
         SessionInterface $session,
-        UserPasswordHasherInterface $passwordHasher
+        UserPasswordHasherInterface $passwordHasher,
+        SluggerInterface $slugger
     ): Response {
         if (!$session->get('admin_id')) {
             return $this->redirectToRoute('admin_login');
@@ -65,6 +68,24 @@ class AdminController extends AbstractController
             if ($plainPassword) {
                 $hashedPassword = $passwordHasher->hashPassword($admin, $plainPassword);
                 $admin->setPassword($hashedPassword);
+            }
+
+            /** @var \Symfony\Component\HttpFoundation\File\UploadedFile $photoFile */
+            $photoFile = $form->get('photoFile')->getData();
+            if ($photoFile) {
+                $originalFilename = pathinfo($photoFile->getClientOriginalName(), PATHINFO_FILENAME);
+                $safeFilename = $slugger->slug($originalFilename);
+                $newFilename = $safeFilename.'-'.uniqid().'.'.$photoFile->guessExtension();
+
+                try {
+                    $photoFile->move(
+                        $this->getParameter('kernel.project_dir').'/public/uploads/admins',
+                        $newFilename
+                    );
+                    $admin->setPhoto($newFilename);
+                } catch (FileException $e) {
+                    $this->addFlash('error', 'Erreur lors du téléchargement de l\'image.');
+                }
             }
 
             $em->flush();
@@ -162,7 +183,7 @@ class AdminController extends AbstractController
             $action = ($newStatus === 'BLOQUE') ? 'bloqué' : 'activé';
             $this->addFlash('success', "✅ Compte de {$user->getNom()} {$action} avec succès.");
         } else {
-            $this->addFlash('error', '❌ Utilisateur introuvable.');
+            $this->addFlash('error', '❌ Votre compte est désactivé pour le moment .');
         }
 
         return $this->redirectToRoute('admin_users');

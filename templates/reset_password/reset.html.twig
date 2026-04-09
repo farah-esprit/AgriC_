@@ -1,0 +1,42 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Nouveau mot de passe - AgriConnect{% endblock %}
+
+{% block body %}
+<section style="padding: 120px 0 60px;">
+    <div class="container">
+
+        <div class="row justify-content-center">
+            <div class="col-md-5">
+
+                <div class="card shadow border-0" style="border-radius:15px;">
+                    <div class="card-header text-white text-center py-4" style="background: linear-gradient(135deg,#4a7c3a,#66bb6a); border-radius:15px 15px 0 0;">
+                        <h4 class="mb-0 fw-bold">Nouveau Mot de passe</h4>
+                        <small class="opacity-75">Sécurisez votre compte</small>
+                    </div>
+
+                    <div class="card-body p-5">
+                        <form method="post" action="{{ path('app_reset_password', {'token': token}) }}">
+                            <div class="mb-3">
+                                <label for="password" class="form-label fw-semibold">Nouveau mot de passe</label>
+                                <input type="password" name="password" id="password" class="form-control" required autofocus>
+                            </div>
+
+                            <div class="mb-4">
+                                <label for="confirm_password" class="form-label fw-semibold">Confirmer le mot de passe</label>
+                                <input type="password" name="confirm_password" id="confirm_password" class="form-control" required>
+                            </div>
+
+                            <button class="btn btn-success w-100" type="submit" style="background:linear-gradient(135deg,#4a7c3a,#66bb6a);border:none;">
+                                Enregistrer le mot de passe
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+    </div>
+</section>
+{% endblock %}

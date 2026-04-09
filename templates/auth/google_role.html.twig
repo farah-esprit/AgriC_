@@ -1,0 +1,60 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Choix de Rôle - AgriConnect{% endblock %}
+
+{% block body %}
+<section style="padding: 120px 0 60px;">
+    <div class="container">
+
+        {% for message in app.flashes('error') %}
+            <div class="alert alert-danger alert-dismissible fade show text-center fw-bold">
+                {{ message }}<button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        {% endfor %}
+
+        <div class="row justify-content-center">
+            <div class="col-md-5">
+
+                <div class="card shadow border-0" style="border-radius:15px;">
+                    <div class="card-header text-white text-center py-4" style="background: linear-gradient(135deg,#4a7c3a,#66bb6a); border-radius:15px 15px 0 0;">
+                        <h4 class="mb-0 fw-bold">Bienvenue {{ google_data.nom }} ! 🎉</h4>
+                        <small class="opacity-75">Finalisons votre inscription</small>
+                    </div>
+
+                    <div class="card-body p-5">
+                        <div class="alert alert-success text-center">
+                            Votre e-mail <strong>{{ google_data.email }}</strong> est bien vérifié.
+                        </div>
+
+                        <p class="text-center text-muted mb-4">
+                            Pour configurer correctement votre espace de travail AgriConnect, veuillez nous indiquer votre rôle principal.
+                        </p>
+
+                        <form method="post" action="{{ path('app_google_setup_role') }}">
+                            <div class="mb-4">
+                                <label for="role" class="form-label fw-semibold">Je suis un(e)...</label>
+                                <select name="role" id="role" class="form-select form-select-lg" required>
+                                    <option value="" disabled selected>-- Choisissez votre rôle --</option>
+                                    <option value="AGRICULTEUR">🚜 Agriculteur</option>
+                                    <option value="FOURNISSEUR">📦 Fournisseur</option>
+                                    <option value="EXPERT">👨‍🔬 Expert</option>
+                                </select>
+                            </div>
+
+                            <button class="btn btn-success w-100" type="submit" style="background:linear-gradient(135deg,#4a7c3a,#66bb6a);border:none; padding:12px;">
+                                Finaliser et Créer mon compte
+                            </button>
+                        </form>
+                        
+                        <div class="text-center mt-3">
+                            <a href="{{ path('app_signin') }}" class="text-muted small text-decoration-none">Annuler et revenir à la connexion</a>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+    </div>
+</section>
+{% endblock %}

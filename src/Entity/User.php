@@ -64,6 +64,12 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     )]
     private ?string $plainPassword = null;
 
+    #[ORM\Column(type: 'string', length: 255, nullable: true)]
+    private ?string $resetToken = null;
+
+    #[ORM\Column(type: 'datetime_immutable', nullable: true)]
+    private ?\DateTimeImmutable $resetTokenRequestedAt = null;
+
     #[ORM\Column(type: 'string', length: 50, nullable: true)]
     private ?string $role = 'AGRICULTEUR';
 
@@ -345,6 +351,28 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
                 $commande->setUser(null);
             }
         }
+        return $this;
+    }
+
+    public function getResetToken(): ?string
+    {
+        return $this->resetToken;
+    }
+
+    public function setResetToken(?string $resetToken): self
+    {
+        $this->resetToken = $resetToken;
+        return $this;
+    }
+
+    public function getResetTokenRequestedAt(): ?\DateTimeImmutable
+    {
+        return $this->resetTokenRequestedAt;
+    }
+
+    public function setResetTokenRequestedAt(?\DateTimeImmutable $resetTokenRequestedAt): self
+    {
+        $this->resetTokenRequestedAt = $resetTokenRequestedAt;
         return $this;
     }
 }

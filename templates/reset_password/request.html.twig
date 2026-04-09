@@ -1,0 +1,52 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Mot de passe oublié - AgriConnect{% endblock %}
+
+{% block body %}
+<section style="padding: 120px 0 60px;">
+    <div class="container">
+
+        {% for message in app.flashes('error') %}
+            <div class="alert alert-danger alert-dismissible fade show text-center fw-bold">
+                {{ message }}<button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        {% endfor %}
+
+        <div class="row justify-content-center">
+            <div class="col-md-5">
+
+                <div class="card shadow border-0" style="border-radius:15px;">
+                    <div class="card-header text-white text-center py-4" style="background: linear-gradient(135deg,#4a7c3a,#66bb6a); border-radius:15px 15px 0 0;">
+                        <h4 class="mb-0 fw-bold">🔐 Réinitialisation</h4>
+                        <small class="opacity-75">Saisissez votre e-mail</small>
+                    </div>
+
+                    <div class="card-body p-5">
+                        <form method="post" action="{{ path('app_forgot_password_request') }}">
+                            <div class="mb-4">
+                                <label for="email" class="form-label fw-semibold">Adresse Email</label>
+                                <input type="email" name="email" id="email" class="form-control" required autocomplete="email" autofocus>
+                                <div class="form-text mt-2">
+                                    Saisissez l'adresse e-mail associée à votre compte et nous vous enverrons un lien pour réinitialiser votre mot de passe.
+                                </div>
+                            </div>
+
+                            <button class="btn btn-success w-100" type="submit" style="background:linear-gradient(135deg,#4a7c3a,#66bb6a);border:none;">
+                                Envoyer le lien
+                            </button>
+                        </form>
+
+                        <hr class="my-4">
+
+                        <p class="text-center text-muted small mb-0">
+                            <a href="{{ path('app_signin') }}" class="fw-bold text-success text-decoration-none">Retour à la connexion</a>
+                        </p>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+    </div>
+</section>
+{% endblock %}

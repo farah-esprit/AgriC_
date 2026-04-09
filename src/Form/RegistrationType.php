@@ -20,51 +20,115 @@ class RegistrationType extends AbstractType
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         $builder
+            // ── NOM : lettres uniquement, 3 à 50 caractères ──
             ->add('nom', TextType::class, [
-                'constraints' => [
-                    new Assert\NotBlank(),
-                    new Assert\Length(min: 3, max: 50),
+                'label' => 'Nom complet',
+                'attr'  => [
+                    'class'       => 'form-control',
+                    'placeholder' => 'Ex: Ahmed Ben Ali',
                 ],
-                'attr' => ['class' => 'form-control'],
+                'constraints' => [
+                    new Assert\NotBlank([
+                        'message' => 'Le nom est obligatoire.',
+                    ]),
+                    new Assert\Length([
+                        'min'        => 3,
+                        'max'        => 50,
+                        'minMessage' => 'Le nom doit contenir au moins {{ limit }} caractères.',
+                        'maxMessage' => 'Le nom ne peut pas dépasser {{ limit }} caractères.',
+                    ]),
+                    new Assert\Regex([
+                        'pattern' => '/^[a-zA-ZÀ-ÿ\s\-]+$/',
+                        'message' => 'Le nom ne peut contenir que des lettres, espaces ou tirets.',
+                    ]),
+                ],
             ])
+
+            // ── EMAIL ──
             ->add('email', EmailType::class, [
-                'constraints' => [
-                    new Assert\NotBlank(),
-                    new Assert\Email(),
+                'label' => 'Adresse email',
+                'attr'  => [
+                    'class'       => 'form-control',
+                    'placeholder' => 'exemple@email.com',
                 ],
-                'attr' => ['class' => 'form-control'],
+                'constraints' => [
+                    new Assert\NotBlank([
+                        'message' => "L'email est obligatoire.",
+                    ]),
+                    new Assert\Email([
+                        'message' => "L'adresse email '{{ value }}' n'est pas valide.",
+                    ]),
+                ],
             ])
+
+            // ── TÉLÉPHONE : exactement 8 chiffres ──
             ->add('telephone', TextType::class, [
+                'label'    => 'Téléphone',
                 'required' => false,
-                'attr' => ['class' => 'form-control'],
+                'attr'     => [
+                    'class'       => 'form-control',
+                    'placeholder' => '12345678',
+                    'maxlength'   => '8',
+                    'oninput'     => 'this.value=this.value.replace(/[^0-9]/g,"")',
+                ],
                 'constraints' => [
                     new Assert\Callback(function ($value, ExecutionContextInterface $context) {
-                        if ($value && !preg_match('/^[0-9]{8}$/', $value)) {
-                            $context->buildViolation('Numéro invalide')->addViolation();
+                        if (!empty($value) && !preg_match('/^[0-9]{8}$/', $value)) {
+                            $context->buildViolation('Le numéro doit contenir exactement 8 chiffres.')
+                                ->addViolation();
                         }
                     }),
                 ],
             ])
+
+            // ── RÔLE ──
             ->add('role', ChoiceType::class, [
+                'label'   => 'Rôle',
                 'choices' => [
                     'Agriculteur' => 'AGRICULTEUR',
                     'Fournisseur' => 'FOURNISSEUR',
-                    'Expert' => 'EXPERT',
+                    'Expert'      => 'EXPERT',
                 ],
                 'attr' => ['class' => 'form-select'],
             ])
+
+            // ── MOT DE PASSE : min 8 car., maj + min + chiffre obligatoires ──
             ->add('plainPassword', RepeatedType::class, [
-                'type' => PasswordType::class,
-                'mapped' => true, // 🔥 IMPORTANT
+                'type'   => PasswordType::class,
+                'mapped' => true,
                 'constraints' => [
-                    new Assert\NotBlank(),
-                    new Assert\Length(min: 8),
+                    new Assert\NotBlank([
+                        'message' => 'Le mot de passe est obligatoire.',
+                    ]),
+                    new Assert\Length([
+                        'min'        => 8,
+                        'minMessage' => 'Le mot de passe doit contenir au moins {{ limit }} caractères.',
+                    ]),
+                    new Assert\Regex([
+                        'pattern' => '/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).+$/',
+                        'message' => 'Le mot de passe doit contenir au moins une majuscule, une minuscule et un chiffre.',
+                    ]),
                 ],
-                'first_options' => ['attr' => ['class' => 'form-control']],
-                'second_options' => ['attr' => ['class' => 'form-control']],
+                'first_options' => [
+                    'label' => 'Mot de passe',
+                    'attr'  => [
+                        'class'       => 'form-control',
+                        'placeholder' => 'Min. 8 caractères, maj + min + chiffre',
+                    ],
+                ],
+                'second_options' => [
+                    'label' => 'Confirmer le mot de passe',
+                    'attr'  => [
+                        'class'       => 'form-control',
+                        'placeholder' => 'Répétez le mot de passe',
+                    ],
+                ],
+                'invalid_message' => 'Les mots de passe ne correspondent pas.',
             ])
+
             ->add('submit', SubmitType::class, [
-                'attr' => ['class' => 'btn btn-success w-100'],
+                'label' => "S'inscrire",
+                'attr'  => ['class' => 'btn btn-success w-100'],
             ]);
     }
 

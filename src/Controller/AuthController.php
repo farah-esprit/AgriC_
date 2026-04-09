@@ -12,6 +12,8 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
+use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
+use Symfony\Component\Security\Core\Authentication\Token\UsernamePasswordToken;
 use Symfony\Component\Routing\Attribute\Route;
 
 class AuthController extends AbstractController
@@ -52,7 +54,8 @@ class AuthController extends AbstractController
         Request $request,
         EntityManagerInterface $em,
         SessionInterface $session,
-        UserPasswordHasherInterface $passwordHasher
+        UserPasswordHasherInterface $passwordHasher,
+        TokenStorageInterface $tokenStorage
     ): Response {
         // Si déjà connecté
         if ($session->get('user_type') === 'ADMIN') {
@@ -82,6 +85,11 @@ class AuthController extends AbstractController
                 $session->set('admin_email',  $admin->getEmail());
                 $session->set('user_type',    'ADMIN');
 
+                // --- Injection du Token Security Symfony pour satisfaire le Web Profiler ---
+                $token = new UsernamePasswordToken($admin, 'main', $admin->getRoles());
+                $tokenStorage->setToken($token);
+                $session->set('_security_main', serialize($token));
+
                 $this->addFlash('success', '✅ Connexion admin réussie ! Bienvenue ' . $admin->getPrenom());
                 return $this->redirectToRoute('admin_dashboard');
             }
@@ -98,6 +106,11 @@ class AuthController extends AbstractController
                 $session->set('user_name', $user->getNom());
                 $session->set('user_role', $user->getRole());
                 $session->set('user_type', 'USER');
+
+                // --- Injection du Token Security Symfony pour satisfaire le Web Profiler ---
+                $token = new UsernamePasswordToken($user, 'main', $user->getRoles());
+                $tokenStorage->setToken($token);
+                $session->set('_security_main', serialize($token));
 
                 $this->addFlash('success', '✅ Connexion réussie ! Bienvenue ' . $user->getNom());
 

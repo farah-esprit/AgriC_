@@ -67,7 +67,21 @@ class Admin implements UserInterface, PasswordAuthenticatedUserInterface
         $this->dateCreation = $dateCreation;
         return $this;
     }
+// Ajoute juste avant la fin de la classe Admin
 
+#[ORM\Column(type: 'string', length: 255, nullable: true)]
+private ?string $photo = null;
+
+public function getPhoto(): ?string
+{
+    return $this->photo;
+}
+
+public function setPhoto(?string $photo): self
+{
+    $this->photo = $photo;
+    return $this;
+}
     /**
      * Identifiant unique de l'utilisateur (remplace getUsername() en Symfony 6)
      */

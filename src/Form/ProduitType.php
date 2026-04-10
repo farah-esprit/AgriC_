@@ -74,10 +74,12 @@ class ProduitType extends AbstractType
                 'label'       => 'Catégorie',
                 'placeholder' => '-- Choisir une catégorie --',
                 'choices'     => [
-                    'Engrais'    => 'Engrais',
-                    'Semences'   => 'Semences',
-                    'Outils'     => 'Outils',
-                    'Pesticides' => 'Pesticides',
+                    'Fruits'    => 'Fruits',
+                    'Huiles'   => 'Huiles',
+                    'Légumes'     => 'Légumes',
+                    'Céréales' => 'Céréales',
+                    'Épices' => 'Épices',
+                    'Produits laitiers' => 'Produits laitiers',
                     'Autre'      => 'Autre',
                 ],
                 'constraints' => [

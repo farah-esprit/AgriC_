@@ -1,4 +1,4 @@
-{% extends 'agriculteur.html.twig' %}
+{% extends app.session.get('user_role') == 'FOURNISSEUR' ? 'fournisseur.html.twig' : 'agriculteur.html.twig' %}
 
 {% block title %}Nouveau Sujet - Forum AgriConnect{% endblock %}
 

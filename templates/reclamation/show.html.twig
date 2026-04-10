@@ -1,0 +1,75 @@
+{% extends 'agriculteur.html.twig' %}
+
+{% block title %}Détails de la Réclamation{% endblock %}
+
+{% block body %}
+<div class="container mt-5 pt-5 mb-5">
+    <div class="card shadow border-0" style="border-radius:15px;">
+        <div class="card-header text-white px-4 py-3" style="background: linear-gradient(to right,#d32f2f,#e57373); border-radius:15px 15px 0 0;">
+            <h4 class="mb-0">Détails de la Réclamation: {{ reclamation.objet }}</h4>
+        </div>
+        <div class="card-body p-4">
+            <table class="table table-bordered">
+                <tbody>
+                    <tr>
+                        <th style="width: 200px;">Id</th>
+                        <td>{{ reclamation.idReclamation }}</td>
+                    </tr>
+                    <tr>
+                        <th>Objet</th>
+                        <td>{{ reclamation.objet }}</td>
+                    </tr>
+                    <tr>
+                        <th>Description</th>
+                        <td>{{ reclamation.description }}</td>
+                    </tr>
+                    <tr>
+                        <th>Date de création</th>
+                        <td>{{ reclamation.dateCreation }}</td>
+                    </tr>
+                    <tr>
+                        <th>Statut</th>
+                        <td>
+                            {% if reclamation.statut == 'Résolu' %}
+                                <span class="badge bg-success">{{ reclamation.statut }}</span>
+                            {% elseif reclamation.statut == 'En cours' %}
+                                <span class="badge bg-warning text-dark">{{ reclamation.statut }}</span>
+                            {% else %}
+                                <span class="badge bg-secondary">{{ reclamation.statut }}</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>Priorité</th>
+                        <td>
+                            {% if reclamation.priorite == 'Urgente' or reclamation.priorite == 'Élevée' %}
+                                <span class="badge bg-danger">{{ reclamation.priorite }}</span>
+                            {% else %}
+                                <span class="badge bg-info text-dark">{{ reclamation.priorite }}</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>Type</th>
+                        <td>{{ reclamation.type }}</td>
+                    </tr>
+                    <tr>
+                        <th>ID Utilisateur</th>
+                        <td>{{ reclamation.userId }}</td>
+                    </tr>
+                </tbody>
+            </table>
+            
+            <div class="d-flex gap-2 mt-4">
+                <a href="{{ path('app_reclamation_index') }}" class="btn btn-secondary">Retour à la liste</a>
+                <a href="{{ path('app_reclamation_edit', {'idReclamation': reclamation.idReclamation}) }}" class="btn btn-warning">Modifier</a>
+                
+                <form method="post" action="{{ path('app_reclamation_delete', {'idReclamation': reclamation.idReclamation}) }}" onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer cette réclamation ?');" style="display:inline-block;">
+                    <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ reclamation.idReclamation) }}">
+                    <button class="btn btn-danger">Supprimer</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

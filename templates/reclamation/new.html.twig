@@ -1,0 +1,32 @@
+{% extends 'agriculteur.html.twig' %}
+
+{% block title %}Nouvelle Réclamation - AgriConnect{% endblock %}
+
+{% block body %}
+<div class="premium-header">
+    <div class="container text-center">
+        <h1 class="premium-title">Déposer une Réclamation</h1>
+        <p class="premium-subtitle">Nous sommes à votre écoute pour résoudre vos problèmes et améliorer nos services.</p>
+    </div>
+</div>
+
+<div class="container pb-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="form-premium-card shadow-lg border-0">
+                <div class="mb-4 pb-3 border-bottom d-flex align-items-center gap-3">
+                    <div class="bg-soft-agri p-3 rounded-circle" style="background: #fff5f5;">
+                        <i class="bi bi-exclamation-octagon fs-3 text-danger"></i>
+                    </div>
+                    <div>
+                        <h4 class="fw-bold mb-0 text-dark">Détails de votre demande</h4>
+                        <p class="text-muted small mb-0">Expliquez-nous la situation en détail.</p>
+                    </div>
+                </div>
+
+                {{ include('reclamation/_form.html.twig') }}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

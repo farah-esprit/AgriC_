@@ -1,0 +1,78 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Inscription - AgriConnect{% endblock %}
+
+{% block body %}
+<section style="padding: 120px 0 60px;">
+    <div class="container">
+
+        <div class="row justify-content-center">
+            <div class="col-md-7">
+
+                <div class="card shadow border-0" style="border-radius:15px;">
+                    <div class="card-header text-white text-center py-4" style="background: linear-gradient(135deg,#4a7c3a,#66bb6a); border-radius:15px 15px 0 0;">
+                        <h4 class="mb-0 fw-bold">📝 Inscription - AgriConnect</h4>
+                        <small class="opacity-75">Créez votre compte fournisseur</small>
+                    </div>
+
+                    <div class="card-body p-5">
+                        {{ form_start(form) }}
+
+                        <div class="mb-3">
+                            {{ form_label(form.nom, 'Nom', {'label_attr': {'class':'form-label fw-semibold'}}) }}
+                            {{ form_widget(form.nom, {'attr': {'class':'form-control'}}) }}
+                            {{ form_errors(form.nom) }}
+                        </div>
+
+                        <div class="mb-3">
+                            {{ form_label(form.email, 'Email', {'label_attr': {'class':'form-label fw-semibold'}}) }}
+                            {{ form_widget(form.email, {'attr': {'class':'form-control'}}) }}
+                            {{ form_errors(form.email) }}
+                        </div>
+
+                        <div class="mb-3">
+                            {{ form_label(form.telephone, 'Téléphone', {'label_attr': {'class':'form-label fw-semibold'}}) }}
+                            <div class="input-group">
+                                <span class="input-group-text fw-bold">+216</span>
+                                {{ form_widget(form.telephone, {'attr': {'class':'form-control', 'placeholder':'12345678', 'maxlength':'8'}}) }}
+                            </div>
+                            {{ form_errors(form.telephone) }}
+                        </div>
+
+                        <div class="mb-3">
+                            {{ form_label(form.role, 'Rôle', {'label_attr': {'class':'form-label fw-semibold'}}) }}
+                            {{ form_widget(form.role, {'attr': {'class':'form-select'}}) }}
+                            {{ form_errors(form.role) }}
+                        </div>
+
+                        <div class="mb-3">
+                            {{ form_label(form.plainPassword.first, 'Mot de passe', {'label_attr': {'class':'form-label fw-semibold'}}) }}
+                            {{ form_widget(form.plainPassword.first, {'attr': {'class':'form-control'}}) }}
+                            {{ form_errors(form.plainPassword.first) }}
+                        </div>
+
+                        <div class="mb-3">
+                            {{ form_label(form.plainPassword.second, 'Confirmer le mot de passe', {'label_attr': {'class':'form-label fw-semibold'}}) }}
+                            {{ form_widget(form.plainPassword.second, {'attr': {'class':'form-control'}}) }}
+                            {{ form_errors(form.plainPassword.second) }}
+                        </div>
+
+                        {{ form_widget(form.submit, {'attr': {'class':'btn btn-success w-100', 'style':'background:linear-gradient(135deg,#4a7c3a,#66bb6a);border:none;'}}) }}
+
+                        {{ form_end(form) }}
+
+                        <hr class="my-4">
+                        <p class="text-center text-muted small mb-2">
+                            Déjà un compte ?
+                            <a href="{{ path('app_signin') }}" class="fw-bold text-success text-decoration-none">Se connecter</a>
+                        </p>
+
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+    </div>
+</section>
+{% endblock %}

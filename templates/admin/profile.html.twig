@@ -1,0 +1,397 @@
+{% extends 'admin/base_admin.html.twig' %}
+
+{% block title %}Mon Profil – Admin{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <link rel="stylesheet" href="{{ asset('assets/css/admin-profile.css') }}">
+{% endblock %}
+
+{% block admin_content %}
+
+{# ─── FLASH MESSAGES ─── #}
+{% for msg in app.flashes('success') %}
+    <div class="ap-flash ap-flash--success">
+        <i class="fas fa-check-circle me-2"></i>{{ msg }}
+    </div>
+{% endfor %}
+{% for msg in app.flashes('error') %}
+    <div class="ap-flash ap-flash--error">
+        <i class="fas fa-exclamation-circle me-2"></i>{{ msg }}
+    </div>
+{% endfor %}
+
+<div class="ap-header">
+    <div>
+        <h2 class="ap-title"><i class="fas fa-user-shield me-2"></i>Mon Profil</h2>
+        <p class="ap-subtitle">Gérez vos informations personnelles</p>
+    </div>
+
+</div>
+
+<div class="ap-layout">
+
+    {# ─── COLONNE GAUCHE : CARTE AVATAR ─── #}
+    <aside class="ap-sidebar">
+        <div class="ap-avatar-card">
+            <div class="ap-avatar-wrap" id="avatarWrap">
+                {% if admin.photo %}
+                    <img src="{{ asset('uploads/admins/' ~ admin.photo) }}"
+                         alt="Photo de profil" class="ap-avatar-img" id="avatarPreview">
+                {% else %}
+                    <div class="ap-avatar-initials" id="avatarInitials">
+                        {{ admin.prenom|slice(0,1)|upper }}{{ admin.nom|slice(0,1)|upper }}
+                    </div>
+                {% endif %}
+                {# Overlay upload (visible uniquement en mode édition) #}
+                <label class="ap-avatar-overlay" for="photoFileInput" id="avatarOverlay" style="display:none;">
+                    <i class="fas fa-camera"></i>
+                    <span>Changer</span>
+                </label>
+            </div>
+            <h5 class="ap-avatar-name">{{ admin.prenom }} {{ admin.nom }}</h5>
+            <span class="ap-badge"><i class="fas fa-shield-alt me-1"></i>Administrateur</span>
+            <p class="ap-avatar-email">{{ admin.email }}</p>
+        </div>
+
+        <div class="ap-info-card">
+            <h6 class="ap-info-title"><i class="fas fa-info-circle me-2"></i>Informations compte</h6>
+            <ul class="ap-info-list">
+                <li>
+                    <span class="ap-info-label"><i class="fas fa-envelope"></i> Email</span>
+                    <span class="ap-info-value">{{ admin.email }}</span>
+                </li>
+                <li>
+                    <span class="ap-info-label"><i class="fas fa-phone"></i> Téléphone</span>
+                    <span class="ap-info-value">{{ admin.telephone ?? '—' }}</span>
+                </li>
+                <li>
+                    <span class="ap-info-label"><i class="fas fa-calendar"></i> Inscrit le</span>
+                    <span class="ap-info-value">
+                        {{ admin.dateCreation ? admin.dateCreation|date('d/m/Y') : '—' }}
+                    </span>
+                </li>
+            </ul>
+        </div>
+    </aside>
+
+    {# ─── COLONNE DROITE : VUE + FORMULAIRE ─── #}
+    <main class="ap-main">
+
+        {# ── MODE LECTURE (par défaut) ── #}
+        <div class="ap-view-panel" id="viewPanel">
+            <div class="ap-panel-header" style="display:flex; justify-content:space-between; width:100%; align-items:center;">
+                <div><i class="fas fa-id-card me-2"></i>Mes informations</div>
+                <button type="button" class="ap-btn ap-btn--edit" id="btnEditPanel" onclick="toggleEdit(true)" style="padding: 0.3rem 0.8rem; font-size: 0.85rem; margin: -0.3rem 0;">
+                    <i class="fas fa-pen me-2"></i>Modifier le profil
+                </button>
+            </div>
+            <div class="ap-view-grid">
+                <div class="ap-view-field">
+                    <span class="ap-view-label">Nom</span>
+                    <span class="ap-view-val">{{ admin.nom }}</span>
+                </div>
+                <div class="ap-view-field">
+                    <span class="ap-view-label">Prénom</span>
+                    <span class="ap-view-val">{{ admin.prenom }}</span>
+                </div>
+                <div class="ap-view-field ap-view-field--full">
+                    <span class="ap-view-label">Email</span>
+                    <span class="ap-view-val">{{ admin.email }}</span>
+                </div>
+                <div class="ap-view-field ap-view-field--full">
+                    <span class="ap-view-label">Téléphone</span>
+                    <span class="ap-view-val">{{ admin.telephone ?? '—' }}</span>
+                </div>
+                <div class="ap-view-field ap-view-field--full">
+                    <span class="ap-view-label">Mot de passe</span>
+                    <span class="ap-view-val ap-pw-dots">••••••••••</span>
+                </div>
+            </div>
+        </div>
+
+        {# ── MODE ÉDITION (caché par défaut) ── #}
+        <div class="ap-edit-panel" id="editPanel" style="display:none;">
+            <div class="ap-panel-header">
+                <i class="fas fa-pen me-2"></i>Modifier mes informations
+            </div>
+
+            {{ form_start(form, {'attr': {'novalidate': 'novalidate', 'enctype': 'multipart/form-data', 'class': 'ap-form'}}) }}
+
+            {# Photo #}
+            <div class="ap-form-section">
+                <h6 class="ap-form-section-title">Photo de profil</h6>
+                <div class="ap-photo-row">
+                    <div class="ap-photo-thumb" id="photoThumb">
+                        {% if admin.photo %}
+                            <img src="{{ asset('uploads/admins/' ~ admin.photo) }}"
+                                 alt="" id="photoPreviewSmall">
+                        {% else %}
+                            <div class="ap-photo-placeholder" id="photoPlaceholder">
+                                {{ admin.prenom|slice(0,1)|upper }}{{ admin.nom|slice(0,1)|upper }}
+                            </div>
+                        {% endif %}
+                    </div>
+                    <div class="ap-photo-info">
+                        {{ form_widget(form.photoFile) }}
+                        {{ form_errors(form.photoFile) }}
+                        <small class="ap-hint">JPEG, PNG ou WebP · max 2 Mo</small>
+                    </div>
+                </div>
+            </div>
+
+            {# Identité #}
+            <div class="ap-form-section">
+                <h6 class="ap-form-section-title">Identité</h6>
+                <div class="ap-form-row">
+                    <div class="ap-form-group">
+                        {{ form_label(form.nom, 'Nom', {'label_attr': {'class': 'ap-label'}}) }}
+                        {{ form_widget(form.nom) }}
+                        <div class="ap-error">{{ form_errors(form.nom) }}</div>
+                    </div>
+                    <div class="ap-form-group">
+                        {{ form_label(form.prenom, 'Prénom', {'label_attr': {'class': 'ap-label'}}) }}
+                        {{ form_widget(form.prenom) }}
+                        <div class="ap-error">{{ form_errors(form.prenom) }}</div>
+                    </div>
+                </div>
+            </div>
+
+            {# Contact #}
+            <div class="ap-form-section">
+                <h6 class="ap-form-section-title">Contact</h6>
+                <div class="ap-form-group">
+                    {{ form_label(form.email, 'Adresse email', {'label_attr': {'class': 'ap-label'}}) }}
+                    {{ form_widget(form.email) }}
+                    <small class="ap-hint"><i class="fas fa-lock me-1"></i>L'email ne peut pas être modifié</small>
+                    <div class="ap-error">{{ form_errors(form.email) }}</div>
+                </div>
+                <div class="ap-form-group">
+                    {{ form_label(form.telephone, 'Téléphone', {'label_attr': {'class': 'ap-label'}}) }}
+                    {{ form_widget(form.telephone) }}
+                    <small class="ap-hint">8 chiffres exactement (ex : 12345678)</small>
+                    <div class="ap-error">{{ form_errors(form.telephone) }}</div>
+                </div>
+            </div>
+
+            {# Mot de passe #}
+            <div class="ap-form-section">
+                <h6 class="ap-form-section-title">Sécurité</h6>
+                <div class="ap-pw-note">
+                    <i class="fas fa-info-circle me-1"></i>Laissez vide pour conserver votre mot de passe actuel
+                </div>
+                <div class="ap-form-row">
+                    <div class="ap-form-group">
+                        {{ form_label(form.plainPassword.first, 'Nouveau mot de passe', {'label_attr': {'class': 'ap-label'}}) }}
+                        {{ form_widget(form.plainPassword.first) }}
+                    </div>
+                    <div class="ap-form-group">
+                        {{ form_label(form.plainPassword.second, 'Confirmer', {'label_attr': {'class': 'ap-label'}}) }}
+                        {{ form_widget(form.plainPassword.second) }}
+                    </div>
+                </div>
+                <div class="ap-error">{{ form_errors(form.plainPassword) }}</div>
+            </div>
+
+            {# Actions #}
+            <div class="ap-form-actions">
+                {{ form_widget(form.submit) }}
+                <button type="button" class="ap-btn ap-btn--cancel" onclick="toggleEdit(false)">
+                    <i class="fas fa-times me-1"></i>Annuler
+                </button>
+            </div>
+
+            {{ form_end(form) }}
+        </div>
+
+    </main>
+</div>
+
+<script>
+function toggleEdit(editing) {
+    const viewPanel = document.getElementById('viewPanel');
+    const editPanel = document.getElementById('editPanel');
+    const btnEdit = document.getElementById('btnEdit');
+    const btnEditPanel = document.getElementById('btnEditPanel');
+    const avatarOverlay = document.getElementById('avatarOverlay');
+
+    if (editing) {
+        viewPanel.classList.add('ap-fade-out');
+        setTimeout(() => {
+            viewPanel.style.display = 'none';
+            viewPanel.classList.remove('ap-fade-out');
+            editPanel.style.display = 'block';
+            editPanel.classList.add('ap-fade-in');
+            if (btnEdit) btnEdit.style.display = 'none';
+            if (btnEditPanel) btnEditPanel.style.display = 'none';
+            if (avatarOverlay) avatarOverlay.style.display = 'flex';
+            editPanel.scrollIntoView({behavior: 'smooth', block: 'start'});
+        }, 300);
+    } else {
+        editPanel.classList.add('ap-fade-out');
+        setTimeout(() => {
+            editPanel.style.display = 'none';
+            editPanel.classList.remove('ap-fade-out');
+            viewPanel.style.display = 'block';
+            viewPanel.classList.add('ap-fade-in');
+            if (btnEdit) btnEdit.style.display = 'flex';
+            if (btnEditPanel) btnEditPanel.style.display = 'block';
+            if (avatarOverlay) avatarOverlay.style.display = 'none';
+        }, 300);
+    }
+}
+
+{# Ouvrir auto en cas d'erreurs de validation #}
+{% if not form.vars.valid and form.vars.submitted %}
+    document.addEventListener('DOMContentLoaded', function() { 
+        document.getElementById('viewPanel').style.display = 'none';
+        document.getElementById('editPanel').style.display = 'block';
+        document.getElementById('btnEdit').style.display = 'none';
+        document.getElementById('avatarOverlay').style.display = 'flex';
+    });
+{% endif %}
+
+{# Preview photo avant upload #}
+document.addEventListener('DOMContentLoaded', function () {
+    const input = document.getElementById('photoFileInput');
+    if (input) {
+        input.addEventListener('change', function () {
+            const file = this.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                const src = e.target.result;
+                const wrap = document.getElementById('avatarWrap');
+                wrap.innerHTML =
+                    '<img src="' + src + '" class="ap-avatar-img ap-fade-in" id="avatarPreview">' +
+                    '<label class="ap-avatar-overlay" for="photoFileInput" id="avatarOverlay" style="display:flex;">' +
+                    '<i class="fas fa-camera"></i><span>Changer</span></label>';
+                const thumb = document.getElementById('photoThumb');
+                thumb.innerHTML = '<img src="' + src + '" id="photoPreviewSmall" class="ap-fade-in" style="width:100%;height:100%;object-fit:cover;border-radius:8px;">';
+            };
+            reader.readAsDataURL(file);
+        });
+    }
+
+    // --- CONTROLE DE SAISIE (Client-Side Validation) ---
+    const formEl = document.querySelector('.ap-form');
+    if (!formEl) return;
+
+    const nomInput = document.getElementById('admin_profile_form_nom');
+    const prenomInput = document.getElementById('admin_profile_form_prenom');
+    const phoneInput = document.getElementById('admin_profile_form_telephone');
+    const pwdInput = document.getElementById('admin_profile_form_plainPassword_first');
+    const pwdConfirm = document.getElementById('admin_profile_form_plainPassword_second');
+
+    function showError(input, message) {
+        input.classList.add('is-invalid');
+        input.classList.remove('is-valid');
+        let errDiv = input.parentElement.querySelector('.ap-custom-error');
+        if (!errDiv) {
+            errDiv = document.createElement('div');
+            errDiv.className = 'ap-error ap-custom-error mt-1';
+            input.parentElement.appendChild(errDiv);
+        }
+        errDiv.textContent = message;
+    }
+
+    function showSuccess(input) {
+        input.classList.remove('is-invalid');
+        input.classList.add('is-valid');
+        const errDiv = input.parentElement.querySelector('.ap-custom-error');
+        if (errDiv) errDiv.textContent = '';
+    }
+
+    // Validation Nom & Prénom
+    const nameRegex = /^[a-zA-ZÀ-ÿ\s\-]+$/;
+    function validateName(input, fieldName) {
+        const val = input.value.trim();
+        if (val.length < 3 || val.length > 50) {
+            showError(input, `Le ${fieldName} doit faire entre 3 et 50 caractères.`);
+            return false;
+        }
+        if (!nameRegex.test(val)) {
+            showError(input, `Le ${fieldName} ne peut contenir que des lettres.`);
+            return false;
+        }
+        showSuccess(input);
+        return true;
+    }
+
+    if(nomInput) {
+        nomInput.addEventListener('input', () => validateName(nomInput, 'nom'));
+    }
+    if(prenomInput) {
+        prenomInput.addEventListener('input', () => validateName(prenomInput, 'prénom'));
+    }
+
+    // Validation Téléphone
+    const phoneRegex = /^[0-9]{8}$/;
+    if(phoneInput) {
+        phoneInput.addEventListener('input', function() {
+            this.value = this.value.replace(/[^0-9]/g, ''); // Empêcher la frappe de non-chiffres
+            const val = this.value.trim();
+            if (val.length > 0 && !phoneRegex.test(val)) {
+                showError(phoneInput, "Le téléphone doit contenir exactement 8 chiffres.");
+            } else {
+                showSuccess(phoneInput);
+            }
+        });
+    }
+
+    // Validation Mot de passe
+    const pwdRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).+$/;
+    function validatePwd() {
+        let valid = true;
+        if(pwdInput.value) {
+            if (pwdInput.value.length < 8) {
+                showError(pwdInput, "Minimum 8 caractères.");
+                valid = false;
+            } else if (!pwdRegex.test(pwdInput.value)) {
+                showError(pwdInput, "Doit contenir Maj, Min et chiffre.");
+                valid = false;
+            } else {
+                showSuccess(pwdInput);
+            }
+
+            if (pwdConfirm && pwdConfirm.value !== pwdInput.value) {
+                showError(pwdConfirm, "Les mots de passe ne correspondent pas.");
+                valid = false;
+            } else if (pwdConfirm && pwdConfirm.value === pwdInput.value) {
+                showSuccess(pwdConfirm);
+            }
+        } else {
+            // Optionnel
+            pwdInput.classList.remove('is-invalid', 'is-valid');
+            const err1 = pwdInput.parentElement.querySelector('.ap-custom-error');
+            if (err1) err1.textContent = '';
+            if(pwdConfirm) {
+                pwdConfirm.classList.remove('is-invalid', 'is-valid');
+                const err2 = pwdConfirm.parentElement.querySelector('.ap-custom-error');
+                if (err2) err2.textContent = '';
+            }
+        }
+        return valid;
+    }
+
+    if(pwdInput) pwdInput.addEventListener('input', validatePwd);
+    if(pwdConfirm) pwdConfirm.addEventListener('input', validatePwd);
+
+    formEl.addEventListener('submit', function(e) {
+        let isFormValid = true;
+        if(nomInput && !validateName(nomInput, 'nom')) isFormValid = false;
+        if(prenomInput && !validateName(prenomInput, 'prénom')) isFormValid = false;
+        if(phoneInput && phoneInput.value.trim().length > 0 && !phoneRegex.test(phoneInput.value.trim())) {
+            showError(phoneInput, "Le téléphone doit contenir exactement 8 chiffres.");
+            isFormValid = false;
+        }
+        if(!validatePwd()) isFormValid = false;
+
+        if(!isFormValid) {
+            e.preventDefault();
+        }
+    });
+});
+</script>
+
+{% endblock %}

@@ -1,0 +1,118 @@
+{% extends app.session.get('user_role') == 'FOURNISSEUR' ? 'fournisseur.html.twig' : (app.session.get('user_role') == 'AGRICULTEUR' ? 'agriculteur.html.twig' : 'base.html.twig') %}
+
+{% block title %}Modifier mon Profil - AgriConnect{% endblock %}
+
+{% block body %}
+
+<section style="padding: 120px 0 60px;">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-7">
+
+                <div class="card shadow border-0" style="border-radius:15px;">
+                    <div class="card-header text-white text-center py-4"
+                         style="background:linear-gradient(to right,#4a7c3a,#66bb6a);border-radius:15px 15px 0 0;">
+                        <h3>✏️ Modifier mon Profil</h3>
+                    </div>
+                    <div class="card-body p-5">
+
+                        {# ✅ novalidate désactive la validation HTML5 native du navigateur #}
+                        {{ form_start(userForm, {'attr': {'enctype': 'multipart/form-data', 'novalidate': 'novalidate'}}) }}
+
+                        {# Photo actuelle #}
+                        <div class="text-center mb-4">
+                            {% if profil.image %}
+                                <img src="{{ asset('uploads/profils/' ~ profil.image) }}"
+                                     style="width:100px;height:100px;border-radius:50%;object-fit:cover;border:4px solid #66bb6a;">
+                            {% else %}
+                                <div style="width:100px;height:100px;border-radius:50%;background:linear-gradient(135deg,#4a7c3a,#66bb6a);display:flex;align-items:center;justify-content:center;font-size:2.2rem;color:white;font-weight:700;margin:0 auto;">
+                                    {{ user.nom|first|upper }}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <hr>
+
+                        {# Nom + Email #}
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold">👤 Nom complet *</label>
+                                {{ form_widget(userForm.nom, {'attr': {'class': 'form-control'}}) }}
+                                {{ form_errors(userForm.nom) }}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold">📧 Adresse email *</label>
+                                {{ form_widget(userForm.email, {'attr': {'class': 'form-control', 'readonly': 'readonly'}}) }}
+                                {{ form_errors(userForm.email) }}
+                            </div>
+                        </div>
+
+                        {# Téléphone #}
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">📞 Téléphone</label>
+                            <div class="input-group">
+                                <span class="input-group-text fw-bold">+216</span>
+                                {{ form_widget(userForm.telephone, {'attr': {'class': 'form-control', 'placeholder': '12345678', 'maxlength': '8'}}) }}
+                            </div>
+                            {{ form_errors(userForm.telephone) }}
+                        </div>
+
+                        {# ✅ Bio — champ HTML direct #}
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">📝 Bio</label>
+                            <textarea name="bio" class="form-control" rows="3"
+                                      placeholder="Décrivez votre activité...">{{ profil.bio }}</textarea>
+                        </div>
+
+                        {# ✅ Photo — champ HTML direct #}
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">📸 Photo de profil</label>
+                            <input type="file" name="image_file" class="form-control" accept="image/jpeg,image/png,image/webp">
+                            {% if profil.image %}
+                                <div class="mt-2">
+                                    <small class="text-muted">Photo actuelle :</small><br>
+                                    <img src="{{ asset('uploads/profils/' ~ profil.image) }}"
+                                         class="rounded-circle mt-1"
+                                         style="width:60px;height:60px;object-fit:cover;border:3px solid #66bb6a;">
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <hr>
+                        <p class="text-muted small mb-3">🔒 Laisser vide pour conserver le mot de passe actuel.</p>
+
+                        {# Mot de passe #}
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold">🔑 Nouveau mot de passe</label>
+                                {{ form_widget(userForm.newPassword.first, {'attr': {'class': 'form-control'}}) }}
+                                {{ form_errors(userForm.newPassword.first) }}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold">🔑 Confirmer</label>
+                                {{ form_widget(userForm.newPassword.second, {'attr': {'class': 'form-control'}}) }}
+                                {{ form_errors(userForm.newPassword.second) }}
+                            </div>
+                        </div>
+
+                        {# Boutons #}
+                        <div class="d-flex gap-3 mt-4">
+                            <button type="submit" class="btn btn-success flex-grow-1">
+                                <i class="bi bi-check-circle"></i> 💾 Enregistrer
+                            </button>
+                            <a href="{{ path('user_profil') }}" class="btn btn-outline-secondary flex-grow-1">
+                                <i class="bi bi-x-circle"></i> ❌ Annuler
+                            </a>
+                        </div>
+
+                        {{ form_end(userForm) }}
+
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</section>
+
+{% endblock %}

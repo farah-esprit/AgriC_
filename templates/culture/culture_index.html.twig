@@ -1,0 +1,211 @@
+{% extends 'agriculteur.html.twig' %}
+
+{% block title %}Liste des Cultures{% endblock %}
+
+{% block body %}
+<section style="padding: 120px 0 60px;">
+    <div class="container">
+
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2 style="color: #4a7c3a; font-weight: bold;">🌱 Gestion des Cultures</h2>
+            <a href="{{ path('app_culture_new') }}" class="btn btn-success">
+                <i class="bi bi-plus-circle"></i> Ajouter une culture
+            </a>
+        </div>
+
+        {% for message in app.flashes('success') %}
+            <div class="alert alert-success alert-dismissible fade show">
+                ✅ {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        {% endfor %}
+
+        {# ── STATISTIQUES ── #}
+        <div class="row g-3 mb-4">
+            <div class="col-6 col-md-3">
+                <div class="card text-white text-center shadow border-0" style="border-radius:12px; background: linear-gradient(to right,#4a7c3a,#66bb6a);">
+                    <div class="card-body py-3">
+                        <div style="font-size:2rem; font-weight:bold;">{{ stats.total }}</div>
+                        <div>Total Cultures</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="card text-white text-center shadow border-0" style="border-radius:12px; background: linear-gradient(to right,#1565c0,#42a5f5);">
+                    <div class="card-body py-3">
+                        <div style="font-size:2rem; font-weight:bold;">{{ stats.totaleHa is defined ? stats.totaleHa : 0 }} ha</div>
+                        <div>Superficie Totale</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="card text-white text-center shadow border-0" style="border-radius:12px; background: linear-gradient(to right,#e65100,#ffa726);">
+                    <div class="card-body py-3">
+                        <div style="font-size:2rem; font-weight:bold;">{{ stats.moyenne is defined ? stats.moyenne : 0 }} ha</div>
+                        <div>Superficie Moyenne</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="card text-white text-center shadow border-0" style="border-radius:12px; background: linear-gradient(to right,#6a1b9a,#ab47bc);">
+                    <div class="card-body py-3">
+                        <div style="font-size:2rem; font-weight:bold;">{{ stats.max is defined ? stats.max : 0 }} ha</div>
+                        <div>Superficie Max</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {# ── GRAPHIQUES ── #}
+        <div class="row g-3 mb-4">
+            <div class="col-md-6">
+                <div class="card shadow border-0" style="border-radius:15px;">
+                    <div class="card-header text-white py-3" style="background: linear-gradient(to right,#4a7c3a,#66bb6a); border-radius:15px 15px 0 0;">
+                        <h6 class="mb-0">📊 Répartition par Type</h6>
+                    </div>
+                    <div class="card-body">
+                        <canvas id="chartType" height="200"></canvas>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card shadow border-0" style="border-radius:15px;">
+                    <div class="card-header text-white py-3" style="background: linear-gradient(to right,#4a7c3a,#66bb6a); border-radius:15px 15px 0 0;">
+                        <h6 class="mb-0">📈 Nombre de Cultures par Type</h6>
+                    </div>
+                    <div class="card-body">
+                        <canvas id="chartSuperficie" height="200"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {# ── RECHERCHE ET FILTRES ── #}
+        <div class="card shadow border-0 mb-4" style="border-radius:15px;">
+            <div class="card-body p-4">
+                <form method="get" class="row g-3 align-items-end">
+                    <div class="col-md-4">
+                        <label class="form-label fw-bold">🔍 Recherche</label>
+                        <input type="text" name="search" class="form-control"
+                               placeholder="Nom, type, localisation..."
+                               value="{{ search is defined and search ? search : '' }}">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label fw-bold">📂 Filtrer par type</label>
+                        <select name="type" class="form-select">
+                            <option value="">-- Tous les types --</option>
+                            {% for option in ['Céréales','Légumes','Fruits','Oléagineux','Fourragères','Autre'] %}
+                                <option value="{{ option }}" {{ (filterType is defined and filterType == option) ? 'selected' : '' }}>{{ option }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label fw-bold">📐 Trier par superficie</label>
+                        <select name="sort" class="form-select">
+                            <option value="">-- Trier --</option>
+                            <option value="DESC">Plus grande d'abord</option>
+                            <option value="ASC">Plus petite d'abord</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2 d-flex gap-2">
+                        <button type="submit" class="btn btn-success flex-grow-1">Filtrer</button>
+                        <a href="{{ path('app_culture_index') }}" class="btn btn-outline-secondary">✕</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        {# ── CARTES CULTURES ── #}
+        {% if cultures|length == 0 %}
+            <div class="text-center py-5">
+                <p class="text-muted fs-5">🌿 Aucune culture trouvée.</p>
+                <a href="{{ path('app_culture_new') }}" class="btn btn-success mt-2">Ajouter la première culture</a>
+            </div>
+        {% else %}
+            <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+                {% for culture in cultures %}
+                <div class="col">
+                    <div class="card h-100 shadow border-0" style="border-radius:15px;">
+                        <div class="card-header text-white text-center py-3"
+                             style="background: linear-gradient(to right,#4a7c3a,#66bb6a); border-radius:15px 15px 0 0;">
+                            <h5 class="mb-0">🌿 {{ culture.nom }}</h5>
+                        </div>
+                        <div class="card-body px-4 py-3">
+                            <p class="mb-2">
+                                <span class="fw-bold" style="color:#4a7c3a;">📂 Type :</span>
+                                <span class="badge ms-1" style="background-color:#66bb6a;">{{ culture.type }}</span>
+                            </p>
+                            <p class="mb-2">
+                                <span class="fw-bold" style="color:#4a7c3a;">📐 Superficie :</span>
+                                {{ culture.superficie }} ha
+                            </p>
+                            <p class="mb-2">
+                                <span class="fw-bold" style="color:#4a7c3a;">📍 Localisation :</span>
+                                {{ culture.localisation }}
+                            </p>
+                        </div>
+                        <div class="card-footer bg-white border-0 px-4 pb-4">
+                            <div class="d-flex gap-2">
+                                <a href="{{ path('app_culture_show', {'id': culture.idCulture}) }}"
+                                   class="btn btn-sm btn-outline-info flex-grow-1">
+                                    <i class="bi bi-eye"></i> Voir
+                                </a>
+                                <a href="{{ path('app_culture_edit', {'id': culture.idCulture}) }}"
+                                   class="btn btn-sm btn-outline-warning flex-grow-1">
+                                    <i class="bi bi-pencil"></i> Modifier
+                                </a>
+                                <form method="post" action="{{ path('app_culture_delete', {'id': culture.idCulture}) }}"
+                                      onsubmit="return confirm('Supprimer cette culture ?')">
+                                    <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ culture.idCulture) }}">
+                                    <button class="btn btn-sm btn-outline-danger">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+    </div>
+</section>
+{% endblock %}
+
+{% block javascripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    {% if stats.parType is defined and stats.parType|length > 0 %}
+    const parType = {{ stats.parType|json_encode|raw }};
+    const labels  = parType.map(item => item.type || 'Inconnu');
+    const totals  = parType.map(item => parseInt(item.total));
+    const colors  = ['#66bb6a','#42a5f5','#ffa726','#ab47bc','#ef5350','#26c6da'];
+
+    new Chart(document.getElementById('chartType'), {
+        type: 'doughnut',
+        data: {
+            labels: labels,
+            datasets: [{ data: totals, backgroundColor: colors }]
+        },
+        options: { plugins: { legend: { position: 'bottom' } } }
+    });
+
+    new Chart(document.getElementById('chartSuperficie'), {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Nombre de cultures',
+                data: totals,
+                backgroundColor: colors
+            }]
+        },
+        options: {
+            plugins: { legend: { display: false } },
+            scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } }
+        }
+    });
+    {% endif %}
+</script>
+{% endblock %}

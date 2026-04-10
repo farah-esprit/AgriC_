@@ -1,0 +1,156 @@
+{% extends 'fournisseur.html.twig' %}
+
+{% block title %}Paiement Commande{% endblock %}
+
+{% block body %}
+<section style="padding: 120px 0 60px;">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-6">
+                <div class="card shadow border-0" style="border-radius: 15px;">
+                    <div class="card-header text-white text-center py-4"
+                         style="background: linear-gradient(to right, #4a7c3a, #66bb6a); border-radius: 15px 15px 0 0;">
+                        <h3>💳 Paiement Sécurisé</h3>
+                    </div>
+                    <div class="card-body p-5">
+
+                        {# Résumé commande #}
+                        <div class="card bg-light mb-4" style="border-radius: 10px;">
+                            <div class="card-body">
+                                <h5 class="fw-bold text-success">📋 Résumé de la commande</h5>
+                                <hr>
+                                <div class="d-flex justify-content-between">
+                                    <span>Produit :</span>
+                                    <strong>{{ commande.produit ? commande.produit.nom : 'N/A' }}</strong>
+                                </div>
+                                <div class="d-flex justify-content-between mt-2">
+                                    <span>Quantité :</span>
+                                    <strong>{{ commande.quantiteCommandee }}</strong>
+                                </div>
+                                <div class="d-flex justify-content-between mt-2">
+                                    <span>Prix unitaire :</span>
+                                    <strong>{{ commande.produit ? commande.produit.prix|number_format(2) : '0.00' }} DT</strong>
+                                </div>
+                                <hr>
+                                <div class="d-flex justify-content-between">
+                                    <span class="fw-bold fs-5">Total :</span>
+                                    <strong class="text-success fs-5">{{ commande.prixTotal|number_format(2) }} DT</strong>
+                                </div>
+                            </div>
+                        </div>
+
+                        {# Formulaire Symfony de paiement (validation côté serveur) #}
+                        {% for message in app.flashes('danger') %}
+                            <div class="alert alert-danger">{{ message }}</div>
+                        {% endfor %}
+
+                        {{ form_start(form, {'attr': {'novalidate': 'novalidate', 'id': 'formPayment'}}) }}
+
+                        <div class="mb-3">
+                            {{ form_label(form.cardholderName, null, {'label_attr': {'class': 'form-label fw-bold'}}) }}
+                            {{ form_widget(form.cardholderName, {'attr': {'class': 'form-control' ~ (form.cardholderName.vars.errors|length > 0 ? ' is-invalid' : '')}}) }}
+                            {{ form_errors(form.cardholderName) }}
+                        </div>
+
+                        <div class="mb-3">
+                            {{ form_label(form.cardNumber, null, {'label_attr': {'class': 'form-label fw-bold'}}) }}
+                            {{ form_widget(form.cardNumber, {'attr': {'class': 'form-control' ~ (form.cardNumber.vars.errors|length > 0 ? ' is-invalid' : '')}}) }}
+                            {{ form_errors(form.cardNumber) }}
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                {{ form_label(form.expiryDate, null, {'label_attr': {'class': 'form-label fw-bold'}}) }}
+                                {{ form_widget(form.expiryDate, {'attr': {'class': 'form-control' ~ (form.expiryDate.vars.errors|length > 0 ? ' is-invalid' : '')}}) }}
+                                {{ form_errors(form.expiryDate) }}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                {{ form_label(form.cvv, null, {'label_attr': {'class': 'form-label fw-bold'}}) }}
+                                {{ form_widget(form.cvv, {'attr': {'class': 'form-control' ~ (form.cvv.vars.errors|length > 0 ? ' is-invalid' : '')}}) }}
+                                {{ form_errors(form.cvv) }}
+                            </div>
+                        </div>
+
+                        {# Zone Stripe Elements #}
+                        <div id="payment-message" class="alert alert-danger mt-3" style="display:none;"></div>
+                        <div id="payment-element" class="mb-4"></div>
+
+                        <button type="submit" id="submit-btn" class="btn btn-success w-100 py-3 fw-bold">
+                            <span id="button-text">💳 Payer {{ commande.prixTotal|number_format(2) }} DT</span>
+                            <span id="spinner" style="display:none;">
+                                <span class="spinner-border spinner-border-sm"></span> Traitement...
+                            </span>
+                        </button>
+
+                        {{ form_end(form) }}
+
+                        <div class="text-center mt-3">
+                            <small class="text-muted">🔒 Paiement sécurisé par Stripe</small>
+                        </div>
+                        <div class="text-center mt-2">
+                            <a href="{{ path('app_commande_index') }}" class="btn btn-outline-secondary btn-sm">
+                                <i class="bi bi-arrow-left"></i> Annuler
+                            </a>
+                        </div>
+
+                        <div class="alert alert-info mt-4">
+                            <strong>🧪 Carte de test :</strong><br>
+                            Numéro : <code>4242 4242 4242 4242</code><br>
+                            Date : <code>12/26</code> — CVC : <code>123</code>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block javascripts %}
+<script src="https://js.stripe.com/v3/"></script>
+<script>
+const stripe = Stripe('{{ stripe_pub_key }}');
+let elements;
+initialize();
+
+async function initialize() {
+    const response = await fetch('{{ path("app_payment_process", {"id": commande.idCommande}) }}', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({})
+    });
+    const { clientSecret, error } = await response.json();
+    if (error) {
+        document.getElementById('payment-message').textContent = error;
+        document.getElementById('payment-message').style.display = 'block';
+        return;
+    }
+    elements = stripe.elements({ clientSecret });
+    const paymentElement = elements.create('payment');
+    paymentElement.mount('#payment-element');
+}
+
+document.getElementById('formPayment').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    setLoading(true);
+    const { error } = await stripe.confirmPayment({
+        elements,
+        confirmParams: {
+            return_url: '{{ url("app_payment_success", {"id": commande.idCommande}) }}',
+        },
+    });
+    if (error) {
+        document.getElementById('payment-message').textContent = error.message;
+        document.getElementById('payment-message').style.display = 'block';
+        setLoading(false);
+    }
+});
+
+function setLoading(isLoading) {
+    document.getElementById('submit-btn').disabled = isLoading;
+    document.getElementById('spinner').style.display = isLoading ? 'inline' : 'none';
+    document.getElementById('button-text').style.display = isLoading ? 'none' : 'inline';
+}
+</script>
+{% endblock %}

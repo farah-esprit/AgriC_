@@ -1,0 +1,215 @@
+{% extends 'agriculteur.html.twig' %}
+
+{% block title %}Liste des Diagnostics{% endblock %}
+
+{% block body %}
+<section style="padding: 120px 0 60px;">
+    <div class="container">
+
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2 style="color: #4a7c3a; font-weight: bold;">🩺 Gestion des Diagnostics</h2>
+            <a href="{{ path('app_diagnostic_new') }}" class="btn btn-success">
+                <i class="bi bi-plus-circle"></i> Ajouter un diagnostic
+            </a>
+        </div>
+
+        {% for message in app.flashes('success') %}
+            <div class="alert alert-success alert-dismissible fade show">
+                ✅ {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        {% endfor %}
+
+        {# ── STATISTIQUES ── #}
+        <div class="row g-3 mb-4">
+            <div class="col-6 col-md-4">
+                <div class="card text-white text-center shadow border-0" style="border-radius:12px; background: linear-gradient(to right,#4a7c3a,#66bb6a);">
+                    <div class="card-body py-3">
+                        <div style="font-size:2rem; font-weight:bold;">{{ stats.total }}</div>
+                        <div>Total Diagnostics</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 col-md-4">
+                <div class="card text-white text-center shadow border-0" style="border-radius:12px; background: linear-gradient(to right,#1565c0,#42a5f5);">
+                    <div class="card-body py-3">
+                        <div style="font-size:2rem; font-weight:bold;">{{ stats.parCulture|length }}</div>
+                        <div>Cultures Diagnostiquées</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 col-md-4">
+                <div class="card text-white text-center shadow border-0" style="border-radius:12px; background: linear-gradient(to right,#e65100,#ffa726);">
+                    <div class="card-body py-3">
+                        <div style="font-size:2rem; font-weight:bold;">{{ stats.parMois|length }}</div>
+                        <div>Mois avec Diagnostics</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {# ── GRAPHIQUES ── #}
+        <div class="row g-3 mb-4">
+            <div class="col-md-6">
+                <div class="card shadow border-0" style="border-radius:15px;">
+                    <div class="card-header text-white py-3" style="background: linear-gradient(to right,#4a7c3a,#66bb6a); border-radius:15px 15px 0 0;">
+                        <h6 class="mb-0">📊 Diagnostics par Culture</h6>
+                    </div>
+                    <div class="card-body">
+                        <canvas id="chartCulture" height="200"></canvas>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card shadow border-0" style="border-radius:15px;">
+                    <div class="card-header text-white py-3" style="background: linear-gradient(to right,#4a7c3a,#66bb6a); border-radius:15px 15px 0 0;">
+                        <h6 class="mb-0">📈 Évolution par Mois</h6>
+                    </div>
+                    <div class="card-body">
+                        <canvas id="chartMois" height="200"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {# ── RECHERCHE ET FILTRES ── #}
+        <div class="card shadow border-0 mb-4" style="border-radius:15px;">
+            <div class="card-body p-4">
+                <form method="get" class="row g-3 align-items-end">
+                    <div class="col-md-3">
+                        <label class="form-label fw-bold">🔍 Recherche</label>
+                        <input type="text" name="search" class="form-control"
+                               placeholder="Symptômes, date..."
+                               value="{{ search is defined and search ? search : '' }}">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label fw-bold">🌿 Filtrer par culture</label>
+                        <select name="culture" class="form-select">
+                            <option value="">-- Toutes les cultures --</option>
+                            {% for culture in cultures %}
+                                <option value="{{ culture.idCulture }}"
+                                    {{ (filterCulture is defined and filterCulture == culture.idCulture) ? 'selected' : '' }}>
+                                    {{ culture.nom }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label fw-bold">📅 Date début</label>
+                        <input type="date" name="dateDebut" class="form-control"
+                               value="{{ dateDebut is defined and dateDebut ? dateDebut : '' }}">
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label fw-bold">📅 Date fin</label>
+                        <input type="date" name="dateFin" class="form-control"
+                               value="{{ dateFin is defined and dateFin ? dateFin : '' }}">
+                    </div>
+                    <div class="col-md-2 d-flex gap-2">
+                        <button type="submit" class="btn btn-success flex-grow-1">Filtrer</button>
+                        <a href="{{ path('app_diagnostic_index') }}" class="btn btn-outline-secondary">✕</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        {# ── CARTES DIAGNOSTICS ── #}
+        {% if diagnostics|length == 0 %}
+            <div class="text-center py-5">
+                <p class="text-muted fs-5">🔍 Aucun diagnostic trouvé.</p>
+                <a href="{{ path('app_diagnostic_new') }}" class="btn btn-success mt-2">Ajouter le premier diagnostic</a>
+            </div>
+        {% else %}
+            <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+                {% for diagnostic in diagnostics %}
+                <div class="col">
+                    <div class="card h-100 shadow border-0" style="border-radius:15px;">
+                        <div class="card-header text-white text-center py-3"
+                             style="background: linear-gradient(to right,#4a7c3a,#66bb6a); border-radius:15px 15px 0 0;">
+                            <h5 class="mb-0">🩺 Diagnostic #{{ diagnostic.idDiagnostic }}</h5>
+                        </div>
+                        <div class="card-body px-4 py-3">
+                            <p class="mb-2">
+                                <span class="fw-bold" style="color:#4a7c3a;">📅 Date :</span>
+                                {{ diagnostic.dateDiagnostic }}
+                            </p>
+                            <p class="mb-2">
+                                <span class="fw-bold" style="color:#4a7c3a;">🌿 Culture ID :</span>
+                                <span class="badge ms-1" style="background-color:#66bb6a;">{{ diagnostic.idCulture }}</span>
+                            </p>
+                            <p class="mb-2">
+                                <span class="fw-bold" style="color:#4a7c3a;">🤒 Symptômes :</span>
+                                {{ diagnostic.symptomes|slice(0,60) }}{% if diagnostic.symptomes|length > 60 %}...{% endif %}
+                            </p>
+                            {% if diagnostic.informationsComplementaires %}
+                            <p class="mb-0 text-muted" style="font-size:0.85rem;">
+                                📝 {{ diagnostic.informationsComplementaires|slice(0,80) }}{% if diagnostic.informationsComplementaires|length > 80 %}...{% endif %}
+                            </p>
+                            {% endif %}
+                        </div>
+                        <div class="card-footer bg-white border-0 px-4 pb-4">
+                            <div class="d-flex gap-2">
+                                <a href="{{ path('app_diagnostic_show', {'id': diagnostic.idDiagnostic}) }}"
+                                   class="btn btn-sm btn-outline-info flex-grow-1">
+                                    <i class="bi bi-eye"></i> Voir
+                                </a>
+                                <a href="{{ path('app_diagnostic_edit', {'id': diagnostic.idDiagnostic}) }}"
+                                   class="btn btn-sm btn-outline-warning flex-grow-1">
+                                    <i class="bi bi-pencil"></i> Modifier
+                                </a>
+                                <form method="post" action="{{ path('app_diagnostic_delete', {'id': diagnostic.idDiagnostic}) }}"
+                                      onsubmit="return confirm('Supprimer ce diagnostic ?')">
+                                    <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ diagnostic.idDiagnostic) }}">
+                                    <button class="btn btn-sm btn-outline-danger">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+    </div>
+</section>
+{% endblock %}
+
+{% block javascripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    {% if stats.parCulture is defined and stats.parCulture|length > 0 %}
+    const parCulture = {{ stats.parCulture|json_encode|raw }};
+    const colors = ['#66bb6a','#42a5f5','#ffa726','#ab47bc','#ef5350','#26c6da'];
+
+    new Chart(document.getElementById('chartCulture'), {
+        type: 'doughnut',
+        data: {
+            labels: parCulture.map(i => 'Culture #' + i.idCulture),
+            datasets: [{ data: parCulture.map(i => parseInt(i.total)), backgroundColor: colors }]
+        },
+        options: { plugins: { legend: { position: 'bottom' } } }
+    });
+    {% endif %}
+
+    {% if stats.parMois is defined and stats.parMois|length > 0 %}
+    const parMois = {{ stats.parMois|json_encode|raw }};
+
+    new Chart(document.getElementById('chartMois'), {
+        type: 'line',
+        data: {
+            labels: parMois.map(i => i.mois),
+            datasets: [{
+                label: 'Diagnostics',
+                data: parMois.map(i => parseInt(i.total)),
+                borderColor: '#4a7c3a',
+                backgroundColor: 'rgba(102,187,106,0.2)',
+                fill: true,
+                tension: 0.4
+            }]
+        },
+        options: { scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } } }
+    });
+    {% endif %}
+</script>
+{% endblock %}

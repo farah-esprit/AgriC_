@@ -3,6 +3,7 @@
 namespace App\Controller;
 
 use App\Entity\Commande;
+use App\Form\PaymentType;
 use App\Repository\CommandeRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -17,11 +18,24 @@ class PaymentController extends AbstractController
     private const STRIPE_PUB = '';
     private const STRIPE_SEC = '';
 
-    #[Route('/checkout/{id}', name: 'app_payment_checkout', methods: ['GET'])]
-    public function checkout(Commande $commande): Response
+    #[Route('/checkout/{id}', name: 'app_payment_checkout', methods: ['GET', 'POST'])]
+    public function checkout(Request $request, Commande $commande, EntityManagerInterface $em): Response
     {
+        $form = $this->createForm(PaymentType::class);
+        $form->handleRequest($request);
+
+        if ($form->isSubmitted() && $form->isValid()) {
+            // Le formulaire Symfony est valide — Stripe prend le relais via JS
+            // Si pas de Stripe, on peut marquer directement comme payée ici
+            $commande->setStatut('PAYEE');
+            $em->flush();
+            $this->addFlash('success', 'Paiement effectué avec succès !');
+            return $this->redirectToRoute('app_payment_success', ['id' => $commande->getIdCommande()]);
+        }
+
         return $this->render('payment/checkout.html.twig', [
             'commande'       => $commande,
+            'form'           => $form->createView(),
             'stripe_pub_key' => self::STRIPE_PUB,
         ]);
     }
@@ -58,9 +72,7 @@ class PaymentController extends AbstractController
                 ],
             ]);
 
-            return $this->json([
-                'clientSecret' => $paymentIntent->client_secret,
-            ]);
+            return $this->json(['clientSecret' => $paymentIntent->client_secret]);
 
         } catch (\Exception $e) {
             return $this->json(['error' => $e->getMessage()], 400);

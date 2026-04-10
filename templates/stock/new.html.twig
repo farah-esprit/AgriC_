@@ -1,20 +1,34 @@
-{% extends 'fournisseur.html.twig' %}
+{% extends app.session.get('user_role') == 'FOURNISSEUR' ? 'fournisseur.html.twig' : (app.session.get('user_role') == 'AGRICULTEUR' ? 'agriculteur.html.twig' : 'base.html.twig') %}
+
 
 {% block title %}Ajouter un Stock{% endblock %}
 
-{% block body %}
+{% block stylesheets %}
+{{ parent() }}
+<style>
+    .input-group-text {
+        background: linear-gradient(to bottom, #4a7c3a, #66bb6a);
+        color: white;
+        border: none;
+    }
+    .form-control:focus, .form-select:focus {
+        border-color: #66bb6a;
+        box-shadow: 0 0 0 0.2rem rgba(102, 187, 106, 0.25);
+    }
+</style>
+{% endblock %}
 
+{% block body %}
 <section style="padding: 120px 0 60px;">
     <div class="container">
         <div class="row justify-content-center">
             <div class="col-lg-6">
-
                 <div class="card shadow border-0" style="border-radius: 15px;">
                     <div class="card-header text-white text-center py-4"
                          style="background: linear-gradient(to right, #4a7c3a, #66bb6a); border-radius: 15px 15px 0 0;">
                         <h3>📦 Ajouter un Stock</h3>
+                        <small class="opacity-75">Associez un stock à un produit</small>
                     </div>
-
                     <div class="card-body p-5">
 
                         {% for message in app.flashes('danger') %}
@@ -24,155 +38,62 @@
                             </div>
                         {% endfor %}
 
-                        <form method="post" id="formStock" novalidate>
+                        {{ form_start(form, {'attr': {'novalidate': 'novalidate'}}) }}
 
-                            <div class="mb-3">
-                                <label class="form-label fw-bold">🌿 Produit *</label>
-                                <select name="produit_id" id="produit_id" class="form-select" required>
-                                    <option value="">-- Choisir un produit --</option>
-                                    {% for produit in produits %}
-                                        <option value="{{ produit.idProduit }}">
-                                            {{ produit.nom }}
-                                        </option>
-                                    {% endfor %}
-                                </select>
-                                <div class="invalid-feedback">Veuillez choisir un produit.</div>
-                                <div class="valid-feedback">✅ Correct !</div>
+                        <div class="mb-3">
+                            {{ form_label(form.produit, null, {'label_attr': {'class': 'form-label fw-bold'}}) }}
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="bi bi-box-seam-fill"></i></span>
+                                {{ form_widget(form.produit, {'attr': {'class': 'form-select' ~ (form.produit.vars.errors|length > 0 ? ' is-invalid' : '')}}) }}
                             </div>
+                            {{ form_errors(form.produit) }}
+                        </div>
 
-                            <div class="mb-3">
-                                <label class="form-label fw-bold">📊 Quantité *</label>
-                                <input type="text" name="quantite" id="quantite"
-                                       class="form-control" placeholder="Ex: 100"
-                                       inputmode="numeric" required>
-                                <div class="invalid-feedback">La quantité doit être un entier positif.</div>
-                                <div class="valid-feedback">✅ Correct !</div>
+                        <div class="mb-3">
+                            {{ form_label(form.quantite, null, {'label_attr': {'class': 'form-label fw-bold'}}) }}
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="bi bi-stack"></i></span>
+                                {{ form_widget(form.quantite, {'attr': {'class': 'form-control' ~ (form.quantite.vars.errors|length > 0 ? ' is-invalid' : ''), 'placeholder': 'Ex: 100'}}) }}
+                                <span class="input-group-text">unités</span>
                             </div>
+                            {{ form_errors(form.quantite) }}
+                        </div>
 
-                            <div class="mb-3">
-                                <label class="form-label fw-bold">✅ Disponible *</label>
-                                <input type="text" name="disponible" id="disponible"
-                                       class="form-control" placeholder="Ex: 80"
-                                       inputmode="numeric" required>
-                                <div class="invalid-feedback">Le disponible doit être positif et ≤ quantité.</div>
-                                <div class="valid-feedback">✅ Correct !</div>
+                        <div class="mb-3">
+                            {{ form_label(form.disponible, null, {'label_attr': {'class': 'form-label fw-bold'}}) }}
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="bi bi-check2-circle"></i></span>
+                                {{ form_widget(form.disponible, {'attr': {'class': 'form-control' ~ (form.disponible.vars.errors|length > 0 ? ' is-invalid' : ''), 'placeholder': 'Ex: 80'}}) }}
+                                <span class="input-group-text">unités</span>
                             </div>
+                            {{ form_errors(form.disponible) }}
+                        </div>
 
-                            <div class="mb-4">
-                                <label class="form-label fw-bold">⚠️ Seuil d'alerte *</label>
-                                <input type="text" name="seuilAlert" id="seuilAlert"
-                                       class="form-control" placeholder="Ex: 10"
-                                       inputmode="numeric" required>
-                                <div class="invalid-feedback">Le seuil doit être un entier positif.</div>
-                                <div class="valid-feedback">✅ Correct !</div>
+                        <div class="mb-4">
+                            {{ form_label(form.seuilAlert, null, {'label_attr': {'class': 'form-label fw-bold'}}) }}
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="bi bi-exclamation-triangle-fill"></i></span>
+                                {{ form_widget(form.seuilAlert, {'attr': {'class': 'form-control' ~ (form.seuilAlert.vars.errors|length > 0 ? ' is-invalid' : ''), 'placeholder': 'Ex: 10'}}) }}
+                                <span class="input-group-text">unités</span>
                             </div>
+                            <small class="text-muted">Une alerte sera déclenchée si le stock descend sous ce seuil</small>
+                            {{ form_errors(form.seuilAlert) }}
+                        </div>
 
-                            <div class="d-flex gap-2">
-                                <button type="submit" class="btn btn-success flex-grow-1">
-                                    <i class="bi bi-check-circle"></i> Ajouter
-                                </button>
-                                <a href="{{ path('app_stock_index') }}" class="btn btn-outline-secondary">
-                                    <i class="bi bi-arrow-left"></i> Retour
-                                </a>
-                            </div>
+                        <div class="d-flex gap-2 mt-4">
+                            <button type="submit" class="btn btn-success flex-grow-1 py-2">
+                                <i class="bi bi-check-circle"></i> Ajouter le stock
+                            </button>
+                            <a href="{{ path('app_stock_index') }}" class="btn btn-outline-secondary py-2">
+                                <i class="bi bi-arrow-left"></i> Retour
+                            </a>
+                        </div>
 
-                        </form>
+                        {{ form_end(form) }}
                     </div>
                 </div>
-
             </div>
         </div>
     </div>
 </section>
-
-{% endblock %}
-
-{% block javascripts %}
-<script>
-document.getElementById('produit_id').addEventListener('change', function() {
-    if (this.value === '') {
-        this.classList.add('is-invalid');
-        this.classList.remove('is-valid');
-    } else {
-        this.classList.add('is-valid');
-        this.classList.remove('is-invalid');
-    }
-});
-
-document.getElementById('quantite').addEventListener('input', function() {
-    this.value = this.value.replace(/[^0-9]/g, '');
-    const val = parseInt(this.value);
-    if (isNaN(val) || val < 0) {
-        this.classList.add('is-invalid');
-        this.classList.remove('is-valid');
-    } else {
-        this.classList.add('is-valid');
-        this.classList.remove('is-invalid');
-        validerDisponible();
-    }
-});
-
-document.getElementById('disponible').addEventListener('input', function() {
-    this.value = this.value.replace(/[^0-9]/g, '');
-    validerDisponible();
-});
-
-function validerDisponible() {
-    const quantite = parseInt(document.getElementById('quantite').value);
-    const disponible = parseInt(document.getElementById('disponible').value);
-    const input = document.getElementById('disponible');
-
-    if (isNaN(disponible) || disponible < 0 || disponible > quantite) {
-        input.classList.add('is-invalid');
-        input.classList.remove('is-valid');
-    } else {
-        input.classList.add('is-valid');
-        input.classList.remove('is-invalid');
-    }
-}
-
-document.getElementById('seuilAlert').addEventListener('input', function() {
-    this.value = this.value.replace(/[^0-9]/g, '');
-    const val = parseInt(this.value);
-    if (isNaN(val) || val < 0) {
-        this.classList.add('is-invalid');
-        this.classList.remove('is-valid');
-    } else {
-        this.classList.add('is-valid');
-        this.classList.remove('is-invalid');
-    }
-});
-
-document.getElementById('formStock').addEventListener('submit', function(e) {
-    let valid = true;
-
-    if (document.getElementById('produit_id').value === '') {
-        document.getElementById('produit_id').classList.add('is-invalid');
-        valid = false;
-    }
-
-    const quantite = parseInt(document.getElementById('quantite').value);
-    if (isNaN(quantite) || quantite < 0) {
-        document.getElementById('quantite').classList.add('is-invalid');
-        valid = false;
-    }
-
-    const disponible = parseInt(document.getElementById('disponible').value);
-    if (isNaN(disponible) || disponible < 0 || disponible > quantite) {
-        document.getElementById('disponible').classList.add('is-invalid');
-        valid = false;
-    }
-
-    const seuilAlert = parseInt(document.getElementById('seuilAlert').value);
-    if (isNaN(seuilAlert) || seuilAlert < 0) {
-        document.getElementById('seuilAlert').classList.add('is-invalid');
-        valid = false;
-    }
-
-    if (!valid) {
-        e.preventDefault();
-        window.scrollTo(0, 0);
-    }
-});
-</script>
 {% endblock %}

@@ -3,6 +3,7 @@
 namespace App\Controller;
 
 use App\Entity\Produit;
+use App\Form\ProduitType;
 use App\Repository\ProduitRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -24,25 +25,23 @@ class ProduitController extends AbstractController
     #[Route('/new', name: 'app_produit_new', methods: ['GET', 'POST'])]
     public function new(Request $request, EntityManagerInterface $em): Response
     {
-        if ($request->isMethod('POST')) {
-            $produit = new Produit();
-            $produit->setNom($request->request->get('nom'));
-            $produit->setDescription($request->request->get('description'));
-            $produit->setPrix((float) $request->request->get('prix'));
-            $produit->setCategorie($request->request->get('categorie'));
-            $produit->setActif(true);
+        $produit = new Produit();
+        $form = $this->createForm(ProduitType::class, $produit);
+        $form->handleRequest($request);
 
-            $isPromo = (bool) $request->request->get('promo');
-            $produit->setPromo($isPromo);
-            $produit->setTauxPromo($isPromo ? (float) $request->request->get('tauxPromo') : null);
-
-            $imageFile = $request->files->get('image');
+        if ($form->isSubmitted() && $form->isValid()) {
+            $imageFile = $form->get('image')->getData();
             if ($imageFile) {
                 $newFilename = uniqid() . '.' . $imageFile->guessExtension();
                 $imageFile->move($this->getParameter('images_directory'), $newFilename);
                 $produit->setImagePath($newFilename);
             }
 
+            if (!$produit->getPromo()) {
+                $produit->setTauxPromo(null);
+            }
+
+            $produit->setActif(true);
             $em->persist($produit);
             $em->flush();
 
@@ -50,14 +49,16 @@ class ProduitController extends AbstractController
             return $this->redirectToRoute('app_produit_index');
         }
 
-        return $this->render('produit/new.html.twig');
+        return $this->render('produit/new.html.twig', [
+            'form' => $form->createView(),
+        ]);
     }
 
     #[Route('/export', name: 'app_produit_export', methods: ['GET'])]
     public function export(ProduitRepository $produitRepository): Response
     {
-        $produits    = $produitRepository->findAll();
-        $csvContent  = "ID,Nom,Description,Prix,Catégorie,Promo,Taux Promo,Prix Promo\n";
+        $produits   = $produitRepository->findAll();
+        $csvContent = "ID,Nom,Description,Prix,Catégorie,Promo,Taux Promo,Prix Promo\n";
 
         foreach ($produits as $produit) {
             $csvContent .= sprintf(
@@ -82,21 +83,19 @@ class ProduitController extends AbstractController
     #[Route('/{id}/edit', name: 'app_produit_edit', methods: ['GET', 'POST'])]
     public function edit(Request $request, Produit $produit, EntityManagerInterface $em): Response
     {
-        if ($request->isMethod('POST')) {
-            $produit->setNom($request->request->get('nom'));
-            $produit->setDescription($request->request->get('description'));
-            $produit->setPrix((float) $request->request->get('prix'));
-            $produit->setCategorie($request->request->get('categorie'));
+        $form = $this->createForm(ProduitType::class, $produit);
+        $form->handleRequest($request);
 
-            $isPromo = (bool) $request->request->get('promo');
-            $produit->setPromo($isPromo);
-            $produit->setTauxPromo($isPromo ? (float) $request->request->get('tauxPromo') : null);
-
-            $imageFile = $request->files->get('image');
+        if ($form->isSubmitted() && $form->isValid()) {
+            $imageFile = $form->get('image')->getData();
             if ($imageFile) {
                 $newFilename = uniqid() . '.' . $imageFile->guessExtension();
                 $imageFile->move($this->getParameter('images_directory'), $newFilename);
                 $produit->setImagePath($newFilename);
+            }
+
+            if (!$produit->getPromo()) {
+                $produit->setTauxPromo(null);
             }
 
             $em->flush();
@@ -104,7 +103,10 @@ class ProduitController extends AbstractController
             return $this->redirectToRoute('app_produit_index');
         }
 
-        return $this->render('produit/edit.html.twig', ['produit' => $produit]);
+        return $this->render('produit/edit.html.twig', [
+            'produit' => $produit,
+            'form'    => $form->createView(),
+        ]);
     }
 
     #[Route('/{id}/delete', name: 'app_produit_delete', methods: ['POST'])]
@@ -115,11 +117,9 @@ class ProduitController extends AbstractController
             if ($stock) {
                 $em->remove($stock);
             }
-
             foreach ($produit->getCommandes() as $commande) {
                 $em->remove($commande);
             }
-
             $em->remove($produit);
             $em->flush();
             $this->addFlash('success', 'Produit supprimé !');

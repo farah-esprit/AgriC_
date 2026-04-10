@@ -29,8 +29,6 @@ class Commande
     private ?int $quantiteCommandee = null;
 
     #[ORM\Column(type: 'float', nullable: true)]
-    #[Assert\NotBlank(message: 'Le prix total est obligatoire.')]
-    #[Assert\PositiveOrZero(message: 'Le prix total doit être positif ou nul.')]
     private ?float $prixTotal = null;
 
     #[ORM\ManyToOne(targetEntity: Produit::class, inversedBy: 'commandes')]
@@ -39,8 +37,7 @@ class Commande
     private ?Produit $produit = null;
 
     #[ORM\ManyToOne(targetEntity: User::class, inversedBy: 'commandes')]
-    #[ORM\JoinColumn(name: 'user_id', referencedColumnName: 'user_id')]
-    #[Assert\NotBlank(message: "L'utilisateur est obligatoire.")]
+    #[ORM\JoinColumn(name: 'user_id', referencedColumnName: 'user_id', nullable: true)]
     private ?User $user = null;
 
     public function getIdCommande(): ?int { return $this->idCommande; }

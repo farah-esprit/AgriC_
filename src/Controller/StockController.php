@@ -3,6 +3,7 @@
 namespace App\Controller;
 
 use App\Entity\Stock;
+use App\Form\StockType;
 use App\Repository\StockRepository;
 use App\Repository\ProduitRepository;
 use Doctrine\ORM\EntityManagerInterface;
@@ -23,51 +24,24 @@ class StockController extends AbstractController
     }
 
     #[Route('/new', name: 'app_stock_new', methods: ['GET', 'POST'])]
-    public function new(
-        Request $request,
-        EntityManagerInterface $em,
-        ProduitRepository $produitRepository
-    ): Response {
-        // ✅ Produits sans stock uniquement
-        $produits = array_filter(
-            $produitRepository->findAll(),
-            fn($p) => $p->getStock() === null
-        );
+    public function new(Request $request, EntityManagerInterface $em): Response
+    {
+        $stock = new Stock();
+       $form = $this->createForm(StockType::class, $stock, ['is_edit' => false]);
+        $form->handleRequest($request);
 
-        if ($request->isMethod('POST')) {
+        if ($form->isSubmitted() && $form->isValid()) {
+            $produit = $stock->getProduit();
 
-            $produit = $produitRepository->find($request->request->get('produit_id'));
-
-            if (!$produit) {
-                $this->addFlash('danger', 'Produit introuvable.');
-                return $this->render('stock/new.html.twig', compact('produits'));
+            if ($produit->getStock() !== null) {
+                $this->addFlash('danger', 'Ce produit a déjà un stock associé.');
+                return $this->render('stock/new.html.twig', ['form' => $form->createView()]);
             }
 
-            if ($produit->getStock()) {
-                $this->addFlash('danger', 'Ce produit a déjà un stock.');
-                return $this->render('stock/new.html.twig', compact('produits'));
+            if ($stock->getDisponible() > $stock->getQuantite()) {
+                $this->addFlash('danger', 'La quantité disponible ne peut pas dépasser la quantité totale.');
+                return $this->render('stock/new.html.twig', ['form' => $form->createView()]);
             }
-
-            $quantite = (int) $request->request->get('quantite');
-            $disponible = (int) $request->request->get('disponible');
-            $seuilAlert = (int) $request->request->get('seuilAlert');
-
-            // ✅ Validations
-            if ($disponible > $quantite) {
-                $this->addFlash('danger', 'Disponible > Quantité.');
-                return $this->render('stock/new.html.twig', compact('produits'));
-            }
-
-            if ($seuilAlert > $quantite) {
-                $this->addFlash('danger', 'Seuil > Quantité.');
-                return $this->render('stock/new.html.twig', compact('produits'));
-            }
-
-            $stock = (new Stock())
-                ->setQuantite($quantite)
-                ->setDisponible($disponible)
-                ->setSeuilAlert($seuilAlert)
-                ->setProduit($produit);
 
             $em->persist($stock);
             $em->flush();
@@ -77,41 +51,29 @@ class StockController extends AbstractController
         }
 
         return $this->render('stock/new.html.twig', [
-            'produits' => $produits,
+            'form' => $form->createView(),
         ]);
     }
 
     #[Route('/{id}/edit', name: 'app_stock_edit', methods: ['GET', 'POST'])]
     public function edit(Request $request, Stock $stock, EntityManagerInterface $em): Response
     {
-        if ($request->isMethod('POST')) {
+       $form = $this->createForm(StockType::class, $stock, ['is_edit' => true]);
+        $form->handleRequest($request);
 
-            $quantite = (int) $request->request->get('quantite');
-            $disponible = (int) $request->request->get('disponible');
-            $seuilAlert = (int) $request->request->get('seuilAlert');
-
-            if ($disponible > $quantite) {
-                $this->addFlash('danger', 'Disponible > Quantité.');
-                return $this->render('stock/edit.html.twig', compact('stock'));
+        if ($form->isSubmitted() && $form->isValid()) {
+            if ($stock->getDisponible() > $stock->getQuantite()) {
+                $this->addFlash('danger', 'La quantité disponible ne peut pas dépasser la quantité totale.');
+                return $this->render('stock/edit.html.twig', ['form' => $form->createView(), 'stock' => $stock]);
             }
-
-            if ($seuilAlert > $quantite) {
-                $this->addFlash('danger', 'Seuil > Quantité.');
-                return $this->render('stock/edit.html.twig', compact('stock'));
-            }
-
-            $stock
-                ->setQuantite($quantite)
-                ->setDisponible($disponible)
-                ->setSeuilAlert($seuilAlert);
 
             $em->flush();
-
             $this->addFlash('success', 'Stock modifié.');
             return $this->redirectToRoute('app_stock_index');
         }
 
         return $this->render('stock/edit.html.twig', [
+            'form'  => $form->createView(),
             'stock' => $stock,
         ]);
     }
@@ -119,10 +81,9 @@ class StockController extends AbstractController
     #[Route('/{id}/delete', name: 'app_stock_delete', methods: ['POST'])]
     public function delete(Request $request, Stock $stock, EntityManagerInterface $em): Response
     {
-        if ($this->isCsrfTokenValid('delete'.$stock->getIdStock(), $request->request->get('_token'))) {
+        if ($this->isCsrfTokenValid('delete' . $stock->getIdStock(), $request->request->get('_token'))) {
             $em->remove($stock);
             $em->flush();
-
             $this->addFlash('success', 'Stock supprimé.');
         }
 

@@ -1,23 +1,21 @@
-{% extends 'fournisseur.html.twig' %}
+{% extends app.session.get('user_role') == 'FOURNISSEUR' ? 'fournisseur.html.twig' : (app.session.get('user_role') == 'AGRICULTEUR' ? 'agriculteur.html.twig' : 'base.html.twig') %}
+
 
 {% block title %}Paiement Commande{% endblock %}
 
 {% block body %}
-
 <section style="padding: 120px 0 60px;">
     <div class="container">
         <div class="row justify-content-center">
             <div class="col-lg-6">
-
                 <div class="card shadow border-0" style="border-radius: 15px;">
                     <div class="card-header text-white text-center py-4"
                          style="background: linear-gradient(to right, #4a7c3a, #66bb6a); border-radius: 15px 15px 0 0;">
                         <h3>💳 Paiement Sécurisé</h3>
                     </div>
-
                     <div class="card-body p-5">
 
-                        <!-- Résumé commande -->
+                        {# Résumé commande #}
                         <div class="card bg-light mb-4" style="border-radius: 10px;">
                             <div class="card-body">
                                 <h5 class="fw-bold text-success">📋 Résumé de la commande</h5>
@@ -42,31 +40,61 @@
                             </div>
                         </div>
 
-                        <!-- Formulaire Stripe -->
-                        <div id="payment-message" class="alert alert-danger" style="display:none;"></div>
+                        {% for message in app.flashes('danger') %}
+                            <div class="alert alert-danger alert-dismissible fade show">
+                                {{ message }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                            </div>
+                        {% endfor %}
 
+                        {{ form_start(form, {'attr': {'novalidate': 'novalidate', 'id': 'formPayment'}}) }}
+
+                        <div class="mb-3">
+                            {{ form_label(form.cardholderName, null, {'label_attr': {'class': 'form-label fw-bold'}}) }}
+                            {{ form_widget(form.cardholderName, {'attr': {'class': 'form-control' ~ (form.cardholderName.vars.errors|length > 0 ? ' is-invalid' : '')}}) }}
+                            {{ form_errors(form.cardholderName) }}
+                        </div>
+
+                        <div class="mb-3">
+                            {{ form_label(form.cardNumber, null, {'label_attr': {'class': 'form-label fw-bold'}}) }}
+                            {{ form_widget(form.cardNumber, {'attr': {'class': 'form-control' ~ (form.cardNumber.vars.errors|length > 0 ? ' is-invalid' : '')}}) }}
+                            {{ form_errors(form.cardNumber) }}
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                {{ form_label(form.expiryDate, null, {'label_attr': {'class': 'form-label fw-bold'}}) }}
+                                {{ form_widget(form.expiryDate, {'attr': {'class': 'form-control' ~ (form.expiryDate.vars.errors|length > 0 ? ' is-invalid' : '')}}) }}
+                                {{ form_errors(form.expiryDate) }}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                {{ form_label(form.cvv, null, {'label_attr': {'class': 'form-label fw-bold'}}) }}
+                                {{ form_widget(form.cvv, {'attr': {'class': 'form-control' ~ (form.cvv.vars.errors|length > 0 ? ' is-invalid' : '')}}) }}
+                                {{ form_errors(form.cvv) }}
+                            </div>
+                        </div>
+
+                        <div id="payment-message" class="alert alert-danger mt-3" style="display:none;"></div>
                         <div id="payment-element" class="mb-4"></div>
 
-                        <button id="submit-btn" class="btn btn-success w-100 py-3 fw-bold">
+                        <button type="submit" id="submit-btn" class="btn btn-success w-100 py-3 fw-bold">
                             <span id="button-text">💳 Payer {{ commande.prixTotal|number_format(2) }} DT</span>
                             <span id="spinner" style="display:none;">
                                 <span class="spinner-border spinner-border-sm"></span> Traitement...
                             </span>
                         </button>
 
-                        <div class="text-center mt-3">
-                            <small class="text-muted">
-                                🔒 Paiement sécurisé par Stripe
-                            </small>
-                        </div>
+                        {{ form_end(form) }}
 
+                        <div class="text-center mt-3">
+                            <small class="text-muted">🔒 Paiement sécurisé par Stripe</small>
+                        </div>
                         <div class="text-center mt-2">
                             <a href="{{ path('app_commande_index') }}" class="btn btn-outline-secondary btn-sm">
                                 <i class="bi bi-arrow-left"></i> Annuler
                             </a>
                         </div>
 
-                        <!-- Carte test -->
                         <div class="alert alert-info mt-4">
                             <strong>🧪 Carte de test :</strong><br>
                             Numéro : <code>4242 4242 4242 4242</code><br>
@@ -75,12 +103,10 @@
 
                     </div>
                 </div>
-
             </div>
         </div>
     </div>
 </section>
-
 {% endblock %}
 
 {% block javascripts %}
@@ -88,7 +114,6 @@
 <script>
 const stripe = Stripe('{{ stripe_pub_key }}');
 let elements;
-
 initialize();
 
 async function initialize() {
@@ -97,31 +122,26 @@ async function initialize() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({})
     });
-
     const { clientSecret, error } = await response.json();
-
     if (error) {
         document.getElementById('payment-message').textContent = error;
         document.getElementById('payment-message').style.display = 'block';
         return;
     }
-
     elements = stripe.elements({ clientSecret });
-
     const paymentElement = elements.create('payment');
     paymentElement.mount('#payment-element');
 }
 
-document.getElementById('submit-btn').addEventListener('click', async function() {
+document.getElementById('formPayment').addEventListener('submit', async function(e) {
+    e.preventDefault();
     setLoading(true);
-
     const { error } = await stripe.confirmPayment({
         elements,
         confirmParams: {
             return_url: '{{ url("app_payment_success", {"id": commande.idCommande}) }}',
         },
     });
-
     if (error) {
         document.getElementById('payment-message').textContent = error.message;
         document.getElementById('payment-message').style.display = 'block';
@@ -130,15 +150,9 @@ document.getElementById('submit-btn').addEventListener('click', async function()
 });
 
 function setLoading(isLoading) {
-    if (isLoading) {
-        document.getElementById('submit-btn').disabled = true;
-        document.getElementById('spinner').style.display = 'inline';
-        document.getElementById('button-text').style.display = 'none';
-    } else {
-        document.getElementById('submit-btn').disabled = false;
-        document.getElementById('spinner').style.display = 'none';
-        document.getElementById('button-text').style.display = 'inline';
-    }
+    document.getElementById('submit-btn').disabled = isLoading;
+    document.getElementById('spinner').style.display = isLoading ? 'inline' : 'none';
+    document.getElementById('button-text').style.display = isLoading ? 'none' : 'inline';
 }
 </script>
 {% endblock %}

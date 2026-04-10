@@ -3,8 +3,10 @@
 namespace App\Controller;
 
 use App\Entity\Commande;
+use App\Form\CommandeType;
 use App\Repository\CommandeRepository;
 use App\Repository\ProduitRepository;
+use App\Repository\UserRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -23,92 +25,68 @@ class CommandeController extends AbstractController
     }
 
     #[Route('/new', name: 'app_commande_new', methods: ['GET', 'POST'])]
-    public function new(Request $request, EntityManagerInterface $em, ProduitRepository $produitRepository): Response
+    public function new(Request $request, EntityManagerInterface $em, UserRepository $userRepository): Response
     {
-        $produits = $produitRepository->findAll();
+        $commande = new Commande();
+        $form = $this->createForm(CommandeType::class, $commande);
+        $form->handleRequest($request);
 
-        if ($request->isMethod('POST')) {
-            $produit = $produitRepository->find($request->request->get('produit_id'));
-            if (!$produit) {
-                $this->addFlash('danger', '❌ Produit introuvable.');
-                return $this->render('commande/new.html.twig', ['produits' => $produits]);
-            }
+        if ($form->isSubmitted() && $form->isValid()) {
+            $produit = $commande->getProduit();
 
             if (!$produit->getActif()) {
                 $this->addFlash('danger', '❌ Ce produit n\'est plus disponible.');
-                return $this->render('commande/new.html.twig', ['produits' => $produits]);
-            }
-
-            $quantiteCommandee = (int) $request->request->get('quantiteCommandee');
-            if ($quantiteCommandee < 1) {
-                $this->addFlash('danger', '❌ La quantité doit être au moins 1.');
-                return $this->render('commande/new.html.twig', ['produits' => $produits]);
-            }
-
-            $dateCommande = $request->request->get('dateCommande');
-            if ($dateCommande < date('Y-m-d')) {
-                $this->addFlash('danger', '❌ La date ne peut pas être dans le passé.');
-                return $this->render('commande/new.html.twig', ['produits' => $produits]);
+                return $this->render('commande/new.html.twig', ['form' => $form->createView()]);
             }
 
             $stock = $produit->getStock();
-            if ($stock && $quantiteCommandee > $stock->getDisponible()) {
+            if ($stock && $commande->getQuantiteCommandee() > $stock->getDisponible()) {
                 $this->addFlash('danger', '⚠️ Stock insuffisant ! Disponible : ' . $stock->getDisponible() . ' unités.');
-                return $this->render('commande/new.html.twig', ['produits' => $produits]);
+                return $this->render('commande/new.html.twig', ['form' => $form->createView()]);
             }
 
             $prixUnitaire = ($produit->getPromo() && $produit->getTauxPromo())
                 ? $produit->getPrixPromo()
                 : $produit->getPrix();
-            $prixTotal = round($prixUnitaire * $quantiteCommandee, 2);
+            $commande->setPrixTotal(round($prixUnitaire * $commande->getQuantiteCommandee(), 2));
 
-            $commande = new Commande();
-            $commande->setDateCommande($dateCommande);
-            $commande->setStatut($request->request->get('statut') ?? 'EN_ATTENTE');
-            $commande->setQuantiteCommandee($quantiteCommandee);
-            $commande->setProduit($produit);
-            $commande->setPrixTotal($prixTotal);
+            // Assigner un user par défaut (le premier user trouvé)
+            if ($commande->getUser() === null) {
+                $user = $userRepository->findOneBy([]);
+                $commande->setUser($user);
+            }
 
             if ($stock) {
-                $stock->setDisponible($stock->getDisponible() - $quantiteCommandee);
+                $stock->setDisponible($stock->getDisponible() - $commande->getQuantiteCommandee());
             }
 
             $em->persist($commande);
             $em->flush();
 
-            $this->addFlash('success', '✅ Commande ajoutée ! Prix total : ' . number_format($prixTotal, 2) . ' DT');
+            $this->addFlash('success', '✅ Commande ajoutée ! Prix total : ' . number_format($commande->getPrixTotal(), 2) . ' DT');
             return $this->redirectToRoute('app_commande_index');
         }
 
         return $this->render('commande/new.html.twig', [
-            'produits' => $produits,
+            'form' => $form->createView(),
         ]);
     }
 
     #[Route('/{id}/edit', name: 'app_commande_edit', methods: ['GET', 'POST'])]
-    public function edit(Request $request, Commande $commande, EntityManagerInterface $em): Response
+    public function edit(Request $request, Commande $commande, EntityManagerInterface $em, UserRepository $userRepository): Response
     {
-        if ($request->isMethod('POST')) {
-            $ancienneQuantite = $commande->getQuantiteCommandee();
-            $nouvelleQuantite = (int) $request->request->get('quantiteCommandee');
-            $dateCommande     = $request->request->get('dateCommande');
+        $ancienneQuantite = $commande->getQuantiteCommandee();
+        $form = $this->createForm(CommandeType::class, $commande);
+        $form->handleRequest($request);
 
-            if ($dateCommande < date('Y-m-d')) {
-                $this->addFlash('danger', '❌ La date ne peut pas être dans le passé.');
-                return $this->render('commande/edit.html.twig', ['commande' => $commande]);
-            }
-
-            if ($nouvelleQuantite < 1) {
-                $this->addFlash('danger', '❌ La quantité doit être au moins 1.');
-                return $this->render('commande/edit.html.twig', ['commande' => $commande]);
-            }
-
-            $stock      = $commande->getProduit()?->getStock();
+        if ($form->isSubmitted() && $form->isValid()) {
+            $nouvelleQuantite = $commande->getQuantiteCommandee();
+            $stock = $commande->getProduit()?->getStock();
             $difference = $nouvelleQuantite - $ancienneQuantite;
 
             if ($stock && $difference > 0 && $difference > $stock->getDisponible()) {
                 $this->addFlash('danger', '⚠️ Stock insuffisant ! Disponible : ' . $stock->getDisponible() . ' unités.');
-                return $this->render('commande/edit.html.twig', ['commande' => $commande]);
+                return $this->render('commande/edit.html.twig', ['form' => $form->createView(), 'commande' => $commande]);
             }
 
             if ($stock) {
@@ -123,9 +101,11 @@ class CommandeController extends AbstractController
                 $commande->setPrixTotal(round($prixUnitaire * $nouvelleQuantite, 2));
             }
 
-            $commande->setStatut($request->request->get('statut'));
-            $commande->setQuantiteCommandee($nouvelleQuantite);
-            $commande->setDateCommande($dateCommande);
+            // Assigner un user par défaut si null
+            if ($commande->getUser() === null) {
+                $user = $userRepository->findOneBy([]);
+                $commande->setUser($user);
+            }
 
             $em->flush();
             $this->addFlash('success', '✅ Commande modifiée avec succès !');
@@ -133,6 +113,7 @@ class CommandeController extends AbstractController
         }
 
         return $this->render('commande/edit.html.twig', [
+            'form'     => $form->createView(),
             'commande' => $commande,
         ]);
     }
@@ -146,7 +127,6 @@ class CommandeController extends AbstractController
                 $stock = $produit->getStock();
                 $stock->setDisponible($stock->getDisponible() + $commande->getQuantiteCommandee());
             }
-
             $em->remove($commande);
             $em->flush();
             $this->addFlash('success', '✅ Commande supprimée !');

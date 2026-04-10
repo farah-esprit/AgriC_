@@ -119,9 +119,8 @@
                     <li><a href="{{ path('app_produit_index') }}">Produits</a></li>
                     <li><a href="{{ path('app_stock_index') }}">Stocks</a></li>
                     <li><a href="{{ path('app_commande_index') }}">Commandes</a></li>
-                    <li><a href="{{ path('app_evenement_index') }}">Événements</a></li>
-                    <li><a href="{{ path('app_reclamation_index') }}">Réclamations</a></li>
-                    
+                    <li><a href="{{ path('thread_index') }}">Forum</a></li>
+
 
                     {# ✅ Dropdown user — affiché uniquement si connecté #}
                     {% if app.session.get('user_id') %}

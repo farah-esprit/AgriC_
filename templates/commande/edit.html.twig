@@ -2,149 +2,129 @@
 
 {% block title %}Modifier une Commande{% endblock %}
 
-{% block body %}
+{% block stylesheets %}
+{{ parent() }}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<style>
+    .calendar-wrapper { position: relative; }
+    .calendar-wrapper input { padding-right: 40px; }
+    .calendar-icon-btn {
+        position: absolute;
+        right: 10px;
+        top: 50%;
+        transform: translateY(-50%);
+        cursor: pointer;
+        color: #4a7c3a;
+        font-size: 1.2rem;
+        background: none;
+        border: none;
+        z-index: 10;
+    }
+</style>
+{% endblock %}
 
+{% block body %}
 <section style="padding: 120px 0 60px;">
     <div class="container">
         <div class="row justify-content-center">
-            <div class="col-lg-6">
-
+            <div class="col-lg-7">
                 <div class="card shadow border-0" style="border-radius: 15px;">
                     <div class="card-header text-white text-center py-4"
                          style="background: linear-gradient(to right, #4a7c3a, #66bb6a); border-radius: 15px 15px 0 0;">
                         <h3>✏️ Modifier la Commande</h3>
                     </div>
-
                     <div class="card-body p-5">
 
-                        {% if erreurs is defined and erreurs|length > 0 %}
-                            <div class="alert alert-danger">
-                                <ul class="mb-0">
-                                    {% for erreur in erreurs %}
-                                        <li>{{ erreur }}</li>
-                                    {% endfor %}
-                                </ul>
+                        {% for message in app.flashes('danger') %}
+                            <div class="alert alert-danger alert-dismissible fade show">
+                                {{ message }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                             </div>
-                        {% endif %}
+                        {% endfor %}
 
-                        <form method="post" id="formCommande" novalidate>
+                        {{ form_start(form, {'attr': {'novalidate': 'novalidate'}}) }}
 
-                            <div class="mb-3">
-                                <label class="form-label fw-bold">📅 Date *</label>
-                                <input type="date" name="dateCommande" id="dateCommande"
-                                       class="form-control is-valid"
-                                       value="{{ commande.dateCommande }}" required>
-                                <div class="invalid-feedback">La date est obligatoire.</div>
-                                <div class="valid-feedback">✅ Correct !</div>
+                        <div class="mb-3">
+                            {{ form_label(form.produit, null, {'label_attr': {'class': 'form-label fw-bold'}}) }}
+                            {{ form_widget(form.produit, {'attr': {'class': 'form-select' ~ (form.produit.vars.errors|length > 0 ? ' is-invalid' : '')}}) }}
+                            {{ form_errors(form.produit) }}
+                        </div>
+
+                        <div class="mb-3">
+                            {{ form_label(form.quantiteCommandee, null, {'label_attr': {'class': 'form-label fw-bold'}}) }}
+                            {{ form_widget(form.quantiteCommandee, {'attr': {'class': 'form-control' ~ (form.quantiteCommandee.vars.errors|length > 0 ? ' is-invalid' : '')}}) }}
+                            {{ form_errors(form.quantiteCommandee) }}
+                        </div>
+
+                        <div class="mb-3">
+                            {{ form_label(form.dateCommande, null, {'label_attr': {'class': 'form-label fw-bold'}}) }}
+                            <div class="calendar-wrapper">
+                                {{ form_widget(form.dateCommande, {
+                                    'attr': {
+                                        'class': 'form-control' ~ (form.dateCommande.vars.errors|length > 0 ? ' is-invalid' : ''),
+                                        'placeholder': 'Cliquez pour choisir une date...',
+                                        'readonly': 'readonly',
+                                        'style': 'cursor:pointer;'
+                                    }
+                                }) }}
+                                <button type="button" class="calendar-icon-btn" id="calendarBtn">📅</button>
                             </div>
+                            {{ form_errors(form.dateCommande) }}
+                        </div>
 
-                            <div class="mb-3">
-                                <label class="form-label fw-bold">📊 Quantité *</label>
-                                <input type="number" name="quantiteCommandee" id="quantiteCommandee"
-                                       class="form-control is-valid"
-                                       value="{{ commande.quantiteCommandee }}"
-                                       min="1" max="99999" required>
-                                <div class="invalid-feedback">La quantité doit être un nombre entier supérieur à 0.</div>
-                                <div class="valid-feedback">✅ Correct !</div>
-                            </div>
+                        <div class="mb-3">
+                            {{ form_label(form.statut, null, {'label_attr': {'class': 'form-label fw-bold'}}) }}
+                            {{ form_widget(form.statut, {'attr': {'class': 'form-select' ~ (form.statut.vars.errors|length > 0 ? ' is-invalid' : '')}}) }}
+                            {{ form_errors(form.statut) }}
+                        </div>
 
-                            <div class="mb-4">
-                                <label class="form-label fw-bold">📌 Statut *</label>
-                                <select name="statut" id="statut" class="form-select is-valid" required>
-                                    {% for statut in ['EN_ATTENTE', 'VALIDEE', 'EXPEDIEE', 'LIVREE', 'ANNULEE'] %}
-                                        <option value="{{ statut }}"
-                                            {{ commande.statut == statut ? 'selected' : '' }}>
-                                            {{ statut }}
-                                        </option>
-                                    {% endfor %}
-                                </select>
-                                <div class="invalid-feedback">Veuillez choisir un statut.</div>
-                                <div class="valid-feedback">✅ Correct !</div>
-                            </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Prix Total (TND)</label>
+                            <input type="text" class="form-control" value="{{ commande.prixTotal }} TND" readonly
+                                   style="background-color: #f8f9fa; cursor: not-allowed;">
+                        </div>
 
-                            <div class="d-flex gap-2">
-                                <button type="submit" class="btn btn-success flex-grow-1">
-                                    <i class="bi bi-check-circle"></i> Modifier
-                                </button>
-                                <a href="{{ path('app_commande_index') }}" class="btn btn-outline-secondary">
-                                    <i class="bi bi-arrow-left"></i> Retour
-                                </a>
-                            </div>
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-success flex-grow-1">
+                                <i class="bi bi-check-circle"></i> Modifier
+                            </button>
+                            <a href="{{ path('app_commande_index') }}" class="btn btn-outline-secondary">
+                                <i class="bi bi-arrow-left"></i> Retour
+                            </a>
+                        </div>
 
-                        </form>
+                        {{ form_end(form) }}
                     </div>
                 </div>
-
             </div>
         </div>
     </div>
 </section>
-
 {% endblock %}
 
 {% block javascripts %}
+{{ parent() }}
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/fr.js"></script>
 <script>
-// ✅ Validation date
-document.getElementById('dateCommande').addEventListener('change', function() {
-    if (!this.value) {
-        this.classList.add('is-invalid');
-        this.classList.remove('is-valid');
-    } else {
-        this.classList.add('is-valid');
-        this.classList.remove('is-invalid');
-    }
-});
+    document.addEventListener("DOMContentLoaded", function () {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
 
-// ✅ Validation quantité - entiers uniquement
-document.getElementById('quantiteCommandee').addEventListener('input', function() {
-    this.value = this.value.replace(/[^0-9]/g, '');
-    const val = parseInt(this.value);
-    if (isNaN(val) || val <= 0) {
-        this.classList.add('is-invalid');
-        this.classList.remove('is-valid');
-    } else {
-        this.classList.add('is-valid');
-        this.classList.remove('is-invalid');
-    }
-});
+        const fp = flatpickr("#commande_dateCommande", {
+            locale: "fr",
+            dateFormat: "Y-m-d",
+            minDate: today,
+            allowInput: false,
+        });
 
-// ✅ Validation statut
-document.getElementById('statut').addEventListener('change', function() {
-    if (this.value === '') {
-        this.classList.add('is-invalid');
-        this.classList.remove('is-valid');
-    } else {
-        this.classList.add('is-valid');
-        this.classList.remove('is-invalid');
-    }
-});
+        document.getElementById("calendarBtn").addEventListener("click", function () {
+            fp.open();
+        });
 
-// ✅ Validation formulaire à la soumission
-document.getElementById('formCommande').addEventListener('submit', function(e) {
-    const date = document.getElementById('dateCommande').value;
-    const quantite = parseInt(document.getElementById('quantiteCommandee').value);
-    const statut = document.getElementById('statut').value;
-    let valid = true;
-
-    if (!date) {
-        document.getElementById('dateCommande').classList.add('is-invalid');
-        valid = false;
-    }
-
-    if (isNaN(quantite) || quantite <= 0) {
-        document.getElementById('quantiteCommandee').classList.add('is-invalid');
-        valid = false;
-    }
-
-    if (statut === '') {
-        document.getElementById('statut').classList.add('is-invalid');
-        valid = false;
-    }
-
-    if (!valid) {
-        e.preventDefault();
-        window.scrollTo(0, 0);
-    }
-});
+        document.getElementById("commande_dateCommande").addEventListener("click", function () {
+            fp.open();
+        });
+    });
 </script>
 {% endblock %}

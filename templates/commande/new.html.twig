@@ -2,6 +2,27 @@
 
 {% block title %}Ajouter une Commande{% endblock %}
 
+{% block stylesheets %}
+{{ parent() }}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<style>
+    .calendar-wrapper { position: relative; }
+    .calendar-wrapper input { padding-right: 40px; }
+    .calendar-icon-btn {
+        position: absolute;
+        right: 10px;
+        top: 50%;
+        transform: translateY(-50%);
+        cursor: pointer;
+        color: #4a7c3a;
+        font-size: 1.2rem;
+        background: none;
+        border: none;
+        z-index: 10;
+    }
+</style>
+{% endblock %}
+
 {% block body %}
 <section style="padding: 120px 0 60px;">
     <div class="container">
@@ -21,63 +42,58 @@
                             </div>
                         {% endfor %}
 
-                        <form method="post" id="formCommande" novalidate>
+                        {{ form_start(form, {'attr': {'novalidate': 'novalidate'}}) }}
 
-                            <div class="mb-3">
-                                <label class="form-label fw-bold">🌿 Produit *</label>
-                                <select name="produit_id" id="produit_id" class="form-select" required>
-                                    <option value="">-- Choisir un produit --</option>
-                                    {% for produit in produits %}
-                                        <option value="{{ produit.idProduit }}">
-                                            {{ produit.nom }} — {{ produit.prix|number_format(2) }} DT
-                                            {% if produit.promo %}🔥 PROMO{% endif %}
-                                        </option>
-                                    {% endfor %}
-                                </select>
-                                <div class="invalid-feedback">Veuillez choisir un produit.</div>
-                                <div class="valid-feedback">✅ Correct !</div>
+                        <div class="mb-3">
+                            {{ form_label(form.produit, null, {'label_attr': {'class': 'form-label fw-bold'}}) }}
+                            {{ form_widget(form.produit, {'attr': {'class': 'form-select' ~ (form.produit.vars.errors|length > 0 ? ' is-invalid' : '')}}) }}
+                            {{ form_errors(form.produit) }}
+                        </div>
+
+                        <div class="mb-3">
+                            {{ form_label(form.quantiteCommandee, null, {'label_attr': {'class': 'form-label fw-bold'}}) }}
+                            {{ form_widget(form.quantiteCommandee, {'attr': {'class': 'form-control' ~ (form.quantiteCommandee.vars.errors|length > 0 ? ' is-invalid' : '')}}) }}
+                            {{ form_errors(form.quantiteCommandee) }}
+                        </div>
+
+                        <div class="mb-3">
+                            {{ form_label(form.dateCommande, null, {'label_attr': {'class': 'form-label fw-bold'}}) }}
+                            <div class="calendar-wrapper">
+                                {{ form_widget(form.dateCommande, {
+                                    'attr': {
+                                        'class': 'form-control' ~ (form.dateCommande.vars.errors|length > 0 ? ' is-invalid' : ''),
+                                        'placeholder': 'Cliquez pour choisir une date...',
+                                        'readonly': 'readonly',
+                                        'style': 'cursor:pointer;'
+                                    }
+                                }) }}
+                                <button type="button" class="calendar-icon-btn" id="calendarBtn">📅</button>
                             </div>
+                            {{ form_errors(form.dateCommande) }}
+                        </div>
 
-                            <div class="mb-3">
-                                <label class="form-label fw-bold">📦 Quantité commandée *</label>
-                                <input type="number" name="quantiteCommandee" id="quantiteCommandee"
-                                       class="form-control" placeholder="Ex: 5" min="1" max="9999" required>
-                                <div class="invalid-feedback">La quantité doit être un entier supérieur à 0.</div>
-                                <div class="valid-feedback">✅ Correct !</div>
-                            </div>
+                        <div class="mb-3">
+                            {{ form_label(form.statut, null, {'label_attr': {'class': 'form-label fw-bold'}}) }}
+                            {{ form_widget(form.statut, {'attr': {'class': 'form-select' ~ (form.statut.vars.errors|length > 0 ? ' is-invalid' : '')}}) }}
+                            {{ form_errors(form.statut) }}
+                        </div>
 
-                            <div class="mb-3">
-                                <label class="form-label fw-bold">📅 Date de commande *</label>
-                                <input type="date" name="dateCommande" id="dateCommande"
-                                       class="form-control" required>
-                                <div class="invalid-feedback">La date ne peut pas être dans le passé.</div>
-                                <div class="valid-feedback">✅ Correct !</div>
-                            </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Prix Total (TND)</label>
+                            <input type="text" class="form-control" value="Calculé automatiquement" readonly
+                                   style="background-color: #f8f9fa; cursor: not-allowed;">
+                        </div>
 
-                            <div class="mb-4">
-                                <label class="form-label fw-bold">🔄 Statut *</label>
-                                <select name="statut" id="statut" class="form-select" required>
-                                    <option value="">-- Choisir un statut --</option>
-                                    <option value="EN_ATTENTE">⏳ En attente</option>
-                                    <option value="VALIDEE">✅ Validée</option>
-                                    <option value="EXPEDIEE">🚚 Expédiée</option>
-                                    <option value="LIVREE">📦 Livrée</option>
-                                    <option value="ANNULEE">❌ Annulée</option>
-                                </select>
-                                <div class="invalid-feedback">Veuillez choisir un statut.</div>
-                                <div class="valid-feedback">✅ Correct !</div>
-                            </div>
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-success flex-grow-1">
+                                <i class="bi bi-check-circle"></i> Enregistrer
+                            </button>
+                            <a href="{{ path('app_commande_index') }}" class="btn btn-outline-secondary">
+                                <i class="bi bi-arrow-left"></i> Retour
+                            </a>
+                        </div>
 
-                            <div class="d-flex gap-2">
-                                <button type="submit" class="btn btn-success flex-grow-1">
-                                    <i class="bi bi-check-circle"></i> Enregistrer
-                                </button>
-                                <a href="{{ path('app_commande_index') }}" class="btn btn-outline-secondary">
-                                    <i class="bi bi-arrow-left"></i> Retour
-                                </a>
-                            </div>
-
-                        </form>
+                        {{ form_end(form) }}
                     </div>
                 </div>
             </div>
@@ -87,91 +103,28 @@
 {% endblock %}
 
 {% block javascripts %}
+{{ parent() }}
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/fr.js"></script>
 <script>
-// Date minimale = aujourd'hui
-document.addEventListener('DOMContentLoaded', function() {
-    const today = new Date().toISOString().split('T')[0];
-    document.getElementById('dateCommande').min = today;
-});
+    document.addEventListener("DOMContentLoaded", function () {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
 
-// Validation produit
-document.getElementById('produit_id').addEventListener('change', function() {
-    if (this.value === '') {
-        this.classList.add('is-invalid');
-        this.classList.remove('is-valid');
-    } else {
-        this.classList.add('is-valid');
-        this.classList.remove('is-invalid');
-    }
-});
+        const fp = flatpickr("#commande_dateCommande", {
+            locale: "fr",
+            dateFormat: "Y-m-d",
+            minDate: today,
+            allowInput: false,
+        });
 
-// Validation quantité - entiers uniquement
-document.getElementById('quantiteCommandee').addEventListener('input', function() {
-    this.value = this.value.replace(/[^0-9]/g, '');
-    const val = parseInt(this.value);
-    if (isNaN(val) || val < 1) {
-        this.classList.add('is-invalid');
-        this.classList.remove('is-valid');
-    } else {
-        this.classList.add('is-valid');
-        this.classList.remove('is-invalid');
-    }
-});
+        document.getElementById("calendarBtn").addEventListener("click", function () {
+            fp.open();
+        });
 
-// Validation date
-document.getElementById('dateCommande').addEventListener('change', function() {
-    const today = new Date().toISOString().split('T')[0];
-    if (this.value === '' || this.value < today) {
-        this.classList.add('is-invalid');
-        this.classList.remove('is-valid');
-    } else {
-        this.classList.add('is-valid');
-        this.classList.remove('is-invalid');
-    }
-});
-
-// Validation statut
-document.getElementById('statut').addEventListener('change', function() {
-    if (this.value === '') {
-        this.classList.add('is-invalid');
-        this.classList.remove('is-valid');
-    } else {
-        this.classList.add('is-valid');
-        this.classList.remove('is-invalid');
-    }
-});
-
-// Validation à la soumission
-document.getElementById('formCommande').addEventListener('submit', function(e) {
-    let valid = true;
-
-    if (document.getElementById('produit_id').value === '') {
-        document.getElementById('produit_id').classList.add('is-invalid');
-        valid = false;
-    }
-
-    const qte = parseInt(document.getElementById('quantiteCommandee').value);
-    if (isNaN(qte) || qte < 1) {
-        document.getElementById('quantiteCommandee').classList.add('is-invalid');
-        valid = false;
-    }
-
-    const today = new Date().toISOString().split('T')[0];
-    const date = document.getElementById('dateCommande').value;
-    if (date === '' || date < today) {
-        document.getElementById('dateCommande').classList.add('is-invalid');
-        valid = false;
-    }
-
-    if (document.getElementById('statut').value === '') {
-        document.getElementById('statut').classList.add('is-invalid');
-        valid = false;
-    }
-
-    if (!valid) {
-        e.preventDefault();
-        window.scrollTo(0, 0);
-    }
-});
+        document.getElementById("commande_dateCommande").addEventListener("click", function () {
+            fp.open();
+        });
+    });
 </script>
 {% endblock %}

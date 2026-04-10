@@ -22,8 +22,8 @@ class ForumController extends AbstractController
     {
         $userRole = $session->get('user_role');
 
-        if (!$session->get('user_id') || !in_array($userRole, ['AGRICULTEUR', 'EXPERT'])) {
-            $this->addFlash('error', 'Accès réservé aux agriculteurs et experts.');
+        if (!$session->get('user_id') || !in_array($userRole, ['AGRICULTEUR', 'EXPERT', 'FOURNISSEUR'])) {
+            $this->addFlash('error', 'Accès réservé aux agriculteurs, fournisseurs et experts.');
             return $this->redirectToRoute('app_home');
         }
 
@@ -56,7 +56,7 @@ class ForumController extends AbstractController
     {
         $userRole = $session->get('user_role');
 
-        if (!$session->get('user_id') || !in_array($userRole, ['AGRICULTEUR', 'EXPERT'])) {
+        if (!$session->get('user_id') || !in_array($userRole, ['AGRICULTEUR', 'EXPERT', 'FOURNISSEUR'])) {
             $this->addFlash('error', 'Accès réservé.');
             return $this->redirectToRoute('app_home');
         }

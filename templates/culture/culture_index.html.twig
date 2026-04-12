@@ -56,30 +56,6 @@
             </div>
         </div>
 
-        {# ── GRAPHIQUES ── #}
-        <div class="row g-3 mb-4">
-            <div class="col-md-6">
-                <div class="card shadow border-0" style="border-radius:15px;">
-                    <div class="card-header text-white py-3" style="background: linear-gradient(to right,#4a7c3a,#66bb6a); border-radius:15px 15px 0 0;">
-                        <h6 class="mb-0">📊 Répartition par Type</h6>
-                    </div>
-                    <div class="card-body">
-                        <canvas id="chartType" height="200"></canvas>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-6">
-                <div class="card shadow border-0" style="border-radius:15px;">
-                    <div class="card-header text-white py-3" style="background: linear-gradient(to right,#4a7c3a,#66bb6a); border-radius:15px 15px 0 0;">
-                        <h6 class="mb-0">📈 Nombre de Cultures par Type</h6>
-                    </div>
-                    <div class="card-body">
-                        <canvas id="chartSuperficie" height="200"></canvas>
-                    </div>
-                </div>
-            </div>
-        </div>
-
         {# ── RECHERCHE ET FILTRES ── #}
         <div class="card shadow border-0 mb-4" style="border-radius:15px;">
             <div class="card-body p-4">
@@ -171,41 +147,4 @@
 
     </div>
 </section>
-{% endblock %}
-
-{% block javascripts %}
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script>
-    {% if stats.parType is defined and stats.parType|length > 0 %}
-    const parType = {{ stats.parType|json_encode|raw }};
-    const labels  = parType.map(item => item.type || 'Inconnu');
-    const totals  = parType.map(item => parseInt(item.total));
-    const colors  = ['#66bb6a','#42a5f5','#ffa726','#ab47bc','#ef5350','#26c6da'];
-
-    new Chart(document.getElementById('chartType'), {
-        type: 'doughnut',
-        data: {
-            labels: labels,
-            datasets: [{ data: totals, backgroundColor: colors }]
-        },
-        options: { plugins: { legend: { position: 'bottom' } } }
-    });
-
-    new Chart(document.getElementById('chartSuperficie'), {
-        type: 'bar',
-        data: {
-            labels: labels,
-            datasets: [{
-                label: 'Nombre de cultures',
-                data: totals,
-                backgroundColor: colors
-            }]
-        },
-        options: {
-            plugins: { legend: { display: false } },
-            scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } }
-        }
-    });
-    {% endif %}
-</script>
 {% endblock %}

@@ -16,28 +16,56 @@ class Culture
     private ?int $idCulture = null;
 
     #[ORM\Column(type: 'string', nullable: true, name: 'nom')]
-    #[Assert\NotBlank(message: 'Le nom est obligatoire.')]
-    #[Assert\Length(min: 2, max: 100, minMessage: 'Minimum 2 caractères.', maxMessage: 'Maximum 100 caractères.')]
-    #[Assert\Regex(pattern: '/^[a-zA-ZÀ-ÿ\s\'-]+$/', message: 'Le nom doit contenir uniquement des lettres.')]
+    #[Assert\NotBlank(message: 'Le nom de la culture est obligatoire.')]
+    #[Assert\Length(
+        min: 3,
+        max: 100,
+        minMessage: 'Le nom doit contenir au moins {{ limit }} caractères.',
+        maxMessage: 'Le nom ne peut pas dépasser {{ limit }} caractères.'
+    )]
+    #[Assert\Regex(
+        pattern: '/^[\p{L}\s\-\.]+$/u',
+        message: 'Le nom ne peut contenir que des lettres, espaces, tirets ou points.'
+    )]
+    #[Assert\Regex(
+        pattern: '/[\p{L}]{3,}/u',
+        message: 'Le nom doit contenir au moins 3 lettres consécutives.'
+    )]
     private ?string $nom = null;
 
     #[ORM\Column(type: 'string', nullable: true, name: 'type')]
-    #[Assert\NotBlank(message: 'Le type est obligatoire.')]
+    #[Assert\NotBlank(message: 'Veuillez sélectionner un type de culture.')]
     #[Assert\Choice(
         choices: ['Céréales', 'Légumes', 'Fruits', 'Oléagineux', 'Fourragères', 'Autre'],
-        message: 'Type invalide.'
+        message: 'Le type sélectionné est invalide.'
     )]
     private ?string $type = null;
 
     #[ORM\Column(type: 'float', nullable: true, name: 'superficie')]
     #[Assert\NotBlank(message: 'La superficie est obligatoire.')]
-    #[Assert\Positive(message: 'La superficie doit être positive.')]
+    #[Assert\Positive(message: 'La superficie doit être un nombre positif.')]
+    #[Assert\LessThanOrEqual(
+        value: 100000,
+        message: 'La superficie ne peut pas dépasser {{ compared_value }} hectares.'
+    )]
     private ?float $superficie = null;
 
     #[ORM\Column(type: 'string', nullable: true, name: 'localisation')]
     #[Assert\NotBlank(message: 'La localisation est obligatoire.')]
-    #[Assert\Length(min: 2, max: 150, minMessage: 'Minimum 2 caractères.', maxMessage: 'Maximum 150 caractères.')]
-    #[Assert\Regex(pattern: '/^[a-zA-ZÀ-ÿ\s\'-]+$/', message: 'La localisation doit contenir uniquement des lettres.')]
+    #[Assert\Length(
+        min: 3,
+        max: 150,
+        minMessage: 'La localisation doit contenir au moins {{ limit }} caractères.',
+        maxMessage: 'La localisation ne peut pas dépasser {{ limit }} caractères.'
+    )]
+    #[Assert\Regex(
+        pattern: '/^[\p{L}\s\-\,\.]+$/u',
+        message: 'La localisation ne peut contenir que des lettres, espaces, virgules, tirets ou points.'
+    )]
+    #[Assert\Regex(
+        pattern: '/[\p{L}]{3,}/u',
+        message: 'La localisation doit contenir au moins 3 lettres consécutives.'
+    )]
     private ?string $localisation = null;
 
     #[ORM\Column(type: 'integer', nullable: true, name: 'idUser')]
@@ -45,6 +73,8 @@ class Culture
 
     #[ORM\Column(type: 'string', nullable: true, name: 'image')]
     private ?string $image = null;
+
+    // ── Getters & Setters ──
 
     public function getIdCulture(): ?int { return $this->idCulture; }
 

@@ -34,13 +34,10 @@
                                 <th style="color: #4a7c3a;">📍 Localisation</th>
                                 <td>{{ culture.localisation }}</td>
                             </tr>
-                            <tr>
-                                <th style="color: #4a7c3a;">👤 ID Utilisateur</th>
-                                <td>{{ culture.userId }}</td>
-                            </tr>
+
                         </table>
 
-                        <div class="d-flex gap-2 mt-3">
+                        <div class="dflex gap-2 mt-3">
                             <a href="{{ path('app_culture_edit', {'id': culture.idCulture}) }}"
                                class="btn btn-warning flex-grow-1">
                                 <i class="bi bi-pencil"></i> Modifier

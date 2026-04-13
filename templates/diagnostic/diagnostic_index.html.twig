@@ -133,8 +133,12 @@
                                 {{ diagnostic.dateDiagnostic }}
                             </p>
                             <p class="mb-2">
-                                <span class="fw-bold" style="color:#4a7c3a;">🌿 Culture ID :</span>
-                                <span class="badge ms-1" style="background-color:#66bb6a;">{{ diagnostic.idCulture }}</span>
+                                <span class="fw-bold" style="color:#4a7c3a;">🌿 Culture :</span>
+
+                                {# ✅ CORRECTION ICI #}
+                                <span class="badge ms-1" style="background-color:#66bb6a;">
+                                    {{ diagnostic.culture ? diagnostic.culture.nom : 'Aucune culture' }}
+                                </span>
                             </p>
                             <p class="mb-2">
                                 <span class="fw-bold" style="color:#4a7c3a;">🤒 Symptômes :</span>
@@ -185,6 +189,7 @@
     new Chart(document.getElementById('chartCulture'), {
         type: 'doughnut',
         data: {
+            {# ✅ CORRECTION ICI — utilise idCulture retourné par IDENTITY() #}
             labels: parCulture.map(i => 'Culture #' + i.idCulture),
             datasets: [{ data: parCulture.map(i => parseInt(i.total)), backgroundColor: colors }]
         },

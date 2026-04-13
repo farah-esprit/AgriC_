@@ -11,7 +11,6 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
-use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 #[Route('/diagnostic')]
 class DiagnosticController extends AbstractController
@@ -28,10 +27,10 @@ class DiagnosticController extends AbstractController
         $dateFin       = $request->query->get('dateFin');
 
         $diagnostics = match (true) {
-            (bool) $search                    => $diagnosticRepository->search((string) $search),
-            (bool) $filterCulture             => $diagnosticRepository->filterByCulture((string) $filterCulture),
-            (bool) ($dateDebut && $dateFin)   => $diagnosticRepository->filterByDateRange(new \DateTime((string) $dateDebut), new \DateTime((string) $dateFin)),
-            default                           => $diagnosticRepository->findAll(),
+            (bool) $search                  => $diagnosticRepository->search((string) $search),
+            (bool) $filterCulture           => $diagnosticRepository->filterByCulture((int) $filterCulture),
+            (bool) ($dateDebut && $dateFin) => $diagnosticRepository->filterByDateRange((string) $dateDebut, (string) $dateFin),
+            default                         => $diagnosticRepository->findAll(),
         };
 
         $stats = [
@@ -52,64 +51,108 @@ class DiagnosticController extends AbstractController
         ]);
     }
 
-    #[Route('/new', name: 'app_diagnostic_new', methods: ['GET', 'POST'])]
-    public function new(
-        Request $request,
-        EntityManagerInterface $em,
-        CultureRepository $cultureRepository
-    ): Response {
-        $diagnostic = new Diagnostic();
-        $form = $this->createForm(DiagnosticType::class, $diagnostic);
-        $form->handleRequest($request);
+   #[Route('/new', name: 'app_diagnostic_new', methods: ['GET', 'POST'])]
+   public function new(
+       Request $request,
+       EntityManagerInterface $em,
+       CultureRepository $cultureRepository
+   ): Response {
+       $erreurs = [];
 
-        if ($form->isSubmitted() && $form->isValid()) {
-            $em->persist($diagnostic);
-            $em->flush();
-            $this->addFlash('success', 'Diagnostic ajouté avec succès !');
-            return $this->redirectToRoute('app_diagnostic_index');
-        }
+       if ($request->isMethod('POST')) {
+           $dateDiagnostic              = $request->request->get('dateDiagnostic');
+           $idCulture                   = $request->request->get('idCulture');
+           $symptomes                   = $request->request->get('symptomes');
+           $informationsComplementaires = $request->request->get('informationsComplementaires');
 
-        return $this->render('diagnostic/diagnostic_new.html.twig', [
-            'form'     => $form->createView(),
-            'cultures' => $cultureRepository->findAll(),
-        ]);
-    }
+           // ✅ Récupérer l'objet Culture
+           $culture = $cultureRepository->find($idCulture);
+
+           if (!$culture) {
+               $erreurs[] = 'Culture invalide.';
+           }
+           if (!$dateDiagnostic) {
+               $erreurs[] = 'La date est obligatoire.';
+           }
+           if (strlen(trim($symptomes)) < 5) {
+               $erreurs[] = 'Les symptômes doivent contenir au moins 5 caractères.';
+           }
+
+           if (empty($erreurs)) {
+               $diagnostic = new Diagnostic();
+               $diagnostic->setDateDiagnostic($dateDiagnostic);
+               $diagnostic->setCulture($culture); // ✅ objet Culture
+               $diagnostic->setSymptomes($symptomes);
+               $diagnostic->setInformationsComplementaires($informationsComplementaires);
+
+               $em->persist($diagnostic);
+               $em->flush();
+               $this->addFlash('success', 'Diagnostic ajouté avec succès !');
+               return $this->redirectToRoute('app_diagnostic_index');
+           }
+       }
+
+       return $this->render('diagnostic/diagnostic_new.html.twig', [
+           'cultures' => $cultureRepository->findAll(),
+           'erreurs'  => $erreurs,
+       ]);
+   }
 
     #[Route('/{id}', name: 'app_diagnostic_show', methods: ['GET'])]
-    public function show(Diagnostic $diagnostic, CultureRepository $cultureRepository): Response
+    public function show(Diagnostic $diagnostic): Response
     {
-        $culture = $diagnostic->getIdCulture()
-            ? $cultureRepository->find($diagnostic->getIdCulture())
-            : null;
-
+        // ✅ Plus besoin de CultureRepository — la relation charge automatiquement
         return $this->render('diagnostic/diagnostic_show.html.twig', [
             'diagnostic' => $diagnostic,
-            'culture'    => $culture,
         ]);
     }
 
-    #[Route('/{id}/edit', name: 'app_diagnostic_edit', methods: ['GET', 'POST'])]
-    public function edit(
-        Request $request,
-        Diagnostic $diagnostic,
-        EntityManagerInterface $em,
-        CultureRepository $cultureRepository
-    ): Response {
-        $form = $this->createForm(DiagnosticType::class, $diagnostic);
-        $form->handleRequest($request);
+   #[Route('/{id}/edit', name: 'app_diagnostic_edit', methods: ['GET', 'POST'])]
+   public function edit(
+       Request $request,
+       Diagnostic $diagnostic,
+       EntityManagerInterface $em,
+       CultureRepository $cultureRepository
+   ): Response {
+       $erreurs = [];
 
-        if ($form->isSubmitted() && $form->isValid()) {
-            $em->flush();
-            $this->addFlash('success', 'Diagnostic modifié avec succès !');
-            return $this->redirectToRoute('app_diagnostic_index');
-        }
+       if ($request->isMethod('POST')) {
+           $dateDiagnostic              = $request->request->get('dateDiagnostic');
+           $idCulture                   = $request->request->get('idCulture');
+           $symptomes                   = $request->request->get('symptomes');
+           $informationsComplementaires = $request->request->get('informationsComplementaires');
 
-        return $this->render('diagnostic/diagnostic_edit.html.twig', [
-            'diagnostic' => $diagnostic,
-            'form'       => $form->createView(),
-            'cultures'   => $cultureRepository->findAll(),
-        ]);
-    }
+           // ✅ Récupérer l'objet Culture
+           $culture = $cultureRepository->find($idCulture);
+
+           if (!$culture) {
+               $erreurs[] = 'Culture invalide.';
+           }
+           if (!$dateDiagnostic) {
+               $erreurs[] = 'La date est obligatoire.';
+           }
+           if (strlen(trim($symptomes)) < 5) {
+               $erreurs[] = 'Les symptômes doivent contenir au moins 5 caractères.';
+           }
+
+           if (empty($erreurs)) {
+               $diagnostic->setDateDiagnostic($dateDiagnostic);
+               $diagnostic->setCulture($culture); // ✅ objet Culture
+               $diagnostic->setSymptomes($symptomes);
+               $diagnostic->setInformationsComplementaires($informationsComplementaires);
+
+               $em->flush();
+               $this->addFlash('success', 'Diagnostic modifié avec succès !');
+               return $this->redirectToRoute('app_diagnostic_index');
+           }
+       }
+
+       return $this->render('diagnostic/diagnostic_edit.html.twig', [
+           'diagnostic' => $diagnostic,
+           'cultures'   => $cultureRepository->findAll(),
+           'erreurs'    => $erreurs,
+       ]);
+   }
 
     #[Route('/{id}/delete', name: 'app_diagnostic_delete', methods: ['POST'])]
     public function delete(Request $request, Diagnostic $diagnostic, EntityManagerInterface $em): Response

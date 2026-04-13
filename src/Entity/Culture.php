@@ -3,6 +3,8 @@
 namespace App\Entity;
 
 use App\Repository\CultureRepository;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
 
@@ -74,6 +76,15 @@ class Culture
     #[ORM\Column(type: 'string', nullable: true, name: 'image')]
     private ?string $image = null;
 
+    // ── Relation OneToMany vers Diagnostic ──
+    #[ORM\OneToMany(mappedBy: 'culture', targetEntity: Diagnostic::class, cascade: ['remove'])]
+    private Collection $diagnostics;
+
+    public function __construct()
+    {
+        $this->diagnostics = new ArrayCollection();
+    }
+
     // ── Getters & Setters ──
 
     public function getIdCulture(): ?int { return $this->idCulture; }
@@ -95,4 +106,25 @@ class Culture
 
     public function getImage(): ?string { return $this->image; }
     public function setImage(?string $image): self { $this->image = $image; return $this; }
+
+    public function getDiagnostics(): Collection { return $this->diagnostics; }
+
+    public function addDiagnostic(Diagnostic $diagnostic): self
+    {
+        if (!$this->diagnostics->contains($diagnostic)) {
+            $this->diagnostics->add($diagnostic);
+            $diagnostic->setCulture($this);
+        }
+        return $this;
+    }
+
+    public function removeDiagnostic(Diagnostic $diagnostic): self
+    {
+        if ($this->diagnostics->removeElement($diagnostic)) {
+            if ($diagnostic->getCulture() === $this) {
+                $diagnostic->setCulture(null);
+            }
+        }
+        return $this;
+    }
 }

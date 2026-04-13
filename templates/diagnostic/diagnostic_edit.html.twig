@@ -44,7 +44,8 @@
                                     <option value="">-- Choisir une culture --</option>
                                     {% for culture in cultures %}
                                         <option value="{{ culture.idCulture }}"
-                                            {{ diagnostic.idCulture == culture.idCulture ? 'selected' : '' }}>
+                                            {# ✅ CORRECTION — compare via diagnostic.culture #}
+                                            {{ diagnostic.culture and diagnostic.culture.idCulture == culture.idCulture ? 'selected' : '' }}>
                                             {{ culture.nom }} ({{ culture.type }})
                                         </option>
                                     {% endfor %}

@@ -69,7 +69,7 @@
                         <div id="step2" style="display:none;">
 
                             <div class="alert alert-success py-2 text-center mb-3" style="font-size:.875rem;">
-                                📱 Vérification par SMS
+                                📱 Numéro de téléphone
                             </div>
 
                             <div class="mb-3">
@@ -79,32 +79,11 @@
                                     {{ form_widget(form.telephone, {'attr': {
                                         'class': 'form-control',
                                         'placeholder': '12345678',
-                                        'maxlength': '8',
-                                        'id': 'phone-input'
+                                        'maxlength': '8'
                                     }}) }}
                                 </div>
-                                {{ form_errors(form.telephone) }}
-                            </div>
-
-                            <button type="button" class="btn btn-outline-success w-100 mb-3"
-                                    id="send-sms-btn" onclick="sendSmsCode()">
-                                📨 Envoyer le code SMS
-                            </button>
-
-                            <div id="sms-code-block" style="display:none;">
-                                <div class="mb-3">
-                                    <label class="form-label fw-semibold">Code de vérification</label>
-                                    <input type="text" id="sms-code-input" class="form-control text-center"
-                                           placeholder="Ex: 123456" maxlength="6"
-                                           style="letter-spacing:.4rem; font-size:1.2rem;">
-                                    <div class="form-text text-muted">Code envoyé au +216 <span id="phone-display"></span></div>
-                                </div>
-
-                                <div class="mb-3">
-                                    <button type="button" class="btn btn-link btn-sm p-0 text-muted"
-                                            onclick="sendSmsCode()">
-                                        🔄 Renvoyer le code
-                                    </button>
+                                <div id="phone-errors" class="text-danger mt-1 fw-bold small">
+                                    {{ form_errors(form.telephone) }}
                                 </div>
                             </div>
 
@@ -116,8 +95,7 @@
                                 {{ form_widget(form.submit, {'attr': {
                                     'class': 'btn btn-success w-50',
                                     'style': 'background:linear-gradient(135deg,#4a7c3a,#66bb6a);border:none;',
-                                    'id': 'submit-btn',
-                                    'disabled': 'disabled'
+                                    'id': 'submit-btn'
                                 }}) }}
                             </div>
                         </div>
@@ -138,7 +116,6 @@
 </section>
 
 {# ══════════════ STYLES ══════════════ #}
-{% verbatim %}
 <style>
 .step-indicator {
     width: 36px; height: 36px;
@@ -160,11 +137,25 @@
 }
 .step-line.done { background: #66bb6a; }
 </style>
-{% endverbatim %}
 
 {# ══════════════ JAVASCRIPT ══════════════ #}
-{% verbatim %}
 <script>
+document.addEventListener("DOMContentLoaded", function() {
+    // Si la page recharge et qu'il y a une erreur sur le téléphone, on rouvre directement l'étape 2 !
+    const phoneErrors = document.getElementById('phone-errors');
+    if (phoneErrors && phoneErrors.textContent.trim().length > 0) {
+        document.getElementById('step1').style.display = 'none';
+        document.getElementById('step2').style.display = 'block';
+
+        const dot1 = document.getElementById('dot1');
+        dot1.classList.remove('active');
+        dot1.classList.add('done');
+        dot1.textContent = '✓';
+        document.getElementById('line1').classList.add('done');
+        document.getElementById('dot2').classList.add('active');
+    }
+});
+
 // ── Navigation entre étapes ──────────────────────────────────────
 function goToStep2() {
     const step1Fields = ['registration_nom', 'registration_email',
@@ -188,6 +179,8 @@ function goToStep2() {
     dot1.textContent = '✓';
     document.getElementById('line1').classList.add('done');
     document.getElementById('dot2').classList.add('active');
+
+    attachStep2Events();
 }
 
 function goToStep1() {
@@ -202,9 +195,17 @@ function goToStep1() {
     document.getElementById('dot2').classList.remove('active');
 }
 
+// ── Attacher les événements de l'étape 2 ────────────────────────
+function attachStep2Events() {
+    // Plus de vérification SMS, le bouton soumet directement le formulaire
+}
+
 // ── Envoi du code SMS ────────────────────────────────────────────
 function sendSmsCode() {
-    const phone = document.getElementById('phone-input').value.trim();
+    const phoneEl = document.getElementById('registration_telephone');
+    if (!phoneEl) { alert('Champ téléphone introuvable.'); return; }
+
+    const phone = phoneEl.value.trim();
 
     if (!/^[0-9]{8}$/.test(phone)) {
         alert('Veuillez entrer un numéro valide (8 chiffres).');
@@ -215,25 +216,52 @@ function sendSmsCode() {
     btn.disabled = true;
     btn.textContent = '⏳ Envoi en cours...';
 
-    // 🔌 BRANCHE TON API SMS ICI :
-    // fetch('/api/send-sms', {
-    //     method: 'POST',
-    //     headers: {'Content-Type': 'application/json'},
-    //     body: JSON.stringify({ phone: '+216' + phone })
-    // })
-    // .then(r => r.json())
-    // .then(() => { showCodeBlock(phone); startResendTimer(btn); })
-    // .catch(() => {
-    //     btn.disabled = false;
-    //     btn.textContent = '📨 Envoyer le code SMS';
-    //     alert('Erreur lors de l\'envoi. Réessayez.');
-    // });
+    fetch('/api/send-sms', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phone: '+216' + phone })
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) {
+            showCodeBlock(phone);
+            startResendTimer(btn);
+        } else {
+            alert('Erreur : ' + data.message);
+            btn.disabled = false;
+            btn.textContent = '📨 Envoyer le code SMS';
+        }
+    })
+    .catch(() => {
+        alert('Erreur réseau. Réessayez.');
+        btn.disabled = false;
+        btn.textContent = '📨 Envoyer le code SMS';
+    });
+}
 
-    // Simulation (à supprimer quand l'API est branchée) :
-    setTimeout(() => {
-        showCodeBlock(phone);
-        startResendTimer(btn);
-    }, 1000);
+// ── Vérification du code avant soumission ────────────────────────
+function verifySmsCode(event) {
+    event.preventDefault();
+
+    const phone = document.getElementById('registration_telephone').value.trim();
+    const code  = document.getElementById('sms-code-input').value.trim();
+
+    fetch('/api/verify-sms', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phone: '+216' + phone, code: code })
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) {
+            document.getElementById('signup-form').submit();
+        } else {
+            alert('❌ ' + data.message);
+        }
+    })
+    .catch(() => {
+        alert('Erreur réseau. Réessayez.');
+    });
 }
 
 function showCodeBlock(phone) {
@@ -253,18 +281,5 @@ function startResendTimer(btn) {
         }
     }, 1000);
 }
-
-// ── Activer le bouton S'inscrire quand le code est saisi ─────────
-document.addEventListener('DOMContentLoaded', function() {
-    const codeInput = document.getElementById('sms-code-input');
-    const submitBtn = document.getElementById('submit-btn');
-
-    if (codeInput && submitBtn) {
-        codeInput.addEventListener('input', function() {
-            submitBtn.disabled = codeInput.value.trim().length < 4;
-        });
-    }
-});
 </script>
-{% endverbatim %}
 {% endblock %}

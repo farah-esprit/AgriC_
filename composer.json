@@ -41,6 +41,7 @@
         "symfony/twig-bundle": "6.4.*",
         "symfony/ux-turbo": "^2.34",
         "symfony/validator": "6.4.*",
+        "symfony/vonage-notifier": "6.4.*",
         "symfony/web-link": "6.4.*",
         "symfony/yaml": "6.4.*",
         "twig/extra-bundle": "^2.12|^3.0",

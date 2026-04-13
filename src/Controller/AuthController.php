@@ -15,7 +15,8 @@ use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
 use Symfony\Component\Security\Core\Authentication\Token\UsernamePasswordToken;
 use Symfony\Component\Routing\Attribute\Route;
-
+use App\Service\SmsVerificationService;
+use Symfony\Component\HttpFoundation\JsonResponse;
 class AuthController extends AbstractController
 {
     #[Route('/signup', name: 'app_signup')]
@@ -128,7 +129,60 @@ class AuthController extends AbstractController
             'form' => $form->createView(),
         ]);
     }
+// ── Route 1 : Envoyer le code SMS ────────────────────────────────
+#[Route('/api/send-sms', name: 'api_send_sms', methods: ['POST'])]
+public function sendSms(
+    Request $request,
+    SmsVerificationService $smsService
+): JsonResponse {
+    $data  = json_decode($request->getContent(), true);
+    $phone = $data['phone'] ?? null;
 
+    if (!$phone || !preg_match('/^\+216[0-9]{8}$/', $phone)) {
+        return $this->json([
+            'success' => false,
+            'message' => 'Numéro invalide.'
+        ], 400);
+    }
+
+    try {
+        $smsService->sendCode($phone);
+        return $this->json([
+            'success' => true,
+            'message' => 'Code envoyé avec succès.'
+        ]);
+    } catch (\Exception $e) {
+        return $this->json([
+            'success' => false,
+            'message' => 'Erreur lors de l\'envoi : ' . $e->getMessage()
+        ], 500);
+    }
+}
+
+// ── Route 2 : Vérifier le code SMS ───────────────────────────────
+#[Route('/api/verify-sms', name: 'api_verify_sms', methods: ['POST'])]
+public function verifySms(
+    Request $request,
+    SmsVerificationService $smsService
+): JsonResponse {
+    $data  = json_decode($request->getContent(), true);
+    $phone = $data['phone'] ?? null;
+    $code  = $data['code']  ?? null;
+
+    if (!$phone || !$code) {
+        return $this->json([
+            'success' => false,
+            'message' => 'Données manquantes.'
+        ], 400);
+    }
+
+    $valid = $smsService->verifyCode($phone, $code);
+
+    return $this->json([
+        'success' => $valid,
+        'message' => $valid ? 'Numéro vérifié !' : 'Code incorrect ou expiré.'
+    ]);
+}
     #[Route('/logout', name: 'app_logout')]
     public function logout(SessionInterface $session): Response
     {

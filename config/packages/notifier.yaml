@@ -1,12 +1,13 @@
+# config/packages/notifier.yaml
 framework:
-    notifier:
-        chatter_transports:
-        texter_transports:
-        channel_policy:
-            # use chat/slack, chat/telegram, sms/twilio or sms/nexmo
-            urgent: ['email']
-            high: ['email']
-            medium: ['email']
-            low: ['email']
-        admin_recipients:
-            - { email: admin@example.com }
+  notifier:
+    chatter_transports: ~
+    texter_transports:
+      vonage: '%env(VONAGE_DSN)%'
+    channel_policy:
+      urgent: ['sms/vonage']
+      high: ['sms/vonage']
+      medium: ['email']
+      low: ['email']
+    admin_recipients:
+      - { email: admin@example.com }

@@ -26,8 +26,8 @@ class DiagnosticRepository extends ServiceEntityRepository
     public function countParCulture(): array
     {
         return $this->createQueryBuilder('d')
-            ->select('d.idCulture AS culture_id, COUNT(d.idDiagnostic) AS total')
-            ->groupBy('culture_id')
+            ->select('IDENTITY(d.culture) AS idCulture, COUNT(d.idDiagnostic) AS total')
+            ->groupBy('d.culture')
             ->orderBy('total', 'DESC')
             ->getQuery()
             ->getResult();
@@ -50,7 +50,7 @@ class DiagnosticRepository extends ServiceEntityRepository
         return $this->createQueryBuilder('d')
             ->where('d.symptomes LIKE :q')
             ->orWhere('d.informationsComplementaires LIKE :q')
-            ->orWhere('CAST(d.dateDiagnostic AS string) LIKE :q')
+            ->orWhere('d.dateDiagnostic LIKE :q')
             ->setParameter('q', "%$query%")
             ->orderBy('d.dateDiagnostic', 'DESC')
             ->getQuery()
@@ -61,7 +61,7 @@ class DiagnosticRepository extends ServiceEntityRepository
     public function filterByCulture(int $idCulture): array
     {
         return $this->createQueryBuilder('d')
-            ->andWhere('d.idCulture = :id')
+            ->andWhere('d.culture = :id')
             ->setParameter('id', $idCulture)
             ->orderBy('d.dateDiagnostic', 'DESC')
             ->getQuery()
@@ -79,7 +79,7 @@ class DiagnosticRepository extends ServiceEntityRepository
     }
 
     // 📅 Filtrer par intervalle de dates
-    public function filterByDateRange(\DateTimeInterface $dateDebut, \DateTimeInterface $dateFin): array
+    public function filterByDateRange(string $dateDebut, string $dateFin): array
     {
         return $this->createQueryBuilder('d')
             ->andWhere('d.dateDiagnostic BETWEEN :start AND :end')
@@ -90,11 +90,11 @@ class DiagnosticRepository extends ServiceEntityRepository
             ->getResult();
     }
 
-    // 🚀 Bonus : derniers diagnostics par culture
+    // 🚀 Derniers diagnostics par culture
     public function findLatestByCulture(int $idCulture, int $limit = 5): array
     {
         return $this->createQueryBuilder('d')
-            ->andWhere('d.idCulture = :culture')
+            ->andWhere('d.culture = :culture')
             ->setParameter('culture', $idCulture)
             ->orderBy('d.dateDiagnostic', 'DESC')
             ->setMaxResults($limit)

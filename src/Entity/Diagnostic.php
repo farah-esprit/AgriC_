@@ -40,14 +40,11 @@ class Diagnostic
     )]
     private ?string $informationsComplementaires = null;
 
-    #[ORM\Column(type: 'integer', nullable: true, name: 'idCulture')]
-    #[Assert\NotBlank(message: "L'ID de la culture est obligatoire.")]
-    #[Assert\Positive(message: "L'ID de la culture doit être un entier positif.")]
-    #[Assert\LessThanOrEqual(
-        value: 999999,
-        message: "L'ID de la culture ne peut pas dépasser {{ compared_value }}."
-    )]
-    private ?int $idCulture = null;
+    // ── Relation ManyToOne vers Culture ──
+    #[ORM\ManyToOne(targetEntity: Culture::class, inversedBy: 'diagnostics')]
+    #[ORM\JoinColumn(name: 'idCulture', referencedColumnName: 'idCulture', nullable: true)]
+    #[Assert\NotNull(message: "La culture est obligatoire.")]
+    private ?Culture $culture = null;
 
     #[ORM\Column(type: 'integer', nullable: true, name: 'idUser')]
     private ?int $userId = null;
@@ -65,8 +62,8 @@ class Diagnostic
     public function getInformationsComplementaires(): ?string { return $this->informationsComplementaires; }
     public function setInformationsComplementaires(?string $informationsComplementaires): self { $this->informationsComplementaires = $informationsComplementaires; return $this; }
 
-    public function getIdCulture(): ?int { return $this->idCulture; }
-    public function setIdCulture(?int $idCulture): self { $this->idCulture = $idCulture; return $this; }
+    public function getCulture(): ?Culture { return $this->culture; }
+    public function setCulture(?Culture $culture): self { $this->culture = $culture; return $this; }
 
     public function getUserId(): ?int { return $this->userId; }
     public function setUserId(?int $userId): self { $this->userId = $userId; return $this; }

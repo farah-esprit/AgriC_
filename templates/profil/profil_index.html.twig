@@ -110,6 +110,16 @@
 
                         {# Boutons #}
                         <div class="d-flex gap-3 mt-4">
+                            {% if user.totpSecret %}
+                                <span class="btn btn-secondary" style="background:#6c757d;border:none;pointer-events:none;">
+                                    🛡️ 2FA Activée
+                                </span>
+                            {% else %}
+                                <a href="{{ path('app_2fa_setup') }}" class="btn" style="background:#e67e22;color:white;border:none;" title="Sécurité Google Authenticator">
+                                    🛡️ Activer 2FA
+                                </a>
+                            {% endif %}
+
                             <a href="{{ path('user_profil_edit') }}" class="btn btn-success flex-grow-1">
                                 ✏️ Modifier mon profil
                             </a>

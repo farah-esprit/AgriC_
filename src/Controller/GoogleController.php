@@ -58,6 +58,13 @@ class GoogleController extends AbstractController
                     $this->addFlash('error', "❌ Votre compte est désactivé. Contactez l'administrateur.");
                     return $this->redirectToRoute('app_signin');
                 }
+
+                // --- INTERCEPTION 2FA ---
+                if ($user->getTotpSecret()) {
+                    $session->set('pending_login_user_id', $user->getUserId());
+                    return $this->redirectToRoute('app_2fa_challenge');
+                }
+
                 $this->addFlash('success', '✅ Connexion Google réussie ! Bienvenue ' . $user->getNom());
             }
 

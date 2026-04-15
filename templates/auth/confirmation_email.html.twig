@@ -1,0 +1,36 @@
+<div style="font-family: Arial, sans-serif; background-color: #f4f4f4; padding: 20px;">
+    <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; padding: 30px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+        <div style="text-align: center; margin-bottom: 20px;">
+            <h1 style="color: #4a7c3a; margin: 0;">AgriConnect</h1>
+            <p style="color: #66bb6a; font-size: 16px; margin-top: 5px;">Rejoignez la communauté agricole</p>
+        </div>
+
+        <h2 style="color: #333333;">Bonjour {{ user.nom }},</h2>
+        
+        <p style="color: #555555; font-size: 16px; line-height: 1.5;">
+            Merci de vous être inscrit sur AgriConnect ! Pour sécuriser votre compte, nous vous demandons de bien vouloir vérifier votre adresse e-mail (Étape 1 sur 2).
+        </p>
+
+        <div style="text-align: center; margin: 30px 0;">
+            <a href="{{ signedUrl }}" 
+               style="background-color: #4a7c3a; color: #ffffff; padding: 12px 25px; text-decoration: none; border-radius: 5px; font-weight: bold; font-size: 16px; display: inline-block;">
+                Vérifier mon adresse e-mail
+            </a>
+        </div>
+
+        <p style="color: #555555; font-size: 16px; line-height: 1.5;">
+            Ce lien est valide pour une durée limitée. Si vous rencontrez des problèmes, copiez-collez l'URL suivante dans votre navigateur :
+        </p>
+        <p style="word-break: break-all; color: #888888; font-size: 14px;">
+            <a href="{{ signedUrl }}" style="color: #4a7c3a;">{{ signedUrl }}</a>
+        </p>
+
+        <p style="color: #555555; font-size: 16px; line-height: 1.5; margin-top: 30px;">
+            À très bientôt,<br>
+            <strong>L'équipe AgriConnect</strong>
+        </p>
+    </div>
+    <div style="text-align: center; margin-top: 20px; color: #999999; font-size: 12px;">
+        &copy; {{ "now"|date("Y") }} AgriConnect. Tous droits réservés.
+    </div>
+</div>

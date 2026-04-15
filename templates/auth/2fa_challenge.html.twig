@@ -1,0 +1,35 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Authentification requise - AgriConnect{% endblock %}
+
+{% block body %}
+<div class="container d-flex justify-content-center align-items-center" style="min-height: 100vh;">
+    <div class="col-md-5 col-lg-4">
+        <div class="card shadow border-0" style="border-radius:15px;">
+            <div class="card-header text-white text-center py-4" style="background:linear-gradient(to right,#2c3e50,#34495e);border-radius:15px 15px 0 0;">
+                <h3 class="mb-0">🛡️ Sécurité 2FA</h3>
+            </div>
+            <div class="card-body p-4 text-center">
+                
+                {% for message in app.flashes('error') %}
+                    <div class="alert alert-danger">{{ message }}</div>
+                {% endfor %}
+
+                <p class="text-muted fw-bold mb-4">
+                    Ouvrez votre application Google Authenticator et entrez le code à 6 chiffres.
+                </p>
+
+                <form method="POST" action="{{ path('app_2fa_challenge') }}">
+                    <div class="mb-4 text-start">
+                        <label class="form-label fw-bold"><i class="bi bi-shield-lock me-2"></i>Code d'authentification</label>
+                        <input type="text" name="code" class="form-control form-control-lg text-center fw-bold fs-3" placeholder="------" maxlength="6" required pattern="[0-9]{6}" autocomplete="one-time-code" autofocus>
+                    </div>
+                    <button type="submit" class="btn w-100" style="background:#2c3e50;color:white;font-weight:bold;font-size:1.1rem;padding:12px;">✅ Vérifier de manière sécurisée</button>
+                    <a href="{{ path('app_signin') }}" class="btn btn-link text-muted mt-3">Retour à la page de connexion</a>
+                </form>
+
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

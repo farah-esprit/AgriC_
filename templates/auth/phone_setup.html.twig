@@ -1,0 +1,134 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Vérification Téléphone - AgriConnect{% endblock %}
+
+{% block body %}
+<section style="padding: 120px 0 60px;">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-6">
+                <div class="card shadow border-0" style="border-radius:15px;">
+                    <div class="card-header text-white text-center py-4"
+                         style="background: linear-gradient(135deg,#4a7c3a,#66bb6a); border-radius:15px 15px 0 0;">
+                        <h4 class="mb-0 fw-bold">📱 Validation SMS</h4>
+                        <small class="opacity-75">Étape 2 : Sécurisez votre compte</small>
+                    </div>
+
+                    <div class="card-body p-5">
+
+                        <p class="text-muted text-center mb-4">
+                            Veuillez entrer votre numéro de téléphone. Un code de vérification vous sera envoyé par SMS.
+                        </p>
+
+                        <form id="phone-form" method="POST" action="{{ path('app_setup_phone') }}">
+                            <div class="mb-3">
+                                <label class="form-label fw-semibold">Numéro de Téléphone (Tunisie)</label>
+                                <div class="input-group">
+                                    <span class="input-group-text fw-bold bg-light">+216</span>
+                                    <input type="text" id="phone-input" name="phone"
+                                           class="form-control form-control-lg"
+                                           placeholder="12345678" maxlength="8"
+                                           oninput="this.value=this.value.replace(/[^0-9]/g,'')">
+                                </div>
+                            </div>
+                            
+                            <div class="text-center mb-3">
+                                <button type="button" id="btn-send-sms" class="btn btn-outline-success fw-bold" onclick="sendSmsCode()">
+                                    📨 Envoyer le code SMS
+                                </button>
+                            </div>
+
+                            <div id="sms-verification-block" style="display: none; background: #f8f9fa; border-radius:10px; padding:20px; border:1px solid #e9ecef;" class="mt-4 shadow-sm">
+                                <label class="form-label fw-semibold text-success">Code reçu par SMS :</label>
+                                <input type="text" id="sms-code-input" class="form-control form-control-lg text-center fw-bold text-success mb-3" style="letter-spacing: 5px; font-size:1.5rem;" placeholder="------" maxlength="6">
+                                
+                                <button type="button" onclick="verifySmsCode()" class="btn btn-success w-100 fw-bold py-2 shadow-sm">
+                                    ✅ Vérifier et activer mon compte
+                                </button>
+                            </div>
+                        </form>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<script>
+function sendSmsCode() {
+    const phone = document.getElementById('phone-input').value.trim();
+
+    if (!/^[0-9]{8}$/.test(phone)) {
+        alert('Veuillez entrer un numéro valide (8 chiffres).');
+        return;
+    }
+
+    const btn = document.getElementById('btn-send-sms');
+    btn.disabled = true;
+    btn.textContent = '⏳ Envoi en cours...';
+
+    fetch('{{ path("api_send_sms") }}', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phone: '+216' + phone })
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) {
+            document.getElementById('sms-verification-block').style.display = 'block';
+            startResendTimer(btn);
+        } else {
+            alert('Erreur : ' + data.message);
+            btn.disabled = false;
+            btn.textContent = '📨 Envoyer le code SMS';
+        }
+    })
+    .catch(() => {
+        alert('Erreur réseau. Réessayez.');
+        btn.disabled = false;
+        btn.textContent = '📨 Envoyer le code SMS';
+    });
+}
+
+function verifySmsCode() {
+    const phone = document.getElementById('phone-input').value.trim();
+    const code  = document.getElementById('sms-code-input').value.trim();
+
+    if(!code) {
+        alert('Veuillez entrer le code.');
+        return;
+    }
+
+    fetch('{{ path("api_verify_sms") }}', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phone: '+216' + phone, code: code })
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) {
+            document.getElementById('phone-form').submit();
+        } else {
+            alert('❌ ' + data.message);
+        }
+    })
+    .catch(() => {
+        alert('Erreur réseau. Réessayez.');
+    });
+}
+
+function startResendTimer(btn) {
+    let seconds = 60;
+    const interval = setInterval(() => {
+        btn.textContent = '🔄 Renvoyer dans ' + seconds + 's';
+        seconds--;
+        if (seconds < 0) {
+            clearInterval(interval);
+            btn.disabled = false;
+            btn.textContent = '📨 Envoyer le code SMS';
+        }
+    }, 1000);
+}
+</script>
+{% endblock %}

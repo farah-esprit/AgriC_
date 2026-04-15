@@ -61,25 +61,7 @@ class RegistrationType extends AbstractType
                 ],
             ])
 
-            // ── TÉLÉPHONE : exactement 8 chiffres ──
-            ->add('telephone', TextType::class, [
-                'label'    => 'Téléphone',
-                'required' => false,
-                'attr'     => [
-                    'class'       => 'form-control',
-                    'placeholder' => '12345678',
-                    'maxlength'   => '8',
-                    'oninput'     => 'this.value=this.value.replace(/[^0-9]/g,"")',
-                ],
-                'constraints' => [
-                    new Assert\Callback(function ($value, ExecutionContextInterface $context) {
-                        if (!empty($value) && !preg_match('/^[0-9]{8}$/', $value)) {
-                            $context->buildViolation('Le numéro doit contenir exactement 8 chiffres.')
-                                ->addViolation();
-                        }
-                    }),
-                ],
-            ])
+
 
             // ── RÔLE ──
             ->add('role', ChoiceType::class, [
@@ -124,11 +106,6 @@ class RegistrationType extends AbstractType
                     ],
                 ],
                 'invalid_message' => 'Les mots de passe ne correspondent pas.',
-            ])
-
-            ->add('submit', SubmitType::class, [
-                'label' => "S'inscrire",
-                'attr'  => ['class' => 'btn btn-success w-100'],
             ]);
     }
 

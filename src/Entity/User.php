@@ -37,8 +37,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[Assert\Email(message: "L'email '{{ value }}' n'est pas valide.")]
     private ?string $email = null;
 
-    #[ORM\Column(type: 'string', length: 20)]
-    #[Assert\NotBlank(message: 'Le numéro de téléphone est obligatoire.')]
+    #[ORM\Column(type: 'string', length: 20, nullable: true)]
     #[Assert\Regex(
         pattern: '/^[0-9]{8,15}$/',
         message: 'Le numéro doit contenir entre 8 et 15 chiffres.'
@@ -74,7 +73,13 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     private ?string $role = 'AGRICULTEUR';
 
     #[ORM\Column(type: 'string', length: 50, nullable: true, name: 'etatCompte')]
-    private ?string $etatCompte = 'ACTIF';
+    private ?string $etatCompte = 'INACTIF';
+
+    #[ORM\Column(type: 'boolean')]
+    private bool $isVerified = false;
+
+    #[ORM\Column(type: 'boolean')]
+    private bool $isPhoneVerified = false;
 
     #[ORM\Column(type: 'datetime', nullable: true, name: 'date_creation')]
     private ?\DateTimeInterface $dateCreation = null;
@@ -104,9 +109,23 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         $this->dateCreation = new \DateTime();
     }
 
+    #[ORM\Column(type: 'string', length: 255, nullable: true)]
+    private ?string $totpSecret = null;
+
     public function getUserId(): ?int
     {
         return $this->userId;
+    }
+
+    public function getTotpSecret(): ?string
+    {
+        return $this->totpSecret;
+    }
+
+    public function setTotpSecret(?string $totpSecret): self
+    {
+        $this->totpSecret = $totpSecret;
+        return $this;
     }
 
     public function getNom(): ?string
@@ -183,6 +202,28 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function setEtatCompte(?string $etatCompte): self
     {
         $this->etatCompte = $etatCompte;
+        return $this;
+    }
+
+    public function isVerified(): bool
+    {
+        return $this->isVerified;
+    }
+
+    public function setIsVerified(bool $isVerified): self
+    {
+        $this->isVerified = $isVerified;
+        return $this;
+    }
+
+    public function isPhoneVerified(): bool
+    {
+        return $this->isPhoneVerified;
+    }
+
+    public function setIsPhoneVerified(bool $isPhoneVerified): self
+    {
+        $this->isPhoneVerified = $isPhoneVerified;
         return $this;
     }
 

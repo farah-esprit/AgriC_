@@ -1,0 +1,48 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Authentification 2FA - AgriConnect{% endblock %}
+
+{% block body %}
+<section style="padding: 120px 0 60px;">
+    <div class="container d-flex justify-content-center">
+        <div class="col-md-6 col-lg-5">
+            <div class="card shadow border-0" style="border-radius:15px;">
+                <div class="card-header text-white text-center py-4" style="background:linear-gradient(to right,#e67e22,#f39c12);border-radius:15px 15px 0 0;">
+                    <h3 class="mb-0">🛡️ Activer 2FA</h3>
+                </div>
+                <div class="card-body p-4 text-center">
+                    
+                    {% for message in app.flashes('error') %}
+                        <div class="alert alert-danger">{{ message }}</div>
+                    {% endfor %}
+
+                    <p class="text-muted fw-bold mb-4">
+                        Scannez ce QR Code avec <span class="text-dark">Google Authenticator</span> ou <span class="text-dark">Microsoft Authenticator</span> sur votre téléphone :
+                    </p>
+
+                    <div class="mb-4">
+                        <img src="{{ qrCodeImage }}" alt="QR Code 2FA" style="border: 2px solid #ddd; border-radius: 10px; padding: 10px; background: white;" />
+                    </div>
+
+                    <p class="small text-muted mb-4">
+                        Si vous ne pouvez pas scanner le QR Code, entrez le code secret suivant manuellement :<br>
+                        <strong class="text-dark fs-5 user-select-all">{{ secret }}</strong>
+                    </p>
+
+                    <hr>
+
+                    <form method="POST" action="{{ path('app_2fa_setup') }}">
+                        <div class="mb-3 text-start">
+                            <label class="form-label fw-bold">Entrez le code à 6 chiffres généré par l'application :</label>
+                            <input type="text" name="code" class="form-control form-control-lg text-center fw-bold fs-4" placeholder="000000" maxlength="6" required pattern="[0-9]{6}">
+                        </div>
+                        <button type="submit" class="btn w-100" style="background:#e67e22;color:white;font-weight:bold;font-size:1.1rem;padding:12px;">✅ Confirmer l'activation</button>
+                        <a href="{{ path('user_profil') }}" class="btn btn-link text-muted mt-3">Annuler et retourner au profil</a>
+                    </form>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

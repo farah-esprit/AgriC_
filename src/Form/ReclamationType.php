@@ -27,6 +27,7 @@ class ReclamationType extends AbstractType
             ->add('dateCreation', DateType::class, [
                 'label' => 'Date',
                 'widget' => 'single_text', // 🔥 compatible HTML5 + flatpickr
+                'input' => 'string',
                 'attr' => ['class' => 'form-control'],
             ])
             ->add('statut', ChoiceType::class, [

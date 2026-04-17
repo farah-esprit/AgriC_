@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: DejaVu Sans, sans-serif; font-size: 11px; color: #2c3e50; }
+
+  .header { background: linear-gradient(135deg, #2d6a4f, #52b788); color: white; padding: 20px 30px; margin-bottom: 20px; }
+  .header h1 { font-size: 20px; margin-bottom: 4px; }
+  .header .meta { font-size: 10px; opacity: 0.85; }
+
+  .summary-bar { display: flex; gap: 15px; margin: 0 30px 20px; }
+  .summary-card { flex: 1; background: #f0f7f4; border: 1px solid #d4edda; border-radius: 6px; padding: 10px; text-align: center; }
+  .summary-card .number { font-size: 22px; font-weight: bold; color: #2d6a4f; }
+  .summary-card .label { font-size: 10px; color: #666; margin-top: 2px; }
+
+  .section { margin: 0 30px 15px; }
+  .section-title { font-size: 12px; font-weight: bold; color: #2d6a4f; border-bottom: 2px solid #52b788; padding-bottom: 4px; margin-bottom: 10px; text-transform: uppercase; }
+
+  table { width: 100%; border-collapse: collapse; font-size: 10px; }
+  thead th { background: #2d6a4f; color: white; padding: 7px 8px; text-align: left; }
+  tbody tr:nth-child(even) { background: #f8fffe; }
+  tbody tr:nth-child(odd)  { background: #fff; }
+  tbody td { padding: 6px 8px; border-bottom: 1px solid #e9f5ee; vertical-align: top; }
+
+  .badge { display: inline-block; background: #52b788; color: white; padding: 1px 6px; border-radius: 8px; font-size: 9px; }
+  .symptomes-cell { max-width: 200px; word-wrap: break-word; }
+
+  .footer { position: fixed; bottom: 0; left: 0; right: 0; background: #f0f7f4; border-top: 1px solid #d4edda; padding: 6px 30px; font-size: 9px; color: #888; display: flex; justify-content: space-between; }
+
+  .page-break { page-break-after: always; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>🌿 Liste des Diagnostics Agricoles</h1>
+  <div class="meta">AgriConnect — Généré le {{ date|date('d/m/Y à H:i') }} — Total : {{ diagnostics|length }} diagnostic(s)</div>
+</div>
+
+{# ── Calcul des cultures uniques sans le filtre |unique (non supporté par Twig/DomPDF) ── #}
+{% set culturesUniques = [] %}
+{% for d in diagnostics %}
+    {% set nom = d.culture ? d.culture.nom : 'N/A' %}
+    {% if nom not in culturesUniques %}
+        {% set culturesUniques = culturesUniques|merge([nom]) %}
+    {% endif %}
+{% endfor %}
+
+<div class="summary-bar">
+  <div class="summary-card">
+    <div class="number">{{ diagnostics|length }}</div>
+    <div class="label">Total diagnostics</div>
+  </div>
+  <div class="summary-card">
+    <div class="number">{{ culturesUniques|length }}</div>  {# ✅ Corrigé #}
+    <div class="label">Cultures concernées</div>
+  </div>
+  <div class="summary-card">
+    <div class="number">{{ date|date('Y') }}</div>
+    <div class="label">Année en cours</div>
+  </div>
+</div>
+
+<div class="section">
+  <div class="section-title">Tableau récapitulatif</div>
+  <table>
+    <thead>
+      <tr>
+        <th>#ID</th>
+        <th>Date</th>
+        <th>Culture</th>
+        <th>Type culture</th>
+        <th>Symptômes (extrait)</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for diagnostic in diagnostics %}
+      <tr>
+        <td><strong>#{{ diagnostic.idDiagnostic }}</strong></td>
+        <td>{{ diagnostic.dateDiagnostic }}</td>
+        <td>
+          {% if diagnostic.culture %}
+            <span class="badge">{{ diagnostic.culture.nom }}</span>
+          {% else %}
+            <span style="color:#aaa;">—</span>
+          {% endif %}
+        </td>
+        <td>{{ diagnostic.culture ? diagnostic.culture.type : '—' }}</td>
+        <td class="symptomes-cell">
+          {{ diagnostic.symptomes|slice(0, 80) }}{% if diagnostic.symptomes|length > 80 %}…{% endif %}
+        </td>
+      </tr>
+      {% else %}
+      <tr>
+        <td colspan="5" style="text-align:center; color:#aaa; padding: 20px;">Aucun diagnostic enregistré.</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<div class="footer">
+  <span>AgriConnect — Application de gestion agricole</span>
+  <span>Export du {{ date|date('d/m/Y') }}</span>
+</div>
+
+</body>
+</html>

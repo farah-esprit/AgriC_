@@ -12,6 +12,7 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
 use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\Routing\Attribute\ParamConverter;
 
 #[Route('/reclamation')]
 class ReclamationController extends AbstractController
@@ -50,6 +51,7 @@ class ReclamationController extends AbstractController
     }
 
     #[Route('/{idReclamation}', name: 'app_reclamation_show', methods: ['GET'])]
+    #[ParamConverter('reclamation', options: ['mapping' => ['idReclamation' => 'idReclamation']])]
     public function show(Reclamation $reclamation): Response
     {
         return $this->render('reclamation/show.html.twig', [
@@ -58,6 +60,7 @@ class ReclamationController extends AbstractController
     }
 
     #[Route('/{idReclamation}/edit', name: 'app_reclamation_edit', methods: ['GET', 'POST'])]
+    #[ParamConverter('reclamation', options: ['mapping' => ['idReclamation' => 'idReclamation']])]
     public function edit(Request $request, Reclamation $reclamation, EntityManagerInterface $em): Response
     {
         $form = $this->createForm(ReclamationType::class, $reclamation)->handleRequest($request);
@@ -74,6 +77,7 @@ class ReclamationController extends AbstractController
     }
 
     #[Route('/{idReclamation}', name: 'app_reclamation_delete', methods: ['POST'])]
+    #[ParamConverter('reclamation', options: ['mapping' => ['idReclamation' => 'idReclamation']])]
     public function delete(Request $request, Reclamation $reclamation, EntityManagerInterface $em): Response
     {
         if ($this->isCsrfTokenValid('delete'.$reclamation->getIdReclamation(), $request->request->get('_token'))) {

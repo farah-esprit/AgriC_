@@ -89,6 +89,58 @@ class DiagnosticRepository extends ServiceEntityRepository
             ->getQuery()
             ->getResult();
     }
+public function findFiltered(?string $search, ?string $cultureId, ?string $dateDebut, ?string $dateFin): array
+{
+    $qb = $this->createQueryBuilder('d')
+        ->leftJoin('d.culture', 'c')
+        ->addSelect('c')
+        ->orderBy('d.dateDiagnostic', 'DESC');
+
+    if ($search) {
+        $qb->andWhere('d.symptomes LIKE :search OR d.informationsComplementaires LIKE :search')
+           ->setParameter('search', '%' . $search . '%');
+    }
+
+    if ($cultureId) {
+        $qb->andWhere('c.idCulture = :culture')
+           ->setParameter('culture', $cultureId);
+    }
+
+    if ($dateDebut) {
+        $qb->andWhere('d.dateDiagnostic >= :dateDebut')
+           ->setParameter('dateDebut', new \DateTime($dateDebut));
+    }
+
+    if ($dateFin) {
+        $qb->andWhere('d.dateDiagnostic <= :dateFin')
+           ->setParameter('dateFin', new \DateTime($dateFin));
+    }
+
+    return $qb->getQuery()->getResult();
+}
+public function getStats(): array
+{
+    $parCulture = $this->createQueryBuilder('d')
+        ->select('IDENTITY(d.culture) as idCulture, COUNT(d.idDiagnostic) as total')
+        ->groupBy('d.culture')
+        ->getQuery()
+        ->getResult();
+
+    $parMois = $this->createQueryBuilder('d')
+        ->select("DATE_FORMAT(d.dateDiagnostic, '%Y-%m') as mois, COUNT(d.idDiagnostic) as total")
+        ->groupBy('mois')
+        ->orderBy('mois', 'ASC')
+        ->getQuery()
+        ->getResult();
+
+    $total = $this->count([]);
+
+    return [
+        'total'      => $total,
+        'parCulture' => $parCulture,
+        'parMois'    => $parMois,
+    ];
+}
 
     // 🚀 Derniers diagnostics par culture
     public function findLatestByCulture(int $idCulture, int $limit = 5): array
@@ -100,5 +152,6 @@ class DiagnosticRepository extends ServiceEntityRepository
             ->setMaxResults($limit)
             ->getQuery()
             ->getResult();
+
     }
 }

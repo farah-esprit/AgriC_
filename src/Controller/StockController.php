@@ -11,6 +11,7 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\Routing\Attribute\ParamConverter;
 
 #[Route('/stock')]
 class StockController extends AbstractController
@@ -56,6 +57,7 @@ class StockController extends AbstractController
     }
 
     #[Route('/{id}/edit', name: 'app_stock_edit', methods: ['GET', 'POST'])]
+    #[ParamConverter('stock', options: ['mapping' => ['id' => 'idStock']])]
     public function edit(Request $request, Stock $stock, EntityManagerInterface $em): Response
     {
        $form = $this->createForm(StockType::class, $stock, ['is_edit' => true]);
@@ -79,6 +81,7 @@ class StockController extends AbstractController
     }
 
     #[Route('/{id}/delete', name: 'app_stock_delete', methods: ['POST'])]
+    #[ParamConverter('stock', options: ['mapping' => ['id' => 'idStock']])]
     public function delete(Request $request, Stock $stock, EntityManagerInterface $em): Response
     {
         if ($this->isCsrfTokenValid('delete' . $stock->getIdStock(), $request->request->get('_token'))) {

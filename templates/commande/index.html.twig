@@ -206,6 +206,12 @@
                             </div>
                         {% endif %}
 
+                        <!-- ✅ Bouton PDF -->
+                        <a href="{{ path('app_commande_pdf', {'id': commande.idCommande}) }}" 
+                           class="btn btn-sm btn-outline-danger w-100 mb-2 fw-bold" target="_blank">
+                            <i class="bi bi-file-pdf"></i> Facture PDF
+                        </a>
+
                         <!-- Modifier / Supprimer -->
                         <div class="d-flex justify-content-center gap-1">
                             <a href="{{ path('app_commande_edit', {'id': commande.idCommande}) }}"

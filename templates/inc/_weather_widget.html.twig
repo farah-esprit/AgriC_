@@ -1,0 +1,212 @@
+<div class="weather-premium-card" id="weather-widget">
+    <div class="weather-loading">
+        <div class="spinner-border text-success" role="status">
+            <span class="visually-hidden">Chargement...</span>
+        </div>
+        <p>Récupération de la météo locale...</p>
+    </div>
+    
+    <div class="weather-content" style="display: none;">
+        <div class="weather-main">
+            <div class="weather-info">
+                <h4 class="weather-city" id="weather-city">Tunisie</h4>
+                <div class="weather-temp" id="weather-temp">--°C</div>
+                <div class="weather-desc" id="weather-desc">Chargement...</div>
+            </div>
+            <div class="weather-icon-box">
+                <i id="weather-icon" class="bi bi-cloud-sun fs-1"></i>
+            </div>
+        </div>
+        
+        <div class="weather-details">
+            <div class="weather-detail-item">
+                <i class="bi bi-droplet"></i>
+                <span id="weather-humidity">--%</span>
+                <small>Humidité</small>
+            </div>
+            <div class="weather-detail-item">
+                <i class="bi bi-wind"></i>
+                <span id="weather-wind">-- km/h</span>
+                <small>Vent</small>
+            </div>
+        </div>
+
+        <div class="weather-recommendation" id="weather-advice">
+            <i class="bi bi-patch-check"></i>
+            <span>Calcul des conseils agricoles...</span>
+        </div>
+    </div>
+</div>
+
+<style>
+    .weather-premium-card {
+        background: linear-gradient(135deg, #ffffff, #f0f7f0);
+        border-radius: 20px;
+        padding: 1.5rem;
+        border: 1px solid rgba(123, 160, 14, 0.2);
+        box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+        min-height: 200px;
+        position: relative;
+        overflow: hidden;
+        font-family: 'Inter', sans-serif;
+        transition: transform 0.3s ease;
+    }
+
+    .weather-premium-card:hover {
+        transform: translateY(-5px);
+    }
+
+    .weather-loading {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        height: 151px;
+        color: #7BA00E;
+    }
+
+    .weather-main {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 1.5rem;
+    }
+
+    .weather-city {
+        font-size: 0.9rem;
+        font-weight: 700;
+        color: #7BA00E;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        margin: 0;
+    }
+
+    .weather-temp {
+        font-size: 2.5rem;
+        font-weight: 800;
+        color: #111;
+        line-height: 1;
+        margin: 0.5rem 0;
+    }
+
+    .weather-desc {
+        font-size: 1rem;
+        color: #64748b;
+        font-weight: 500;
+        text-transform: capitalize;
+    }
+
+    .weather-icon-box {
+        color: #7BA00E;
+        filter: drop-shadow(0 4px 10px rgba(123, 160, 14, 0.3));
+    }
+
+    .weather-details {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+        margin-bottom: 1rem;
+        background: rgba(255,255,255,0.5);
+        padding: 10px;
+        border-radius: 12px;
+    }
+
+    .weather-detail-item {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+    }
+
+    .weather-detail-item i {
+        color: #7BA00E;
+        margin-bottom: 4px;
+    }
+
+    .weather-detail-item span {
+        font-weight: 700;
+        color: #111;
+        font-size: 0.9rem;
+    }
+
+    .weather-detail-item small {
+        font-size: 0.7rem;
+        color: #94a3b8;
+        text-transform: uppercase;
+    }
+
+    .weather-recommendation {
+        background: #f0f7f0;
+        color: #2e7d32;
+        padding: 8px 12px;
+        border-radius: 8px;
+        font-size: 0.8rem;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+</style>
+
+<script>
+    (function() {
+        const WMO_CODES = {
+            0: { desc: "Ciel dégagé", icon: "bi-sun-fill" },
+            1: { desc: "Principalement dégagé", icon: "bi-plugin-fill" },
+            2: { desc: "Partiellement couvert", icon: "bi-cloud-sun-fill" },
+            3: { desc: "Couvert", icon: "bi-cloud-fill" },
+            45: { desc: "Brouillard", icon: "bi-cloud-fog-fill" },
+            48: { desc: "Brouillard givrant", icon: "bi-cloud-fog-fill" },
+            51: { desc: "Bruine légère", icon: "bi-cloud-drizzle-fill" },
+            61: { desc: "Pluie légère", icon: "bi-cloud-rain-fill" },
+            63: { desc: "Pluie modérée", icon: "bi-cloud-rain-heavy-fill" },
+            71: { desc: "Neige légère", icon: "bi-snow" },
+            95: { desc: "Orage", icon: "bi-cloud-lightning-rain-fill" }
+        };
+
+        const getAdvice = (code, temp) => {
+            if (code >= 61) return "Pluie prévue : Évitez l'arrosage automatique.";
+            if (temp > 30) return "Forte chaleur : Surveillez l'irrigation.";
+            if (temp < 5) return "Risque de gel : Protégez vos cultures sensibles.";
+            return "Conditions idéales pour les travaux agricoles.";
+        };
+
+        async function updateWeather(lat, lon) {
+            try {
+                const response = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true&hourly=relativehumidity_2m`);
+                const data = await response.json();
+                
+                const current = data.current_weather;
+                const weather = WMO_CODES[current.weathercode] || { desc: "Inconnu", icon: "bi-cloud-fill" };
+
+                document.getElementById('weather-temp').textContent = `${current.temperature}°C`;
+                document.getElementById('weather-desc').textContent = weather.desc;
+                document.getElementById('weather-icon').className = `bi ${weather.icon} fs-1`;
+                document.getElementById('weather-wind').textContent = `${current.windspeed} km/h`;
+                
+                // Humidité (moyenne de la journée ou première heure)
+                const humidity = data.hourly ? data.hourly.relativehumidity_2m[0] : '--';
+                document.getElementById('weather-humidity').textContent = `${humidity}%`;
+
+                document.getElementById('weather-advice').querySelector('span').textContent = getAdvice(current.weathercode, current.temperature);
+
+                document.querySelector('.weather-loading').style.display = 'none';
+                document.querySelector('.weather-content').style.display = 'block';
+
+            } catch (error) {
+                console.error("Weather error:", error);
+                document.querySelector('.weather-loading p').textContent = "Erreur de chargement.";
+            }
+        }
+
+        // Géolocalisation
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+                (pos) => updateWeather(pos.coords.latitude, pos.coords.longitude),
+                () => updateWeather(36.8065, 10.1815) // Fallback Tunis
+            );
+        } else {
+            updateWeather(36.8065, 10.1815);
+        }
+    })();
+</script>

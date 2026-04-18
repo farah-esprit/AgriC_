@@ -162,8 +162,8 @@
     .info-list i { color: #94a3b8; }
 </style>
 
-<!-- HEADER -->
-<div class="dash-header">
+<!-- WELCOME -->
+<div class="dash-header mb-4" style="background: white; padding: 1.5rem; border-radius: 16px; border: 1px solid rgba(0,0,0,0.06); display: flex; justify-content: space-between; align-items: center;">
     <div>
         <h2 class="dash-title">Tableau de bord</h2>
         <div class="dash-subtitle">Bienvenue, {{ app.session.get('admin_prenom') }} {{ app.session.get('admin_nom') }}</div>

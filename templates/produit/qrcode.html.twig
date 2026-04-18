@@ -1,0 +1,42 @@
+{% extends app.session.get('user_role') == 'FOURNISSEUR' ? 'fournisseur.html.twig' : (app.session.get('user_role') == 'AGRICULTEUR' ? 'agriculteur.html.twig' : 'base.html.twig') %}
+
+{% block title %}QR Code - {{ produit.nom }}{% endblock %}
+
+{% block body %}
+<div class="container py-5 d-flex justify-content-center align-items-center" style="min-height: 80vh;">
+    <div class="card shadow-lg border-0 rounded-4" style="max-width: 450px; width: 100%; background: linear-gradient(145deg, #ffffff, #f9fbfd);">
+        <div class="card-body p-5 text-center position-relative">
+            
+            <!-- Icon at the top -->
+            <div class="mb-4">
+                <div class="d-inline-flex justify-content-center align-items-center bg-success text-white rounded-circle shadow-sm" style="width: 70px; height: 70px; font-size: 30px;">
+                    <i class="bi bi-qr-code-scan"></i>
+                </div>
+            </div>
+
+            <h3 class="fw-bold mb-1 text-dark">{{ produit.nom }}</h3>
+            <p class="text-muted mb-4 fs-5">{{ produit.categorie }}</p>
+            
+            <div class="bg-white p-3 rounded-4 shadow-sm d-inline-block border">
+                <img src="{{ qrCodeDataUri }}" alt="QR Code {{ produit.nom }}" class="img-fluid" style="border-radius: 10px;">
+            </div>
+            
+            <div class="mt-4 pt-4 border-top">
+                {% if produit.promo and produit.tauxPromo %}
+                    <h4 class="text-danger fw-bold mb-0 fs-3">{{ produit.prixPromo|number_format(2) }} TND</h4>
+                    <span class="badge bg-danger rounded-pill mb-2">-{{ produit.tauxPromo }}%</span>
+                    <div><small class="text-muted text-decoration-line-through fs-6">{{ produit.prix|number_format(2) }} TND</small></div>
+                {% else %}
+                    <h4 class="text-success fw-bold mb-0 fs-3">{{ produit.prix|number_format(2) }} TND</h4>
+                {% endif %}
+            </div>
+
+            <div class="mt-5">
+                <a href="{{ path('app_produit_index') }}" class="btn btn-outline-secondary rounded-pill px-4 py-2 fw-bold w-100">
+                    <i class="bi bi-arrow-left me-2"></i> Retour aux produits
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

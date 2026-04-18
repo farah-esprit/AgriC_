@@ -1,0 +1,324 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}AgriConnect - Dashboard Stock{% endblock %}
+
+{% block body %}
+<style>
+    :root {
+        --primary: #7BA00E;
+        --primary-dark: #5c7a0b;
+        --secondary: #0f172a;
+        --danger: #ef4444;
+        --info: #3b82f6;
+        --success: #22c55e;
+        --bg-light: #f8fafc;
+    }
+
+    .dash-wrapper {
+        background: var(--bg-light);
+        min-height: 100vh;
+        padding-bottom: 3rem;
+    }
+
+    .dash-header {
+        background: #fff;
+        padding: 2rem;
+        border-bottom: 1px solid rgba(0,0,0,0.05);
+        margin-bottom: 2rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-radius: 0 0 20px 20px;
+        box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+    }
+
+    .dash-title h1 {
+        font-family: 'Outfit', sans-serif;
+        font-weight: 700;
+        font-size: 2rem;
+        color: var(--secondary);
+        margin: 0;
+    }
+
+    .dash-title p {
+        color: #64748b;
+        margin: 0;
+        font-size: 0.95rem;
+    }
+
+    .kpi-card {
+        background: #fff;
+        border-radius: 16px;
+        padding: 1.5rem;
+        border: 1px solid rgba(0,0,0,0.05);
+        box-shadow: 0 10px 15px -3px rgba(0,0,0,0.05);
+        transition: transform 0.3s ease;
+        height: 100%;
+    }
+
+    .kpi-card:hover { transform: translateY(-5px); }
+
+    .kpi-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.25rem;
+        margin-bottom: 1rem;
+    }
+
+    .kpi-value {
+        font-size: 1.875rem;
+        font-weight: 700;
+        color: var(--secondary);
+        margin-bottom: 0.25rem;
+    }
+
+    .kpi-label {
+        color: #64748b;
+        font-weight: 500;
+        font-size: 0.875rem;
+        text-transform: uppercase;
+        letter-spacing: 0.025em;
+    }
+
+    .content-card {
+        background: #fff;
+        border-radius: 20px;
+        border: 1px solid rgba(0,0,0,0.05);
+        padding: 1.5rem;
+        box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+        height: 100%;
+    }
+
+    .card-title {
+        font-family: 'Outfit', sans-serif;
+        font-weight: 600;
+        font-size: 1.125rem;
+        color: var(--secondary);
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .btn-action {
+        background: var(--primary);
+        color: white;
+        padding: 0.75rem 1.5rem;
+        border-radius: 12px;
+        font-weight: 600;
+        text-decoration: none;
+        transition: all 0.2s;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .btn-action:hover {
+        background: var(--primary-dark);
+        color: white;
+        box-shadow: 0 4px 12px rgba(123, 160, 14, 0.3);
+    }
+
+    .table-premium {
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 0 0.5rem;
+    }
+
+    .table-premium th {
+        background: transparent;
+        border: none;
+        padding: 0.75rem 1rem;
+        color: #64748b;
+        font-size: 0.8rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+
+    .table-premium tr { background: #f8fafc; border-radius: 12px; }
+
+    .table-premium td {
+        padding: 1rem;
+        border: none;
+        vertical-align: middle;
+    }
+
+    .table-premium tr td:first-child { border-radius: 12px 0 0 12px; }
+    .table-premium tr td:last-child { border-radius: 0 12px 12px 0; }
+
+    .badge-stock {
+        padding: 0.4rem 0.8rem;
+        border-radius: 8px;
+        font-size: 0.75rem;
+        font-weight: 600;
+    }
+
+    .badge-ok { background: #ecfdf5; color: #059669; }
+    .badge-low { background: #fef2f2; color: #dc2626; }
+</style>
+
+<div class="dash-wrapper">
+    <div class="container-fluid px-4">
+        <!-- Header -->
+        <div class="dash-header">
+            <div class="dash-title">
+                <h1>📊 Analytique des Stocks</h1>
+                <p>Suivez en temps réel la disponibilité et la valeur de votre inventaire.</p>
+            </div>
+            <div class="d-flex gap-2">
+                <a href="{{ path('app_home') }}" class="btn btn-secondary px-4 py-2" style="border-radius: 10px;">
+                    <i class="fas fa-home"></i> Accueil
+                </a>
+                <a href="{{ path('app_stock_index') }}" class="btn btn-success px-4 py-2" style="border-radius: 10px; background-color: var(--primary); border-color: var(--primary);">
+                    <i class="fas fa-boxes"></i> Gérer le Stock
+                </a>
+            </div>
+        </div>
+
+        <!-- Floating Navigation (Fallback Visibility) -->
+        <div style="position: fixed; bottom: 30px; right: 30px; z-index: 9999; display: flex; gap: 15px;">
+            <a href="{{ path('app_home') }}" class="btn btn-dark shadow-lg px-4 py-3" style="border-radius: 50px; border: 2px solid white;">
+                <i class="fas fa-home"></i> Accueil
+            </a>
+            <a href="{{ path('app_stock_index') }}" class="btn btn-success shadow-lg px-4 py-3" style="border-radius: 50px; background-color: var(--primary); border: 2px solid white;">
+                <i class="fas fa-arrow-left"></i> Retour Stocks
+            </a>
+        </div>
+
+        <!-- KPI Cards -->
+        <div class="row g-4 mb-5">
+            <div class="col-md-3">
+                <div class="kpi-card">
+                    <div class="kpi-icon" style="background: rgba(59, 130, 246, 0.1); color: var(--info);">
+                        <i class="fas fa-barcode"></i>
+                    </div>
+                    <div class="kpi-value">{{ stats.totalProducts }}</div>
+                    <div class="kpi-label">Produits Référencés</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="kpi-card">
+                    <div class="kpi-icon" style="background: rgba(34, 197, 94, 0.1); color: var(--success);">
+                        <i class="fas fa-cubes"></i>
+                    </div>
+                    <div class="kpi-value">{{ stats.totalQuantity }}</div>
+                    <div class="kpi-label">Volume Total</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="kpi-card">
+                    <div class="kpi-icon" style="background: rgba(239, 68, 68, 0.1); color: var(--danger);">
+                        <i class="fas fa-exclamation-triangle"></i>
+                    </div>
+                    <div class="kpi-value" style="color: var(--danger);">{{ stats.lowStockCount }}</div>
+                    <div class="kpi-label">Alertes Stock Bas</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="kpi-card">
+                    <div class="kpi-icon" style="background: rgba(123, 160, 14, 0.1); color: var(--primary);">
+                        <i class="fas fa-coins"></i>
+                    </div>
+                    <div class="kpi-value">{{ stats.totalValue|number_format(2, ',', ' ') }} DT</div>
+                    <div class="kpi-label">Valeur de l'Inventaire</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-4">
+            <!-- Distribution Chart -->
+            <div class="col-lg-5">
+                <div class="content-card">
+                    <h5 class="card-title"><i class="fas fa-chart-pie" style="color: var(--primary);"></i> Répartition par Catégorie</h5>
+                    <div style="height: 350px;">
+                        <canvas id="categoryChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Stock / Table -->
+            <div class="col-lg-7">
+                <div class="content-card">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h5 class="card-title m-0"><i class="fas fa-history" style="color: var(--primary);"></i> Panorama des Produits</h5>
+                        <small class="text-muted">Aperçu rapide</small>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table-premium">
+                            <thead>
+                                <tr>
+                                    <th>Produit</th>
+                                    <th>Catégorie</th>
+                                    <th>Dispo</th>
+                                    <th>Demande Prédite (30j)</th>
+                                    <th>État</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for stock in stats.recentStocks %}
+                                    <tr>
+                                        <td><strong>{{ stock.produit.nom }}</strong></td>
+                                        <td>{{ stock.produit.categorie }}</td>
+                                        <td>{{ stock.disponible }}</td>
+                                        <td>
+                                            <div class="d-flex align-items-center gap-2">
+                                                <span class="fw-bold">{{ stock.predictedDemand }}</span>
+                                                {% if stock.predictedDemand > stock.disponible %}
+                                                    <i class="fas fa-arrow-trend-up text-danger" title="Demande supérieure au stock disponible"></i>
+                                                {% endif %}
+                                            </div>
+                                        </td>
+                                        <td>
+                                            {% if stock.disponible <= stock.seuilAlert %}
+                                                <span class="badge-stock badge-low"><i class="fas fa-arrow-down"></i> Critique</span>
+                                            {% else %}
+                                                <span class="badge-stock badge-ok"><i class="fas fa-check"></i> En stock</span>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                {% else %}
+                                    <tr>
+                                        <td colspan="4" class="text-center py-4">Aucun produit en stock</td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const ctx = document.getElementById('categoryChart').getContext('2d');
+    const chartData = {{ stats.categoryChart|json_encode|raw }};
+
+    new Chart(ctx, {
+        type: 'doughnut',
+        data: chartData,
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            cutout: '70%',
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: {
+                        padding: 20,
+                        usePointStyle: true,
+                        font: { family: 'Inter', size: 12 }
+                    }
+                }
+            }
+        }
+    });
+});
+</script>
+{% endblock %}

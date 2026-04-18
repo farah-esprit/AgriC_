@@ -1,14 +1,23 @@
 parameters:
   images_directory: '%kernel.project_dir%/public/uploads/images'
+  mail_from_address: 'baha111.sherif@gmail.com'
+  mail_from_name: 'AgriC Platform'
 
 services:
   _defaults:
     autowire: true
     autoconfigure: true
+    bind:
+      string $projectDir: '%kernel.project_dir%'
+      string $mailFromAddress: '%mail_from_address%'
+      string $mailFromName: '%mail_from_name%'
+      string $googleClientId: '%env(GOOGLE_CLIENT_ID)%'
+      string $googleClientSecret: '%env(GOOGLE_CLIENT_SECRET)%'
+      string $googleOauthRefreshToken: '%env(GOOGLE_OAUTH_REFRESH_TOKEN)%'
 
   App\:
     resource: '../src/'
     exclude:
       - '../src/DependencyInjection/'
       - '../src/Entity/'
-      - '../src/Kernel.php'
+      - '../src/Kernel.php'

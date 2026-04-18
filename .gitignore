@@ -1,3 +1,6 @@
+/.env
+/test_*.php
+/chatbot_questions.md
 
 ###> symfony/framework-bundle ###
 /.env.local

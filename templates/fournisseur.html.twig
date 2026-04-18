@@ -160,6 +160,15 @@
     </header>
 
     <main id="main">
+        {% for label, messages in app.flashes %}
+            {% for message in messages %}
+                <div class="alert alert-{{ label }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% endfor %}
+        {% endfor %}
+
         {% block body %}
         <section id="hero" class="hero section">
             <div class="container">
@@ -232,6 +241,11 @@
     <script src="{{ asset('assets/vendor/swiper/swiper-bundle.min.js') }}"></script>
     <script src="{{ asset('assets/js/main.js') }}"></script>
 
+    {% if app.request.attributes.get('_route') matches '/^app_(produit|stock|commande)/' %}
+        {% include 'inc/_chatbot.html.twig' %}
+    {% endif %}
+
     {% block javascripts %}{% endblock %}
+
 </body>
 </html>

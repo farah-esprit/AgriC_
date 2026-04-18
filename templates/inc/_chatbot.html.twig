@@ -1,0 +1,248 @@
+<style>
+    /* Chatbot Styles */
+    :root {
+        --bot-primary: #2e7d32;
+        --bot-secondary: #4caf50;
+        --bot-bg: #ffffff;
+        --bot-text: #333333;
+        --bot-glass: rgba(255, 255, 255, 0.9);
+    }
+
+    #agric-chatbot-container {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        z-index: 999999;
+        font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        display: block !important;
+    }
+
+    #chatbot-bubble {
+        width: 60px;
+        height: 60px;
+        background: linear-gradient(135deg, var(--bot-primary), var(--bot-secondary));
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        transition: all 0.3s ease;
+        color: white;
+        font-size: 24px;
+    }
+
+    #chatbot-bubble:hover {
+        transform: scale(1.1);
+        box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+    }
+
+    #chatbot-window {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 400px;
+        max-width: 90vw;
+        height: 600px;
+        max-height: 80vh;
+        background: var(--bot-glass);
+        backdrop-filter: blur(15px);
+        border: 1px solid rgba(255,255,255,0.4);
+        border-radius: 20px;
+        box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        display: none;
+        flex-direction: column;
+        overflow: hidden;
+        animation: modalFadeIn 0.3s ease-out;
+    }
+
+    @keyframes modalFadeIn {
+        from { opacity: 0; transform: translate(-50%, -45%); }
+        to { opacity: 1; transform: translate(-50%, -50%); }
+    }
+
+    #chatbot-header {
+        background: linear-gradient(to right, var(--bot-primary), var(--bot-secondary));
+        color: white;
+        padding: 15px 20px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-weight: bold;
+    }
+
+    #chatbot-messages {
+        flex: 1;
+        padding: 15px;
+        overflow-y: auto;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .message {
+        max-width: 80%;
+        padding: 10px 15px;
+        border-radius: 15px;
+        font-size: 14px;
+        line-height: 1.4;
+    }
+
+    .message.bot {
+        align-self: flex-start;
+        background: #e8f5e9;
+        color: #1b5e20;
+        border-bottom-left-radius: 2px;
+    }
+
+    .message.user {
+        align-self: flex-end;
+        background: var(--bot-primary);
+        color: white;
+        border-bottom-right-radius: 2px;
+    }
+
+    #chatbot-suggestions {
+        padding: 10px;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        border-top: 1px solid #eee;
+    }
+
+    .suggestion-badge {
+        background: #f1f8e9;
+        color: var(--bot-primary);
+        padding: 5px 12px;
+        border-radius: 20px;
+        font-size: 12px;
+        border: 1px solid #c8e6c9;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .suggestion-badge:hover {
+        background: var(--bot-primary);
+        color: white;
+    }
+
+    #chatbot-input-area {
+        padding: 15px;
+        display: flex;
+        gap: 10px;
+        background: white;
+    }
+
+    #chatbot-input {
+        flex: 1;
+        border: 1px solid #ddd;
+        border-radius: 20px;
+        padding: 8px 15px;
+        outline: none;
+        font-size: 14px;
+    }
+
+    #chatbot-send {
+        background: var(--bot-primary);
+        color: white;
+        border: none;
+        width: 35px;
+        height: 35px;
+        border-radius: 50%;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+</style>
+
+<div id="agric-chatbot-container">
+    <div id="chatbot-window">
+        <div id="chatbot-header">
+            <span>Assistant AgriC 🚜</span>
+            <span id="close-chatbot" style="cursor: pointer;">&times;</span>
+        </div>
+        <div id="chatbot-messages">
+            <div class="message bot">
+                Bonjour ! Je suis votre assistant stock. Comment puis-je vous aider aujourd'hui ?
+            </div>
+        </div>
+        <div id="chatbot-suggestions">
+            <div class="suggestion-badge" onclick="chatbotSendMessage('⚠️ Alertes stock faible')">⚠️ Alertes stock</div>
+            <div class="suggestion-badge" onclick="chatbotSendMessage('📊 État global du stock')">📊 État global</div>
+            <div class="suggestion-badge" onclick="chatbotSendMessage('🆘 Aide')">🆘 Aide</div>
+        </div>
+        <div id="chatbot-input-area">
+            <input type="text" id="chatbot-input" placeholder="Posez une question...">
+            <button id="chatbot-send">➤</button>
+        </div>
+    </div>
+    <div id="chatbot-bubble">
+        💬
+    </div>
+</div>
+
+<script>
+    console.log("Chatbot AgriC chargé.");
+
+    function initChatbot() {
+        const bubble = document.getElementById('chatbot-bubble');
+        const windowChat = document.getElementById('chatbot-window');
+        const closeBtn = document.getElementById('close-chatbot');
+        const input = document.getElementById('chatbot-input');
+        const sendBtn = document.getElementById('chatbot-send');
+        const messagesContainer = document.getElementById('chatbot-messages');
+
+        if (!bubble || !windowChat) return;
+
+        bubble.addEventListener('click', () => {
+            windowChat.style.display = (windowChat.style.display === 'flex') ? 'none' : 'flex';
+            input.focus();
+        });
+
+        closeBtn.addEventListener('click', () => {
+            windowChat.style.display = 'none';
+        });
+
+        // Global function for suggestions
+        window.chatbotSendMessage = async (text) => {
+            if (!text.trim()) return;
+
+            addMessage(text, 'user');
+            input.value = '';
+
+            try {
+                const response = await fetch('/api/chatbot/stock', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message: text })
+                });
+                const data = await response.json();
+                
+                if (data.text) {
+                    addMessage(data.text, 'bot');
+                }
+            } catch (e) {
+                addMessage("Désolé, une erreur est survenue lors de la communication avec le serveur.", 'bot');
+            }
+        };
+
+        const addMessage = (text, sender) => {
+            const msgDiv = document.createElement('div');
+            msgDiv.className = `message ${sender}`;
+            msgDiv.innerHTML = text.replace(/\n/g, '<br>');
+            messagesContainer.appendChild(msgDiv);
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        };
+
+        sendBtn.addEventListener('click', () => window.chatbotSendMessage(input.value));
+        input.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') window.chatbotSendMessage(input.value);
+        });
+    }
+
+    // Support for both standard load and Symfony Turbo
+    document.addEventListener('DOMContentLoaded', initChatbot);
+    document.addEventListener('turbo:load', initChatbot);
+</script>

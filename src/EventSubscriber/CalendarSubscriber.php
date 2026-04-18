@@ -11,6 +11,7 @@ use CalendarBundle\CalendarEvents;
 use CalendarBundle\Event\CalendarEvent;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
+use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 
 class CalendarSubscriber implements EventSubscriberInterface
@@ -20,7 +21,8 @@ class CalendarSubscriber implements EventSubscriberInterface
         private readonly CultureRepository $cultureRepository,
         private readonly CalendarAiService $aiService,
         private readonly EntityManagerInterface $em,
-        private readonly UrlGeneratorInterface $router
+        private readonly UrlGeneratorInterface $router,
+        private readonly RequestStack $requestStack
     ) {}
 
     public static function getSubscribedEvents(): array
@@ -38,13 +40,19 @@ class CalendarSubscriber implements EventSubscriberInterface
 
         // 1. Toujours synchroniser/générer les suggestions IA au moment de l'affichage
         // (En conditions réelles, on pourrait faire ça via un cron job, mais ici c'est plus interactif)
-        $this->syncAiSuggestions();
+        $userId = $this->requestStack->getSession()->get('user_id');
+        if (!$userId) return;
 
-        // 2. Récupérer toutes les activités (Confirmées et Suggestions)
+        $this->syncAiSuggestions($userId);
+
+        // 2. Récupérer toutes les activités (Confirmées et Suggestions) de l'utilisateur
         $activities = $this->activityRepository->createQueryBuilder('a')
+            ->join('a.culture', 'c')
             ->where('a.beginAt BETWEEN :start AND :end')
+            ->andWhere('c.user = :userId')
             ->setParameter('start', $start->format('Y-m-d H:i:s'))
             ->setParameter('end', $end->format('Y-m-d H:i:s'))
+            ->setParameter('userId', $userId)
             ->getQuery()
             ->getResult();
 
@@ -70,9 +78,9 @@ class CalendarSubscriber implements EventSubscriberInterface
         }
     }
 
-    private function syncAiSuggestions(): void
+    private function syncAiSuggestions(int $userId): void
     {
-        $cultures = $this->cultureRepository->findAll();
+        $cultures = $this->cultureRepository->findBy(['user' => $userId]);
         foreach ($cultures as $culture) {
             $suggestions = $this->aiService->generateSuggestions($culture);
             foreach ($suggestions as $suggestion) {

@@ -26,7 +26,7 @@ class Activity
     #[Assert\Choice(choices: ['Plantation', 'Irrigation', 'Récolte', 'Traitement', 'Autre'])]
     private ?string $type = null;
 
-    #[ORM\Column(type: 'datetime')]
+#[ORM\Column(type: 'datetime')]
     #[Assert\NotBlank(message: 'La date de début est obligatoire.')]
     private ?\DateTimeInterface $beginAt = null;
 

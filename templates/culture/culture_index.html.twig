@@ -95,12 +95,7 @@
             {% endif %}
         </div>
 
-        {% for message in app.flashes('success') %}
-            <div class="alert alert-success alert-dismissible fade show">
-                ✅ {{ message }}
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            </div>
-        {% endfor %}
+        {# Flash messages handled by agriculteur.html.twig #}
 
         {# ── STATISTIQUES ── #}
         <div class="row g-3 mb-4">

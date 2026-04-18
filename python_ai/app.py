@@ -8,87 +8,79 @@ import io
 app = Flask(__name__)
 CORS(app)
 
-# Base de connaissances pour le diagnostic
+# Base de connaissances étendue pour le diagnostic
 KNOWLEDGE_BASE = {
     "tomate": {
         "mildiou": {
-            "keywords": ["taches brunes", "taches noires", "feuilles flétries", "duvet blanc", "humidité"],
+            "keywords": ["taches brunes", "taches noires", "feuilles flétries", "duvet blanc", "humidité", "noirâtre"],
             "suggestion": "Il semble s'agir du Mildiou de la tomate (Phytophthora infestans).",
-            "traitements": [
-                "Supprimer et brûler les feuilles infectées immédiatement",
-                "Appliquer de la bouillie bordelaise (solution cuprique)",
-                "Améliorer la circulation de l'air et éviter de mouiller le feuillage"
-            ],
+            "traitements": ["Supprimer les feuilles infectées", "Appliquer de la bouillie bordelaise", "Espacer les plants"],
             "urgence": "élevée",
-            "conseil": "Isolez les plants touchés pour éviter la propagation rapide par temps humide."
+            "conseil": "Évitez d'arroser les feuilles, le champignon adore l'eau stagnante."
         },
         "oïdium": {
-            "keywords": ["poudre blanche", "feutrage blanc", "feuilles jaunes", "déformation"],
+            "keywords": ["poudre blanche", "feutrage blanc", "feuilles blanches", "moisissure blanche"],
             "suggestion": "Diagnostic probable : Oïdium (maladie du blanc).",
-            "traitements": [
-                "Pulvériser un mélange de soufre ou de bicarbonate de soude",
-                "Supprimer les parties très atteintes",
-                "Réduire l'arrosage nocturne"
-            ],
+            "traitements": ["Soufre pulvérisé", "Bicarbonate de soude + savon noir", "Supprimer les feuilles atteintes"],
             "urgence": "modérée",
-            "conseil": "Ne saturez pas l'air autour des plants, le champignon aime l'humidité stagnante."
-        },
-        "pucerons": {
-            "keywords": ["insectes verts", "insectes noirs", "feuilles enroulées", "miellat", "fourmis"],
-            "suggestion": "Présence de pucerons détectée.",
-            "traitements": [
-                "Pulvériser une solution d'eau et de savon noir (5%)",
-                "Introduire des prédateurs naturels comme les coccinelles",
-                "Rincer le feuillage au jet d'eau"
-            ],
-            "urgence": "faible",
-            "conseil": "Vérifiez le revers des feuilles régulièrement."
+            "conseil": "Assurez une bonne aération entre vos plants."
         }
     },
-    "pomme de terre": {
-        "mildiou": {
-            "keywords": ["taches brunes", "pourriture", "tiges noires", "humidité"],
-            "suggestion": "Mildiou de la pomme de terre détecté.",
-            "traitements": [
-                "Traitement fongicide à base de cuivre",
-                "Récolte anticipée si les tubercules ne sont pas encore atteints",
-                "Destruction des fanes infectées"
-            ],
-            "urgence": "critique",
-            "conseil": "Agissez vite, le mildiou peut détruire une récolte entière en quelques jours."
-        },
-        "doryphore": {
-            "keywords": ["scarabée rayé", "larves rouges", "feuilles mangées", "trous"],
-            "suggestion": "Attaque de Doryphores.",
-            "traitements": [
-                "Ramassage manuel des adultes et des larves",
-                "Utilisation de bacille de Thuringe (BT)",
-                "Rotation des cultures l'année prochaine"
-            ],
+    "olivier": {
+        "oeil_de_paon": {
+            "keywords": ["taches circulaires", "cercles jaunes", "taches sombres", "défoliation", "chute feuilles"],
+            "suggestion": "Il semble s'agir de l'Oeil de paon (Cycloconium oleaginum), très fréquent sur l'olivier.",
+            "traitements": ["Traitement au cuivre (Fongicide)", "Taille pour aérer la couronne", "Éviter les excès d'azote"],
             "urgence": "élevée",
-            "conseil": "Inspectez quotidiennement vos plants."
+            "conseil": "Traitez préventivement à l'automne et au printemps après la pluie."
+        },
+        "mouche_olivier": {
+            "keywords": ["piqûres fruits", "olives mangées", "larves", "perforation", "chute olives"],
+            "suggestion": "Attaque probable de la Mouche de l'olive (Bactrocera oleae).",
+            "traitements": ["Pièges à phéromones", "Argile blanche sur les fruits", "Récolter précocement"],
+            "urgence": "critique",
+            "conseil": "Récoltez les olives tombées au sol car elles abritent les larves."
+        }
+    },
+    "vigne": {
+        "mildiou_vigne": {
+            "keywords": ["taches huile", "taches translucides", "duvet blanc revers", "taches brunes"],
+            "suggestion": "Diagnostic : Mildiou de la vigne (Plasmopara viticola).",
+            "traitements": ["Bouillie bordelaise", "Épamprage pour aérer", "Supprimer les feuilles au sol"],
+            "urgence": "élevée",
+            "conseil": "Agissez dès l'apparition des 'taches d'huile' sur le dessus des feuilles."
+        }
+    },
+    "agrumes": {
+        "pucerons_agrumes": {
+            "keywords": ["feuilles enroulées", "insectes noirs", "fourmis", "miellat", "jeunes pousses"],
+            "suggestion": "Présence de pucerons sur vos agrumes.",
+            "traitements": ["Savon noir dilué", "Lâcher de coccinelles", "Purin d'ortie"],
+            "urgence": "modérée",
+            "conseil": "Éliminez les fourmis car elles protègent les pucerons."
+        },
+        "chlorose": {
+            "keywords": ["feuilles jaunes", "nervures vertes", "manque fer", "jaunissement"],
+            "suggestion": "Carence probable en Fer (Chlorose ferrique).",
+            "traitements": ["Apport de séquestrène (fer chélaté)", "Réduire le calcaire du sol", "Apport de compost acide"],
+            "urgence": "faible",
+            "conseil": "Évitez les arrosages à l'eau trop calcaire."
         }
     },
     "general": {
         "carence_azote": {
-            "keywords": ["feuilles jaunes", "croissance lente", "petites feuilles"],
-            "suggestion": "Carence probable en Azote (N).",
-            "traitements": [
-                "Ajouter un engrais riche en azote (purin d'ortie, sang séché)",
-                "Apporter du compost bien décomposé"
-            ],
+            "keywords": ["jaunissement complet", "petites feuilles", "croissance stoppée"],
+            "suggestion": "Carence en Azote détectée.",
+            "traitements": ["Apport de purin d'ortie", "Engrais riche en N", "Compost"],
             "urgence": "faible",
-            "conseil": "Vérifiez le pH de votre sol."
+            "conseil": "Apportez de l'azote surtout au printemps."
         },
-        "manque_eau": {
-            "keywords": ["feuilles tombantes", "sol sec", "flétrissement", "jaunissement"],
-            "suggestion": "Stress hydrique (manque d'eau).",
-            "traitements": [
-                "Arrosage régulier au pied de la plante",
-                "Paillage pour conserver l'humidité"
-            ],
+        "stress_hydrique": {
+            "keywords": ["feuilles tombantes", "flétrissement", "sol sec", "terre craquelée"],
+            "suggestion": "La plante souffre de la soif (Stress hydrique).",
+            "traitements": ["Arrosage profond au pied", "Paillage du sol", "Binage pour briser la croûte"],
             "urgence": "modérée",
-            "conseil": "Arrosez de préférence tôt le matin ou tard le soir."
+            "conseil": "Arrosez le soir pour limiter l'évaporation."
         }
     }
 }

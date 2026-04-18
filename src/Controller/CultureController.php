@@ -25,15 +25,20 @@ class CultureController extends AbstractController
         PaginatorInterface $paginator,
         WeatherService $weatherService
     ): Response {
+        $userId = $request->getSession()->get('user_id');
+        if (!$userId) {
+            return $this->redirectToRoute('app_signin');
+        }
+
         $search         = $request->query->get('search');
         $filterType     = $request->query->get('type');
         $sortSuperficie = $request->query->get('sort');
 
         $query = match (true) {
-            (bool) $search         => $cultureRepository->search($search),
-            (bool) $filterType     => $cultureRepository->filterByType($filterType),
-            (bool) $sortSuperficie => $cultureRepository->orderBySuperficie($sortSuperficie),
-            default                => $cultureRepository->findAll(),
+            (bool) $search         => $cultureRepository->search($search, $userId),
+            (bool) $filterType     => $cultureRepository->filterByType($filterType, $userId),
+            (bool) $sortSuperficie => $cultureRepository->orderBySuperficie($userId, $sortSuperficie),
+            default                => $cultureRepository->findAllByUser($userId),
         };
 
         // 📄 Pagination via KnpPaginatorBundle
@@ -44,12 +49,12 @@ class CultureController extends AbstractController
         );
 
         $stats = [
-            'total'    => $cultureRepository->countTotal(),
-            'moyenne'  => $cultureRepository->getSuperficieMoyenne(),
-            'totaleHa' => $cultureRepository->getSuperficieTotal(),
-            'max'      => $cultureRepository->getSuperficieMax(),
-            'min'      => $cultureRepository->getSuperficieMin(),
-            'parType'  => $cultureRepository->countParType(),
+            'total'    => $cultureRepository->countTotal($userId),
+            'moyenne'  => $cultureRepository->getSuperficieMoyenne($userId),
+            'totaleHa' => $cultureRepository->getSuperficieTotal($userId),
+            'max'      => $cultureRepository->getSuperficieMax($userId),
+            'min'      => $cultureRepository->getSuperficieMin($userId),
+            'parType'  => $cultureRepository->countParType($userId),
         ];
 
         // 🌤️ Météo pour le widget fixe en haut de la page
@@ -98,11 +103,14 @@ class CultureController extends AbstractController
             }
 
             if (empty($erreurs)) {
+                $user = $em->getRepository(\App\Entity\User::class)->find($request->getSession()->get('user_id'));
+                
                 $culture = new Culture();
                 $culture->setNom($nom);
                 $culture->setType($type);
                 $culture->setSuperficie(floatval($superficie));
                 $culture->setLocalisation($localisation);
+                $culture->setUser($user);
 
                 $em->persist($culture);
                 $em->flush();
@@ -126,8 +134,15 @@ class CultureController extends AbstractController
      * Affiche le détail d'une culture + météo en temps réel via OpenWeatherMap API.
      */
     #[Route('/{id}', name: 'app_culture_show', methods: ['GET'])]
-    public function show(Culture $culture, WeatherService $weatherService): Response
+    public function show(Culture $culture, WeatherService $weatherService, Request $request): Response
     {
+        // 🔒 Sécurité : Vérifier l'appartenance
+        $userId = $request->getSession()->get('user_id');
+        if (!$culture->getUser() || $culture->getUser()->getUserId() !== $userId) {
+            $this->addFlash('error', "Accès refusé : Cette culture ne vous appartient pas.");
+            return $this->redirectToRoute('app_culture_index');
+        }
+
         // 🌤️ Météo basée sur la localisation de la culture
         $meteo = $weatherService->getWeather($culture->getLocalisation() ?? 'Tunis');
 
@@ -140,6 +155,13 @@ class CultureController extends AbstractController
     #[Route('/{id}/edit', name: 'app_culture_edit', methods: ['GET', 'POST'])]
     public function edit(Request $request, Culture $culture, EntityManagerInterface $em, ValidatorInterface $validator): Response
     {
+        // 🔒 Sécurité : Vérifier l'appartenance
+        $userId = $request->getSession()->get('user_id');
+        if (!$culture->getUser() || $culture->getUser()->getUserId() !== $userId) {
+            $this->addFlash('error', "Accès refusé : Vous ne pouvez pas modifier cette culture.");
+            return $this->redirectToRoute('app_culture_index');
+        }
+
         $erreurs = [];
 
         if ($request->isMethod('POST')) {
@@ -190,6 +212,13 @@ class CultureController extends AbstractController
     #[Route('/{id}/delete', name: 'app_culture_delete', methods: ['POST'])]
     public function delete(Request $request, Culture $culture, EntityManagerInterface $em): Response
     {
+        // 🔒 Sécurité : Vérifier l'appartenance
+        $userId = $request->getSession()->get('user_id');
+        if (!$culture->getUser() || $culture->getUser()->getUserId() !== $userId) {
+            $this->addFlash('error', "Accès refusé : Vous ne pouvez pas supprimer cette culture.");
+            return $this->redirectToRoute('app_culture_index');
+        }
+
         if ($this->isCsrfTokenValid('delete' . $culture->getIdCulture(), $request->request->get('_token'))) {
             $em->remove($culture);
             $em->flush();

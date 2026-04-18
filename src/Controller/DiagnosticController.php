@@ -38,12 +38,17 @@ class DiagnosticController extends AbstractController
         CultureRepository $cultureRepo,
         PaginatorInterface $paginator
     ): Response {
+        $userId = $request->getSession()->get('user_id');
+        if (!$userId) {
+            return $this->redirectToRoute('app_signin');
+        }
+
         $search      = $request->query->get('search');
         $cultureId   = $request->query->get('culture');
         $dateDebut   = $request->query->get('dateDebut');
         $dateFin     = $request->query->get('dateFin');
 
-        $query = $repo->findFiltered($search, $cultureId, $dateDebut, $dateFin);
+        $query = $repo->findFilteredByUser($userId, $search, $cultureId, $dateDebut, $dateFin);
 
         $diagnostics = $paginator->paginate(
             $query,
@@ -51,11 +56,11 @@ class DiagnosticController extends AbstractController
             8
         );
 
-        $stats = $repo->getStats();
+        $stats = $repo->getStatsByUser($userId);
 
         return $this->render('diagnostic/diagnostic_index.html.twig', [
             'diagnostics'   => $diagnostics,
-            'cultures'      => $cultureRepo->findAll(),
+            'cultures'      => $cultureRepo->findBy(['user' => $userId]),
             'stats'         => $stats,
             'search'        => $search,
             'filterCulture' => $cultureId,
@@ -74,6 +79,7 @@ class DiagnosticController extends AbstractController
         CultureRepository $cultureRepo,
         DiagnosticAiService $aiService
     ): Response {
+        $userId = $request->getSession()->get('user_id');
         $erreurs = [];
 
         if ($request->isMethod('POST')) {
@@ -85,7 +91,7 @@ class DiagnosticController extends AbstractController
             /** @var UploadedFile $imageFile */
             $imageFile = $request->files->get('image');
 
-            if (!$culture)                        $erreurs[] = 'Culture invalide';
+            if (!$culture || $culture->getUser()->getUserId() !== $userId) $erreurs[] = 'Culture invalide';
             if (strlen(trim($symptomes ?? '')) < 5) $erreurs[] = 'Symptômes trop courts';
 
             if (empty($erreurs)) {
@@ -127,7 +133,7 @@ class DiagnosticController extends AbstractController
         }
 
         return $this->render('diagnostic/diagnostic_new.html.twig', [
-            'cultures' => $cultureRepo->findAll(),
+            'cultures' => $cultureRepo->findBy(['user' => $userId]),
             'erreurs'  => $erreurs,
         ]);
     }
@@ -137,8 +143,14 @@ class DiagnosticController extends AbstractController
     // =========================
     #[Route('/{id}', name: 'app_diagnostic_show', methods: ['GET'])]
     #[ParamConverter('diagnostic', options: ['mapping' => ['id' => 'idDiagnostic']])]
-    public function show(Diagnostic $diagnostic): Response
+    public function show(Diagnostic $diagnostic, Request $request): Response
     {
+        $userId = $request->getSession()->get('user_id');
+        if (!$diagnostic->getCulture() || !$diagnostic->getCulture()->getUser() || $diagnostic->getCulture()->getUser()->getUserId() !== $userId) {
+            $this->addFlash('error', "Accès refusé : Ce diagnostic ne vous appartient pas.");
+            return $this->redirectToRoute('app_diagnostic_index');
+        }
+
         $result = $diagnostic->getResultat()
             ? json_decode($diagnostic->getResultat(), true)
             : null;
@@ -160,6 +172,12 @@ class DiagnosticController extends AbstractController
         EntityManagerInterface $em,
         CultureRepository $cultureRepo
     ): Response {
+        $userId = $request->getSession()->get('user_id');
+        if (!$diagnostic->getCulture() || !$diagnostic->getCulture()->getUser() || $diagnostic->getCulture()->getUser()->getUserId() !== $userId) {
+            $this->addFlash('error', "Accès refusé.");
+            return $this->redirectToRoute('app_diagnostic_index');
+        }
+
         $erreurs = [];
 
         if ($request->isMethod('POST')) {
@@ -168,7 +186,7 @@ class DiagnosticController extends AbstractController
             $infos     = $request->request->get('informationsComplementaires');
             $culture   = $cultureRepo->find($cultureId);
 
-            if (!$culture)                          $erreurs[] = 'Culture invalide';
+            if (!$culture || $culture->getUser()->getUserId() !== $userId) $erreurs[] = 'Culture invalide';
             if (strlen(trim($symptomes ?? '')) < 5) $erreurs[] = 'Symptômes trop courts';
 
             if (empty($erreurs)) {
@@ -185,7 +203,7 @@ class DiagnosticController extends AbstractController
 
         return $this->render('diagnostic/diagnostic_edit.html.twig', [
             'diagnostic' => $diagnostic,
-            'cultures'   => $cultureRepo->findAll(),
+            'cultures'   => $cultureRepo->findBy(['user' => $userId]),
             'erreurs'    => $erreurs,
         ]);
     }
@@ -200,6 +218,12 @@ class DiagnosticController extends AbstractController
         Diagnostic $diagnostic,
         EntityManagerInterface $em
     ): Response {
+        $userId = $request->getSession()->get('user_id');
+        if (!$diagnostic->getCulture() || !$diagnostic->getCulture()->getUser() || $diagnostic->getCulture()->getUser()->getUserId() !== $userId) {
+            $this->addFlash('error', "Accès refusé : Vous ne pouvez pas supprimer ce diagnostic.");
+            return $this->redirectToRoute('app_diagnostic_index');
+        }
+
         if ($this->isCsrfTokenValid('delete' . $diagnostic->getIdDiagnostic(), $request->request->get('_token'))) {
             $em->remove($diagnostic);
             $em->flush();
@@ -214,8 +238,13 @@ class DiagnosticController extends AbstractController
     // =========================
     #[Route('/{id}/pdf', name: 'app_diagnostic_pdf', methods: ['GET'])]
     #[ParamConverter('diagnostic', options: ['mapping' => ['id' => 'idDiagnostic']])]
-    public function pdf(Diagnostic $diagnostic): Response
+    public function pdf(Diagnostic $diagnostic, Request $request): Response
     {
+        $userId = $request->getSession()->get('user_id');
+        if (!$diagnostic->getCulture() || !$diagnostic->getCulture()->getUser() || $diagnostic->getCulture()->getUser()->getUserId() !== $userId) {
+            return $this->redirectToRoute('app_diagnostic_index');
+        }
+
         $html = $this->renderView('diagnostic/pdf/diagnostic_pdf.html.twig', [
             'diagnostic' => $diagnostic,
             'date'       => new \DateTime(),

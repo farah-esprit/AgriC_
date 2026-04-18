@@ -1,5 +1,6 @@
 parameters:
   images_directory: '%kernel.project_dir%/public/uploads/images'
+  open_weather_api_key: '%env(OPEN_WEATHER_API_KEY)%'
 
 services:
   _defaults:
@@ -11,4 +12,9 @@ services:
     exclude:
       - '../src/DependencyInjection/'
       - '../src/Entity/'
-      - '../src/Kernel.php'
+      - '../src/Kernel.php'
+
+  App\Service\WeatherService:
+    arguments:
+      $openWeatherApiKey: '%open_weather_api_key%'
+

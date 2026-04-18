@@ -24,9 +24,9 @@ class ReclamationType extends AbstractType
                 'label' => 'Description',
                 'attr' => ['class' => 'form-control', 'rows' => 5],
             ])
-            ->add('dateCreation', DateType::class, [
-                'label' => 'Date',
-                'widget' => 'single_text', // 🔥 compatible HTML5 + flatpickr
+            ->add('dateCreation', \Symfony\Component\Form\Extension\Core\Type\DateTimeType::class, [
+                'label' => 'Date de création',
+                'widget' => 'single_text',
                 'attr' => ['class' => 'form-control'],
             ])
             ->add('statut', ChoiceType::class, [

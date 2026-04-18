@@ -17,10 +17,25 @@ use Symfony\Component\Routing\Attribute\Route;
 class ReclamationController extends AbstractController
 {
     #[Route('/', name: 'app_reclamation_index', methods: ['GET'])]
-    public function index(ReclamationRepository $repo): Response
+    public function index(Request $request, ReclamationRepository $repo): Response
     {
+        $search = $request->query->get('q');
+        $sort = $request->query->get('sort', 'dateCreation');
+        $direction = $request->query->get('direction', 'DESC');
+
+        $reclamations = $repo->findBySearchAndSort($search, $sort, $direction);
+
+        // Récupération des statistiques
+        $statsStatus = $repo->countByStatus();
+        $statsPriority = $repo->countByPriority();
+
         return $this->render('reclamation/index.html.twig', [
-            'reclamations' => $repo->findAll(),
+            'reclamations' => $reclamations,
+            'statsStatus' => $statsStatus,
+            'statsPriority' => $statsPriority,
+            'currentSearch' => $search,
+            'currentSort' => $sort,
+            'currentDirection' => $direction,
         ]);
     }
 

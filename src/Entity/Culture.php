@@ -70,11 +70,21 @@ class Culture
     )]
     private ?string $localisation = null;
 
-    #[ORM\Column(type: 'integer', nullable: true, name: 'idUser')]
-    private ?int $userId = null;
-
     #[ORM\Column(type: 'string', nullable: true, name: 'image')]
     private ?string $image = null;
+
+    #[ORM\Column(type: 'datetime', nullable: true, name: 'dateSemis')]
+    #[Assert\Type(type: '\DateTimeInterface', message: 'La date de semis doit être une date valide.')]
+    private ?\DateTimeInterface $dateSemis = null;
+
+    #[ORM\Column(type: 'integer', nullable: true, name: 'cycleCroissance')]
+    #[Assert\PositiveOrZero(message: 'Le cycle de croissance doit être un nombre positif.')]
+    private ?int $cycleCroissance = null;
+
+    // ── Relation ManyToOne vers User ──
+    #[ORM\ManyToOne(targetEntity: User::class)]
+    #[ORM\JoinColumn(name: 'idUser', referencedColumnName: 'user_id', nullable: true)]
+    private ?User $user = null;
 
     // ── Relation OneToMany vers Diagnostic ──
     #[ORM\OneToMany(mappedBy: 'culture', targetEntity: Diagnostic::class, cascade: ['remove'])]
@@ -87,27 +97,103 @@ class Culture
 
     // ── Getters & Setters ──
 
-    public function getIdCulture(): ?int { return $this->idCulture; }
+    public function getIdCulture(): ?int
+    {
+        return $this->idCulture;
+    }
 
-    public function getNom(): ?string { return $this->nom; }
-    public function setNom(?string $nom): self { $this->nom = $nom; return $this; }
+    public function getNom(): ?string
+    {
+        return $this->nom;
+    }
 
-    public function getType(): ?string { return $this->type; }
-    public function setType(?string $type): self { $this->type = $type; return $this; }
+    public function setNom(?string $nom): self
+    {
+        $this->nom = $nom;
+        return $this;
+    }
 
-    public function getSuperficie(): ?float { return $this->superficie; }
-    public function setSuperficie(?float $superficie): self { $this->superficie = $superficie; return $this; }
+    public function getType(): ?string
+    {
+        return $this->type;
+    }
 
-    public function getLocalisation(): ?string { return $this->localisation; }
-    public function setLocalisation(?string $localisation): self { $this->localisation = $localisation; return $this; }
+    public function setType(?string $type): self
+    {
+        $this->type = $type;
+        return $this;
+    }
 
-    public function getUserId(): ?int { return $this->userId; }
-    public function setUserId(?int $userId): self { $this->userId = $userId; return $this; }
+    public function getSuperficie(): ?float
+    {
+        return $this->superficie;
+    }
 
-    public function getImage(): ?string { return $this->image; }
-    public function setImage(?string $image): self { $this->image = $image; return $this; }
+    public function setSuperficie(?float $superficie): self
+    {
+        $this->superficie = $superficie;
+        return $this;
+    }
 
-    public function getDiagnostics(): Collection { return $this->diagnostics; }
+    public function getLocalisation(): ?string
+    {
+        return $this->localisation;
+    }
+
+    public function setLocalisation(?string $localisation): self
+    {
+        $this->localisation = $localisation;
+        return $this;
+    }
+
+    public function getImage(): ?string
+    {
+        return $this->image;
+    }
+
+    public function setImage(?string $image): self
+    {
+        $this->image = $image;
+        return $this;
+    }
+
+    public function getDateSemis(): ?\DateTimeInterface
+    {
+        return $this->dateSemis;
+    }
+
+    public function setDateSemis(?\DateTimeInterface $dateSemis): self
+    {
+        $this->dateSemis = $dateSemis;
+        return $this;
+    }
+
+    public function getCycleCroissance(): ?int
+    {
+        return $this->cycleCroissance;
+    }
+
+    public function setCycleCroissance(?int $cycleCroissance): self
+    {
+        $this->cycleCroissance = $cycleCroissance;
+        return $this;
+    }
+
+    public function getUser(): ?User
+    {
+        return $this->user;
+    }
+
+    public function setUser(?User $user): self
+    {
+        $this->user = $user;
+        return $this;
+    }
+
+    public function getDiagnostics(): Collection
+    {
+        return $this->diagnostics;
+    }
 
     public function addDiagnostic(Diagnostic $diagnostic): self
     {

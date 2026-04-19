@@ -8,17 +8,94 @@
 
         <div class="d-flex justify-content-between align-items-center mb-4">
             <h2 style="color: #4a7c3a; font-weight: bold;">🌱 Gestion des Cultures</h2>
-            <a href="{{ path('app_culture_new') }}" class="btn btn-success">
-                <i class="bi bi-plus-circle"></i> Ajouter une culture
-            </a>
+            <div class="d-flex gap-2">
+                <a href="{{ path('app_culture_analyze_image') }}" class="btn btn-outline-success">
+                    <i class="bi bi-camera"></i> Analyser Image
+                </a>
+                <a href="{{ path('app_culture_new') }}" class="btn btn-success">
+                    <i class="bi bi-plus-circle"></i> Ajouter une culture
+                </a>
+            </div>
         </div>
 
-        {% for message in app.flashes('success') %}
-            <div class="alert alert-success alert-dismissible fade show">
-                ✅ {{ message }}
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        {# ── BANDEAU MÉTÉO PREMIUM ── #}
+        <div class="mb-5">
+            {% if meteo is not null %}
+            <div class="card shadow border-0 overflow-hidden" 
+                 style="border-radius: 20px; background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%); color: white;">
+                <div class="card-body p-0">
+                    <div class="row g-0 align-items-center">
+                        {# Colonne Gauche : Ville et Sélecteur #}
+                        <div class="col-md-5 p-4 border-end border-white border-opacity-10">
+                            <div class="d-flex align-items-center gap-3 mb-3">
+                                <div class="bg-white bg-opacity-20 p-2 rounded-3">
+                                    <i class="bi bi-geo-alt-fill fs-4"></i>
+                                </div>
+                                <div>
+                                    <h4 class="mb-0 fw-bold">{{ meteo.ville }}</h4>
+                                    <small class="opacity-75">Ma région agricole</small>
+                                </div>
+                            </div>
+                            
+                            <form action="{{ path('app_culture_index') }}" method="get" id="weatherForm">
+                                <div class="input-group input-group-sm">
+                                    <span class="input-group-text bg-white bg-opacity-10 border-white border-opacity-25 text-white">
+                                        <i class="bi bi-search"></i>
+                                    </span>
+                                    <select name="ville" class="form-select bg-white bg-opacity-10 border-white border-opacity-25 text-white" 
+                                            style="cursor: pointer;" onchange="document.getElementById('weatherForm').submit()">
+                                        <option value="" style="color: black;">Changer de région...</option>
+                                        {% for region in ['Tunis', 'Sousse', 'Sfax', 'Nabeul', 'Bizerte', 'Kairouan', 'Béja', 'Jendouba', 'Gafsa', 'Gabès', 'Monastir'] %}
+                                            <option value="{{ region }}" {{ villeMeteo == region ? 'selected' : '' }} style="color: black;">{{ region }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                {# Garder les autres filtres si présents #}
+                                {% if search %}<input type="hidden" name="search" value="{{ search }}">{% endif %}
+                                {% if filterType %}<input type="hidden" name="type" value="{{ filterType }}">{% endif %}
+                            </form>
+                        </div>
+
+                        {# Colonne Centre : Température et Icône #}
+                        <div class="col-md-4 p-4 text-center border-end border-white border-opacity-10">
+                            <div class="d-flex align-items-center justify-content-center gap-4">
+                                <img src="https://openweathermap.org/img/wn/{{ meteo.icone }}@2x.png" 
+                                     alt="{{ meteo.description }}" style="width: 70px;">
+                                <div class="text-start">
+                                    <div style="font-size: 3rem; font-weight: 800; line-height: 1;">{{ meteo.temperature }}°C</div>
+                                    <div class="text-capitalize opacity-90">{{ meteo.description }}</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {# Colonne Droite : Détails #}
+                        <div class="col-md-3 p-4">
+                            <div class="d-flex flex-column gap-2" style="font-size: 0.9rem;">
+                                <div class="d-flex justify-content-between">
+                                    <span class="opacity-75">💧 Humidité</span>
+                                    <span class="fw-bold">{{ meteo.humidite }}%</span>
+                                </div>
+                                <div class="d-flex justify-content-between">
+                                    <span class="opacity-75">🌡️ Ressenti</span>
+                                    <span class="fw-bold">{{ meteo.ressenti }}°C</span>
+                                </div>
+                                <div class="d-flex justify-content-between">
+                                    <span class="opacity-75">💨 Vent</span>
+                                    <span class="fw-bold">{{ meteo.vent }} km/h</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
-        {% endfor %}
+            {% else %}
+            <div class="alert alert-info border-0 shadow-sm" style="border-radius: 15px;">
+                <i class="bi bi-info-circle me-2"></i> Configurez votre clé API OpenWeatherMap pour afficher la météo en direct.
+            </div>
+            {% endif %}
+        </div>
+
+        {# Flash messages handled by agriculteur.html.twig #}
 
         {# ── STATISTIQUES ── #}
         <div class="row g-3 mb-4">
@@ -92,7 +169,7 @@
         </div>
 
         {# ── CARTES CULTURES ── #}
-        {% if cultures|length == 0 %}
+        {% if cultures.getTotalItemCount() == 0 %}
             <div class="text-center py-5">
                 <p class="text-muted fs-5">🌿 Aucune culture trouvée.</p>
                 <a href="{{ path('app_culture_new') }}" class="btn btn-success mt-2">Ajouter la première culture</a>
@@ -142,6 +219,34 @@
                     </div>
                 </div>
                 {% endfor %}
+            </div>
+
+            {# ── PAGINATION KnpPaginator ── #}
+            <div class="mt-5 p-4 border-top">
+                <div class="row align-items-center g-3">
+                    <div class="col-md-6">
+                        {% set firstItem = (cultures.getCurrentPageNumber() - 1) * cultures.getItemNumberPerPage() + 1 %}
+
+                        {# ✅ CORRECTION : remplacement de |min (filtre inexistant en Twig) #}
+                        {% set calculatedLast = cultures.getCurrentPageNumber() * cultures.getItemNumberPerPage() %}
+                        {% if calculatedLast > cultures.getTotalItemCount() %}
+                            {% set lastItem = cultures.getTotalItemCount() %}
+                        {% else %}
+                            {% set lastItem = calculatedLast %}
+                        {% endif %}
+
+                        <p class="text-muted mb-0">
+                            📊 Affichage de
+                            <strong>{{ firstItem }}</strong> à
+                            <strong>{{ lastItem }}</strong>
+                            sur <strong>{{ cultures.getTotalItemCount() }}</strong> cultures
+                            (Page <strong>{{ cultures.getCurrentPageNumber() }}</strong>/{{ cultures.getPageCount() }})
+                        </p>
+                    </div>
+                    <div class="col-md-6 text-center">
+                        {{ knp_pagination_render(cultures) }}
+                    </div>
+                </div>
             </div>
         {% endif %}
 

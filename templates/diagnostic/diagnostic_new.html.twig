@@ -6,12 +6,15 @@
 <section style="padding: 120px 0 60px;">
     <div class="container">
         <div class="row justify-content-center">
-            <div class="col-lg-6">
+            <div class="col-lg-7">
 
-                <div class="card shadow border-0" style="border-radius: 15px;">
+                <div class="card shadow border-0" style="border-radius: 18px; overflow: hidden;">
                     <div class="card-header text-white text-center py-4"
-                         style="background: linear-gradient(to right, #4a7c3a, #66bb6a); border-radius: 15px 15px 0 0;">
-                        <h3>🩺 Ajouter un Diagnostic</h3>
+                         style="background: linear-gradient(135deg, #2d6a2d 0%, #4a7c3a 50%, #66bb6a 100%);">
+                        <h3 class="mb-0">🩺 Nouveau Diagnostic</h3>
+                        <p class="mb-0 mt-1" style="opacity: 0.85; font-size: 0.9rem;">
+                            Décrivez les symptômes — l'IA vous aidera à identifier la maladie
+                        </p>
                     </div>
 
                     <div class="card-body p-5">
@@ -26,8 +29,9 @@
                             </div>
                         {% endif %}
 
-                        <form method="post" id="formDiagnostic" novalidate>
+                        <form method="post" id="formDiagnostic" enctype="multipart/form-data" novalidate>
 
+                            {# ── Date ── #}
                             <div class="mb-3">
                                 <label class="form-label fw-bold">📅 Date du diagnostic *</label>
                                 <input type="date" name="dateDiagnostic" id="dateDiagnostic"
@@ -37,6 +41,7 @@
                                 <div class="valid-feedback">✅ Correct !</div>
                             </div>
 
+                            {# ── Culture ── #}
                             <div class="mb-3">
                                 <label class="form-label fw-bold">🌿 Culture concernée *</label>
                                 <select name="idCulture" id="idCulture" class="form-select" required>
@@ -49,28 +54,167 @@
                                 <div class="valid-feedback">✅ Correct !</div>
                             </div>
 
+                            {# ── Symptômes ── #}
                             <div class="mb-3">
-                                <label class="form-label fw-bold">🤒 Symptômes *</label>
+                                <label class="form-label fw-bold">🤒 Symptômes observés *</label>
                                 <textarea name="symptomes" id="symptomes" class="form-control"
-                                          rows="3" minlength="5" required
-                                          placeholder="Décrivez les symptômes observés..."></textarea>
-                                <div class="invalid-feedback">Les symptômes sont obligatoires (minimum 5 caractères).</div>
-                                <div class="valid-feedback">✅ Correct !</div>
+                                          rows="4" minlength="5" required
+                                          placeholder="Ex: feuilles jaunissantes avec taches brunes, tige molle à la base, présence de champignons blancs..."></textarea>
+                                <div class="d-flex justify-content-between">
+                                    <div class="invalid-feedback">Les symptômes sont obligatoires (minimum 5 caractères).</div>
+                                    <small id="symptomesCount" class="text-muted ms-auto mt-1">0 caractères</small>
+                                </div>
                             </div>
 
+                            {# ── Image (Optionnel pour aide au diag) ── #}
+                            <div class="mb-4">
+                                <label class="form-label fw-bold">📸 Photo des symptômes (Optionnel)</label>
+                                <div class="image-upload-zone p-4 text-center"
+                                     style="border: 2px dashed #ccc; border-radius: 12px; background: #fafafa; cursor: pointer; transition: all 0.3s;"
+                                     onclick="document.getElementById('imageInput').click()">
+                                    <div id="imagePreviewContainer" class="d-none mb-3">
+                                        <img id="imagePreview" src="#" alt="Aperçu" style="max-width: 100%; max-height: 200px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
+                                    </div>
+                                    <div id="imageUploadPlaceholder">
+                                        <i class="bi bi-camera" style="font-size: 2rem; color: #666;"></i>
+                                        <p class="mb-0 mt-2 text-muted" style="font-size: 0.9rem;">Cliquez ou glissez une photo ici pour aider l'IA</p>
+                                    </div>
+                                    <input type="file" name="image" id="imageInput" class="d-none" accept="image/*">
+                                </div>
+                                <div id="imageFileName" class="mt-2 small text-success fw-bold d-none text-center"></div>
+                            </div>
+
+                            {# ══════════════════════════════════════════════════
+                               🤖 MODULE IA — Bouton + Panneau de résultat
+                               ══════════════════════════════════════════════════ #}
+                            <div class="mb-4" id="aiModule">
+
+                                {# Bouton déclencheur #}
+                                <button type="button" id="btnAiSuggest"
+                                        class="btn w-100 py-3"
+                                        style="background: linear-gradient(135deg, #e8f5e9, #f1f8e9);
+                                               border: 2px dashed #66bb6a; border-radius: 12px;
+                                               color: #2d6a2d; font-weight: 600; font-size: 0.95rem;
+                                               transition: all 0.25s ease;">
+                                    <span id="btnAiIcon" style="font-size: 1.2rem;">🤖</span>
+                                    <span id="btnAiText" class="ms-2">Analyser avec l'IA Locale</span>
+                                    <span id="btnAiLoading" class="d-none ms-2">
+                                        <span class="spinner-border spinner-border-sm me-1"></span>
+                                        Analyse en cours...
+                                    </span>
+                                    <span class="ms-2 badge" style="background:#66bb6a; color:#fff; font-size:0.7rem;">GRATUIT</span>
+                                </button>
+
+                                {# ── Panneau résultat IA ── #}
+                                <div id="aiResultPanel" class="d-none mt-3"
+                                     style="border-radius: 14px; overflow: hidden;
+                                            border: 1.5px solid #a5d6a7; box-shadow: 0 4px 20px rgba(74,124,58,0.12);">
+
+                                    {# En-tête du panneau #}
+                                    <div class="d-flex align-items-center justify-content-between px-4 py-3"
+                                         style="background: linear-gradient(to right, #2d6a2d, #4a7c3a);">
+                                        <div class="d-flex align-items-center gap-2">
+                                            <span style="font-size: 1.3rem;">🤖</span>
+                                            <div>
+                                                <div class="text-white fw-bold" style="font-size: 0.95rem;">Diagnostic IA — AgriConnect</div>
+                                                <div style="color: rgba(255,255,255,0.7); font-size: 0.75rem;">Analyse basée sur les symptômes décrits</div>
+                                            </div>
+                                        </div>
+                                        <div class="d-flex align-items-center gap-2">
+                                            {# Badge niveau d'urgence #}
+                                            <span id="aiUrgenceBadge" class="badge px-3 py-2" style="font-size: 0.75rem;"></span>
+                                            {# Score de confiance #}
+                                            <div id="aiConfianceWrap" class="d-none text-center">
+                                                <div id="aiConfianceVal" class="text-white fw-bold" style="font-size: 1.1rem; line-height:1;"></div>
+                                                <div style="color: rgba(255,255,255,0.6); font-size: 0.65rem;">confiance</div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {# Corps du panneau #}
+                                    <div style="background: #f8fdf8; padding: 20px 24px;">
+
+                                        {# Résumé du diagnostic #}
+                                        <div class="mb-3 p-3"
+                                             style="background: #fff; border-radius: 10px;
+                                                    border-left: 4px solid #66bb6a;">
+                                            <div class="fw-bold mb-1" style="color:#2d6a2d; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.5px;">
+                                                📋 Résumé du diagnostic
+                                            </div>
+                                            <p id="aiSuggestion" class="mb-0" style="color: #444; font-size: 0.9rem; line-height: 1.6;"></p>
+                                        </div>
+
+                                        <div class="row g-3">
+
+                                            {# Maladies probables #}
+                                            <div class="col-md-6" id="aiMaladiesWrap">
+                                                <div class="h-100 p-3"
+                                                     style="background: #fff; border-radius: 10px;
+                                                            border-left: 4px solid #ef5350;">
+                                                    <div class="fw-bold mb-2" style="color: #c62828; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.5px;">
+                                                        🦠 Maladies probables
+                                                    </div>
+                                                    <ul id="aiMaladiesList" class="mb-0 ps-3"
+                                                        style="font-size: 0.87rem; color: #444; line-height: 1.8;"></ul>
+                                                </div>
+                                            </div>
+
+                                            {# Traitements recommandés #}
+                                            <div class="col-md-6" id="aiTraitementsWrap">
+                                                <div class="h-100 p-3"
+                                                     style="background: #fff; border-radius: 10px;
+                                                            border-left: 4px solid #1565c0;">
+                                                    <div class="fw-bold mb-2" style="color: #0d47a1; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.5px;">
+                                                        💊 Traitements recommandés
+                                                    </div>
+                                                    <ul id="aiTraitementsList" class="mb-0 ps-3"
+                                                        style="font-size: 0.87rem; color: #444; line-height: 1.8;"></ul>
+                                                </div>
+                                            </div>
+
+                                        </div>
+
+                                        {# Conseil pratique #}
+                                        <div id="aiConseilWrap" class="mt-3 p-3"
+                                             style="background: #fffde7; border-radius: 10px;
+                                                    border-left: 4px solid #f9a825;">
+                                            <div class="fw-bold mb-1" style="color: #e65100; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.5px;">
+                                                💡 Conseil urgent
+                                            </div>
+                                            <p id="aiConseilText" class="mb-0" style="font-size: 0.87rem; color: #555; line-height: 1.6;"></p>
+                                        </div>
+
+                                        {# Footer disclaimer #}
+                                            Modèle d'IA Agricole Local — Résultat à titre indicatif uniquement.
+                                            Consultez un agronome pour une confirmation.
+                                    </div>
+                                </div>
+
+                                {# Panneau d'erreur IA #}
+                                <div id="aiError" class="d-none mt-3 alert alert-warning d-flex align-items-center gap-2"
+                                     style="border-radius: 10px; font-size: 0.87rem;">
+                                    <span style="font-size: 1.1rem;">⚠️</span>
+                                    <span id="aiErrorText"></span>
+                                </div>
+                            </div>
+                            {# ══ FIN MODULE IA ══ #}
+
+                            {# ── Informations complémentaires ── #}
                             <div class="mb-4">
                                 <label class="form-label fw-bold">📝 Informations complémentaires</label>
                                 <textarea name="informationsComplementaires" id="informationsComplementaires"
                                           class="form-control" rows="3"
-                                          placeholder="Informations supplémentaires (optionnel)..."></textarea>
+                                          placeholder="Conditions météo, stade de croissance, traitements déjà appliqués... (optionnel)"></textarea>
+                                <div class="form-text">Ces informations améliorent la précision de l'analyse IA.</div>
                             </div>
 
+                            {# ── Boutons ── #}
                             <div class="d-flex gap-2">
-                                <button type="submit" class="btn btn-success flex-grow-1">
-                                    <i class="bi bi-check-circle"></i> Enregistrer
+                                <button type="submit" class="btn btn-success flex-grow-1 py-2">
+                                    <i class="bi bi-check-circle me-1"></i> Enregistrer le diagnostic
                                 </button>
-                                <a href="{{ path('app_diagnostic_index') }}" class="btn btn-outline-secondary">
-                                    <i class="bi bi-arrow-left"></i> Retour
+                                <a href="{{ path('app_diagnostic_index') }}" class="btn btn-outline-secondary py-2">
+                                    <i class="bi bi-arrow-left me-1"></i> Retour
                                 </a>
                             </div>
 
@@ -86,33 +230,58 @@
 
 {% block javascripts %}
 <script>
+// ─────────────────────────────────────────────────────────────
+// Validation temps réel
+// ─────────────────────────────────────────────────────────────
 const today = new Date().toISOString().split('T')[0];
 
-document.getElementById('dateDiagnostic').addEventListener('change', function() {
-    if (!this.value || this.value > today) {
-        this.classList.add('is-invalid'); this.classList.remove('is-valid');
-    } else {
-        this.classList.add('is-valid'); this.classList.remove('is-invalid');
+document.getElementById('dateDiagnostic').addEventListener('change', function () {
+    const ok = this.value && this.value <= today;
+    this.classList.toggle('is-invalid', !ok);
+    this.classList.toggle('is-valid',   ok);
+});
+
+document.getElementById('idCulture').addEventListener('change', function () {
+    const ok = this.value !== '';
+    this.classList.toggle('is-invalid', !ok);
+    this.classList.toggle('is-valid',   ok);
+});
+
+const symptomesEl = document.getElementById('symptomes');
+const countEl     = document.getElementById('symptomesCount');
+
+symptomesEl.addEventListener('input', function () {
+    const n  = this.value.trim().length;
+    const ok = n >= 5;
+    this.classList.toggle('is-invalid', !ok);
+    this.classList.toggle('is-valid',   ok);
+    countEl.textContent = n + ' caractère' + (n > 1 ? 's' : '');
+    countEl.style.color = ok ? '#4a7c3a' : '#dc3545';
+});
+
+// Gestion Aperçu Image
+const imageInput     = document.getElementById('imageInput');
+const imagePreview   = document.getElementById('imagePreview');
+const previewCont    = document.getElementById('imagePreviewContainer');
+const placeholder    = document.getElementById('imageUploadPlaceholder');
+const fileNameEl     = document.getElementById('imageFileName');
+
+imageInput.addEventListener('change', function() {
+    const file = this.files[0];
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            imagePreview.src = e.target.result;
+            previewCont.classList.remove('d-none');
+            placeholder.classList.add('d-none');
+            fileNameEl.textContent = "📄 " + file.name;
+            fileNameEl.classList.remove('d-none');
+        }
+        reader.readAsDataURL(file);
     }
 });
 
-document.getElementById('idCulture').addEventListener('change', function() {
-    if (this.value === '') {
-        this.classList.add('is-invalid'); this.classList.remove('is-valid');
-    } else {
-        this.classList.add('is-valid'); this.classList.remove('is-invalid');
-    }
-});
-
-document.getElementById('symptomes').addEventListener('input', function() {
-    if (this.value.trim().length < 5) {
-        this.classList.add('is-invalid'); this.classList.remove('is-valid');
-    } else {
-        this.classList.add('is-valid'); this.classList.remove('is-invalid');
-    }
-});
-
-document.getElementById('formDiagnostic').addEventListener('submit', function(e) {
+document.getElementById('formDiagnostic').addEventListener('submit', function (e) {
     let valid = true;
 
     const date = document.getElementById('dateDiagnostic');
@@ -130,7 +299,185 @@ document.getElementById('formDiagnostic').addEventListener('submit', function(e)
         symptomes.classList.add('is-invalid'); valid = false;
     }
 
-    if (!valid) { e.preventDefault(); window.scrollTo(0, 0); }
+    if (!valid) { e.preventDefault(); window.scrollTo({ top: 0, behavior: 'smooth' }); }
 });
+
+// ─────────────────────────────────────────────────────────────
+// 🤖 Module IA Locale
+// ─────────────────────────────────────────────────────────────
+const btn         = document.getElementById('btnAiSuggest');
+const btnText     = document.getElementById('btnAiText');
+const btnLoading  = document.getElementById('btnAiLoading');
+const btnIcon     = document.getElementById('btnAiIcon');
+const resultPanel = document.getElementById('aiResultPanel');
+const errorDiv    = document.getElementById('aiError');
+const errorText   = document.getElementById('aiErrorText');
+
+// Configuration couleurs urgence
+const URGENCE_CONFIG = {
+    faible   : { bg: '#1b5e20', text: '#ffffff', label: '🟢 Urgence faible' },
+    moderee  : { bg: '#e65100', text: '#ffffff', label: '🟠 Urgence modérée' },
+    elevee   : { bg: '#b71c1c', text: '#ffffff', label: '🔴 Urgence élevée' },
+};
+
+btn.addEventListener('mouseenter', () => {
+    if (!btn.disabled) btn.style.background = 'linear-gradient(135deg, #c8e6c9, #dcedc8)';
+});
+btn.addEventListener('mouseleave', () => {
+    if (!btn.disabled) btn.style.background = 'linear-gradient(135deg, #e8f5e9, #f1f8e9)';
+});
+
+btn.addEventListener('click', async function () {
+    const symptomes = symptomesEl.value.trim();
+    const idCulture = document.getElementById('idCulture').value;
+    const infosSupp = document.getElementById('informationsComplementaires').value.trim();
+
+    // Masquer les anciens résultats
+    resultPanel.classList.add('d-none');
+    errorDiv.classList.add('d-none');
+    errorText.textContent = '';
+
+    // Validation minimale
+    if (symptomes.length < 10) {
+        errorText.textContent = 'Veuillez saisir au moins 10 caractères dans le champ Symptômes avant l\'analyse.';
+        errorDiv.classList.remove('d-none');
+        symptomesEl.focus();
+        return;
+    }
+
+    // État chargement
+    btnText.classList.add('d-none');
+    btnIcon.classList.add('d-none');
+    btnLoading.classList.remove('d-none');
+    btn.disabled = true;
+
+    try {
+        let response;
+        const file = imageInput.files[0];
+
+        if (file) {
+            // Envoi Multipart si image présente
+            const formData = new FormData();
+            formData.append('image',     file);
+            formData.append('symptomes', symptomes);
+            formData.append('idCulture', idCulture || '');
+            formData.append('infos',     infosSupp || '');
+
+            response = await fetch('/diagnostic/api/ai', {
+                method: 'POST',
+                body:   formData
+            });
+        } else {
+            // Envoi JSON classique
+            response = await fetch('/diagnostic/api/ai', {
+                method:  'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body:    JSON.stringify({
+                    symptomes: symptomes,
+                    idCulture: idCulture || null,
+                    infos: infosSupp || null,
+                }),
+            });
+        }
+
+        const data = await response.json();
+
+        if (!response.ok || data.error) {
+            errorText.textContent = data.error || 'Erreur lors de l\'analyse IA.';
+            errorDiv.classList.remove('d-none');
+            return;
+        }
+
+        // ── Remplissage du panneau ──
+
+        // Résumé
+        document.getElementById('aiSuggestion').textContent = data.suggestion || '—';
+
+        // Maladies
+        const maladiesList = document.getElementById('aiMaladiesList');
+        if (data.maladies && data.maladies.length) {
+            maladiesList.innerHTML = data.maladies
+                .map((m, i) => `<li><strong>#${i+1}</strong> ${escHtml(m)}</li>`)
+                .join('');
+            document.getElementById('aiMaladiesWrap').style.display = '';
+        } else {
+            document.getElementById('aiMaladiesWrap').style.display = 'none';
+        }
+
+        // Traitements
+        const traitementsList = document.getElementById('aiTraitementsList');
+        if (data.traitements && data.traitements.length) {
+            traitementsList.innerHTML = data.traitements
+                .map(t => `<li>${escHtml(t)}</li>`)
+                .join('');
+            document.getElementById('aiTraitementsWrap').style.display = '';
+        } else {
+            document.getElementById('aiTraitementsWrap').style.display = 'none';
+        }
+
+        // Conseil
+        const conseilWrap = document.getElementById('aiConseilWrap');
+        if (data.conseil) {
+            document.getElementById('aiConseilText').textContent = data.conseil;
+            conseilWrap.style.display = '';
+        } else {
+            conseilWrap.style.display = 'none';
+        }
+
+        // Urgence
+        const urgenceBadge = document.getElementById('aiUrgenceBadge');
+        const key = normaliseKey(data.urgence || 'moderee');
+        const cfg = URGENCE_CONFIG[key] || URGENCE_CONFIG['moderee'];
+        urgenceBadge.textContent        = cfg.label;
+        urgenceBadge.style.background   = cfg.bg;
+        urgenceBadge.style.color        = cfg.text;
+
+        // Confiance
+        const confianceWrap = document.getElementById('aiConfianceWrap');
+        const confianceVal  = document.getElementById('aiConfianceVal');
+        if (data.confiance !== undefined) {
+            confianceVal.textContent = data.confiance + '%';
+            confianceWrap.classList.remove('d-none');
+        } else {
+            confianceWrap.classList.add('d-none');
+        }
+
+        // Afficher le panneau avec animation
+        resultPanel.classList.remove('d-none');
+        resultPanel.style.opacity   = '0';
+        resultPanel.style.transform = 'translateY(8px)';
+        resultPanel.style.transition = 'opacity 0.35s ease, transform 0.35s ease';
+        setTimeout(() => {
+            resultPanel.style.opacity   = '1';
+            resultPanel.style.transform = 'translateY(0)';
+        }, 10);
+
+        resultPanel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+
+    } catch (err) {
+        errorText.textContent = 'Erreur réseau. Vérifiez votre connexion et réessayez.';
+        errorDiv.classList.remove('d-none');
+    } finally {
+        btnText.classList.remove('d-none');
+        btnIcon.classList.remove('d-none');
+        btnLoading.classList.add('d-none');
+        btn.disabled = false;
+    }
+});
+
+// ── Utilitaires ──
+function escHtml(str) {
+    const d = document.createElement('div');
+    d.appendChild(document.createTextNode(str));
+    return d.innerHTML;
+}
+
+function normaliseKey(str) {
+    return str.toLowerCase()
+        .replace(/[éèêë]/g, 'e')
+        .replace(/[àâä]/g, 'a')
+        .replace(/[ùûü]/g, 'u')
+        .replace(/[ôö]/g, 'o');
+}
 </script>
 {% endblock %}

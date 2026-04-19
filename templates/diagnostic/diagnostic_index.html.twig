@@ -6,19 +6,21 @@
 <section style="padding: 120px 0 60px;">
     <div class="container">
 
-        <div class="d-flex justify-content-between align-items-center mb-4">
+        <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
             <h2 style="color: #4a7c3a; font-weight: bold;">🩺 Gestion des Diagnostics</h2>
-            <a href="{{ path('app_diagnostic_new') }}" class="btn btn-success">
-                <i class="bi bi-plus-circle"></i> Ajouter un diagnostic
-            </a>
+            <div class="d-flex gap-2">
+                {# 📄 Export PDF liste complète — DomPDF #}
+                <a href="{{ path('app_diagnostic_pdf_liste') }}" class="btn btn-danger" target="_blank"
+                   title="Exporter toute la liste en PDF">
+                    <i class="bi bi-file-earmark-pdf"></i> Exporter PDF
+                </a>
+                <a href="{{ path('app_diagnostic_new') }}" class="btn btn-success">
+                    <i class="bi bi-plus-circle"></i> Ajouter un diagnostic
+                </a>
+            </div>
         </div>
 
-        {% for message in app.flashes('success') %}
-            <div class="alert alert-success alert-dismissible fade show">
-                ✅ {{ message }}
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            </div>
-        {% endfor %}
+        {# Flash messages handled by agriculteur.html.twig #}
 
         {# ── STATISTIQUES ── #}
         <div class="row g-3 mb-4">
@@ -113,7 +115,7 @@
         </div>
 
         {# ── CARTES DIAGNOSTICS ── #}
-        {% if diagnostics|length == 0 %}
+        {% if diagnostics.getTotalItemCount() == 0 %}
             <div class="text-center py-5">
                 <p class="text-muted fs-5">🔍 Aucun diagnostic trouvé.</p>
                 <a href="{{ path('app_diagnostic_new') }}" class="btn btn-success mt-2">Ajouter le premier diagnostic</a>
@@ -134,8 +136,6 @@
                             </p>
                             <p class="mb-2">
                                 <span class="fw-bold" style="color:#4a7c3a;">🌿 Culture :</span>
-
-                                {# ✅ CORRECTION ICI #}
                                 <span class="badge ms-1" style="background-color:#66bb6a;">
                                     {{ diagnostic.culture ? diagnostic.culture.nom : 'Aucune culture' }}
                                 </span>
@@ -151,7 +151,7 @@
                             {% endif %}
                         </div>
                         <div class="card-footer bg-white border-0 px-4 pb-4">
-                            <div class="d-flex gap-2">
+                            <div class="d-flex gap-2 flex-wrap">
                                 <a href="{{ path('app_diagnostic_show', {'id': diagnostic.idDiagnostic}) }}"
                                    class="btn btn-sm btn-outline-info flex-grow-1">
                                     <i class="bi bi-eye"></i> Voir
@@ -159,6 +159,11 @@
                                 <a href="{{ path('app_diagnostic_edit', {'id': diagnostic.idDiagnostic}) }}"
                                    class="btn btn-sm btn-outline-warning flex-grow-1">
                                     <i class="bi bi-pencil"></i> Modifier
+                                </a>
+                                {# 📄 PDF individuel — DomPDF #}
+                                <a href="{{ path('app_diagnostic_pdf', {'id': diagnostic.idDiagnostic}) }}"
+                                   class="btn btn-sm btn-outline-danger" target="_blank" title="Export PDF">
+                                    <i class="bi bi-file-earmark-pdf"></i>
                                 </a>
                                 <form method="post" action="{{ path('app_diagnostic_delete', {'id': diagnostic.idDiagnostic}) }}"
                                       onsubmit="return confirm('Supprimer ce diagnostic ?')">
@@ -173,7 +178,36 @@
                 </div>
                 {% endfor %}
             </div>
-        {% endif %}
+
+            {# ── PAGINATION ── #}
+            <div class="mt-5 p-4 border-top">
+                <div class="row align-items-center g-3">
+                    <div class="col-md-6">
+                        {% set firstItem = (diagnostics.getCurrentPageNumber() - 1) * diagnostics.getItemNumberPerPage() + 1 %}
+
+                        {# ✅ Pas de filtre |min — remplacement par if/else #}
+                        {% set calculatedLast = diagnostics.getCurrentPageNumber() * diagnostics.getItemNumberPerPage() %}
+                        {% if calculatedLast > diagnostics.getTotalItemCount() %}
+                            {% set lastItem = diagnostics.getTotalItemCount() %}
+                        {% else %}
+                            {% set lastItem = calculatedLast %}
+                        {% endif %}
+
+                        <p class="text-muted mb-0">
+                                                    📊 Affichage de
+                                                    <strong>{{ firstItem }}</strong> à
+                                                    <strong>{{ lastItem }}</strong>
+                                                    sur <strong>{{ diagnostics.getTotalItemCount() }}</strong> diagnostics
+                                                    (Page <strong>{{ diagnostics.getCurrentPageNumber() }}</strong> / {{ diagnostics.getPageCount() }})
+                                                </p>
+                                            </div>
+                    <div class="col-md-6 text-center">
+                        {{ knp_pagination_render(diagnostics) }}
+                    </div>
+                </div>
+            </div>
+
+        {% endif %}{# ✅ endif manquant ajouté ici #}
 
     </div>
 </section>
@@ -189,7 +223,6 @@
     new Chart(document.getElementById('chartCulture'), {
         type: 'doughnut',
         data: {
-            {# ✅ CORRECTION ICI — utilise idCulture retourné par IDENTITY() #}
             labels: parCulture.map(i => 'Culture #' + i.idCulture),
             datasets: [{ data: parCulture.map(i => parseInt(i.total)), backgroundColor: colors }]
         },

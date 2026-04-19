@@ -11,6 +11,7 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\Routing\Attribute\ParamConverter;
 
 #[Route('/payment')]
 class PaymentController extends AbstractController
@@ -19,6 +20,7 @@ class PaymentController extends AbstractController
     private const STRIPE_SEC = '';
 
     #[Route('/checkout/{id}', name: 'app_payment_checkout', methods: ['GET', 'POST'])]
+    #[ParamConverter('commande', options: ['mapping' => ['id' => 'idCommande']])]
     public function checkout(Request $request, Commande $commande, EntityManagerInterface $em): Response
     {
         $form = $this->createForm(PaymentType::class);
@@ -41,6 +43,7 @@ class PaymentController extends AbstractController
     }
 
     #[Route('/process/{id}', name: 'app_payment_process', methods: ['POST'])]
+    #[ParamConverter('commande', options: ['mapping' => ['id' => 'idCommande']])]
     public function process(Request $request, Commande $commande, EntityManagerInterface $em): JsonResponse
     {
         \Stripe\Stripe::setApiKey(self::STRIPE_SEC);
@@ -80,6 +83,7 @@ class PaymentController extends AbstractController
     }
 
     #[Route('/success/{id}', name: 'app_payment_success', methods: ['GET'])]
+    #[ParamConverter('commande', options: ['mapping' => ['id' => 'idCommande']])]
     public function success(Commande $commande, EntityManagerInterface $em): Response
     {
         $commande->setStatut('PAYEE');
@@ -91,6 +95,7 @@ class PaymentController extends AbstractController
     }
 
     #[Route('/cancel/{id}', name: 'app_payment_cancel', methods: ['GET'])]
+    #[ParamConverter('commande', options: ['mapping' => ['id' => 'idCommande']])]
     public function cancel(Commande $commande): Response
     {
         return $this->render('payment/cancel.html.twig', [

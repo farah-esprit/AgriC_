@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <style>
+        body { font-family: Arial, sans-serif; background: #f4f4f4; padding: 20px; }
+        .container { background: white; border-radius: 10px; padding: 30px; max-width: 600px; margin: auto; }
+        .header { background: linear-gradient(to right, #2e86c1, #5dade2); color: white; padding: 20px; border-radius: 10px 10px 0 0; text-align: center; }
+        .footer { text-align: center; color: #aaa; font-size: 12px; margin-top: 20px; }
+        .badge-en-attente  { background: #f39c12; color: white; padding: 5px 12px; border-radius: 5px; }
+        .badge-confirmée   { background: #27ae60; color: white; padding: 5px 12px; border-radius: 5px; }
+        .badge-livrée      { background: #2980b9; color: white; padding: 5px 12px; border-radius: 5px; }
+        .badge-annulée     { background: #e74c3c; color: white; padding: 5px 12px; border-radius: 5px; }
+        .badge { background: #7f8c8d; color: white; padding: 5px 12px; border-radius: 5px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th { background: #f0f0f0; padding: 10px; text-align: left; }
+        td { padding: 10px; border-bottom: 1px solid #eee; }
+        .total { font-size: 18px; font-weight: bold; color: #2e86c1; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h2>🔄 AgriC — Mise à jour de votre commande</h2>
+        </div>
+
+        <div style="padding: 20px;">
+            <p>Bonjour <strong>{{ commande.user.nom }}</strong>,</p>
+            <p>Le statut de votre commande <strong>#{{ commande.idCommande }}</strong> a été mis à jour :</p>
+
+            <table>
+                <tr>
+                    <th>Détail</th>
+                    <th>Info</th>
+                </tr>
+                <tr>
+                    <td>🌾 Produit</td>
+                    <td>{{ commande.produit.nom }}</td>
+                </tr>
+                <tr>
+                    <td>📦 Quantité</td>
+                    <td>{{ commande.quantiteCommandee }}</td>
+                </tr>
+                <tr>
+                    <td>📅 Date</td>
+                    <td>{{ commande.dateCommande }}</td>
+                </tr>
+                <tr>
+                    <td>🔄 Nouveau statut</td>
+                    <td>
+                        {% set badgeClass = 'badge' %}
+                        {% if commande.statut == 'confirmée' %}
+                            {% set badgeClass = 'badge-confirmée' %}
+                        {% elseif commande.statut == 'livrée' %}
+                            {% set badgeClass = 'badge-livrée' %}
+                        {% elseif commande.statut == 'annulée' %}
+                            {% set badgeClass = 'badge-annulée' %}
+                        {% elseif commande.statut == 'en attente' %}
+                            {% set badgeClass = 'badge-en-attente' %}
+                        {% endif %}
+                        <span class="{{ badgeClass }}">{{ commande.statut }}</span>
+                    </td>
+                </tr>
+                <tr>
+                    <td>💰 Prix Total</td>
+                    <td class="total">{{ commande.prixTotal|number_format(2) }} TND</td>
+                </tr>
+            </table>
+
+            <p style="margin-top: 20px;">Pour toute question, contactez notre support. 📧</p>
+        </div>
+
+        <div class="footer">
+            © {{ "now"|date("Y") }} AgriC — Plateforme Agricole
+        </div>
+    </div>
+</body>
+</html>

@@ -44,13 +44,14 @@
                         <small class="opacity-75">Modifiez les informations du produit</small>
                     </div>
                     <div class="card-body p-5">
+                        
+                        {# Banner Météo Dynamique #}
+                        <div id="weather-advice-banner" class="alert shadow-sm mb-4" style="display: none; border-radius: 12px;">
+                            <i id="weather-icon-span"></i>
+                            <span id="weather-text-span" class="fw-bold"></span>
+                        </div>
 
-                        {% for message in app.flashes('danger') %}
-                            <div class="alert alert-danger alert-dismissible fade show">
-                                {{ message }}
-                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                            </div>
-                        {% endfor %}
+
 
                         {{ form_start(form, {'attr': {'novalidate': 'novalidate', 'enctype': 'multipart/form-data'}}) }}
 
@@ -154,8 +155,10 @@
 
 {% block javascripts %}
 {{ parent() }}
+{% include 'inc/_product_weather_script.html.twig' %}
 <script>
-    document.addEventListener("DOMContentLoaded", function () {
+    document.addEventListener("DOMContentLoaded", async function () {
+        // Toggle promo logic existante
         const promoCheckbox = document.querySelector('input[name="produit[promo]"]');
         const tauxPromoField = document.getElementById("tauxPromoField");
 
@@ -165,6 +168,28 @@
 
         toggleTauxPromo();
         promoCheckbox.addEventListener("change", toggleTauxPromo);
+
+        // --- 🌤️ Intelligence Météo ---
+        const weatherData = await ProductWeatherIntelligence.fetchWeather();
+        if (weatherData) {
+            const category = "{{ produit.categorie }}";
+            const advice = ProductWeatherIntelligence.getAdvice(category, weatherData);
+            
+            const banner = document.getElementById('weather-advice-banner');
+            const icon = document.getElementById('weather-icon-span');
+            const text = document.getElementById('weather-text-span');
+
+            if (advice.isAlert) {
+                banner.className = 'alert alert-danger shadow-sm mb-4';
+                icon.className = 'bi bi-exclamation-triangle-fill me-2';
+            } else {
+                banner.className = 'alert alert-info shadow-sm mb-4';
+                icon.className = 'bi bi-info-circle-fill me-2';
+            }
+            
+            text.textContent = `Conseil de conservation (${category}) : ${advice.text}`;
+            banner.style.display = 'block';
+        }
     });
 </script>
 {% endblock %}

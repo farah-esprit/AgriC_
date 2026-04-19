@@ -1,0 +1,98 @@
+<script>
+/**
+ * Product Weather Intelligence
+ * Analyzes Open-Meteo data against product categories to provide agricultural advice.
+ */
+const ProductWeatherIntelligence = {
+    // Rules configuration
+    rules: {
+        'Légumes': {
+            highTemp: { limit: 30, advice: "Attention au flétrissement. Assurez une humidité constante." },
+            freeze: { limit: 2, advice: "Risque de gel ! Protégez vos récoltes sous abri." }
+        },
+        'Fruits': {
+            highTemp: { limit: 32, advice: "Chaleur excessive : risque de maturation précoce ou brûlures." },
+            rain: { code: 61, advice: "Pluie prévue : attention au risque de pourriture sur certains fruits." }
+        },
+        'Engrais': {
+            humidity: { limit: 75, advice: "Humidité forte : stockez au sec pour éviter l'agglomération." },
+            highTemp: { limit: 35, advice: "Forte chaleur : éloignez des sources inflammables." }
+        },
+        'Semences': {
+            humidity: { limit: 70, advice: "Trop humide : risque de moisissure des graines." },
+            heat: { limit: 28, advice: "Chaleur : risque de perte de pouvoir germinatif." }
+        },
+        'Outils': {
+            rain: { code: 61, advice: "Pluie : rentrez le matériel pour éviter la rouille." }
+        },
+        'Culture': {
+            wind: { limit: 30, advice: "Vent fort : attention aux jeunes pousses et serres." }
+        }
+    },
+
+    /**
+     * Get specific advice for a product
+     */
+    getAdvice: function(category, weatherData) {
+        if (!weatherData) return "Chargement des données météo...";
+        
+        const temp = weatherData.current_weather.temperature;
+        const code = weatherData.current_weather.weathercode;
+        const humidity = weatherData.hourly ? weatherData.hourly.relativehumidity_2m[0] : 50;
+        const wind = weatherData.current_weather.windspeed;
+
+        // Try to find matching category (case insensitive)
+        const catKey = Object.keys(this.rules).find(k => category.toLowerCase().includes(k.toLowerCase())) || 'Default';
+        const rule = this.rules[catKey] || {};
+
+        let advice = "Conditions de conservation normales.";
+        let alert = false;
+
+        if (rule.freeze && temp <= rule.freeze.limit) {
+            advice = rule.freeze.advice;
+            alert = true;
+        } else if (rule.highTemp && temp >= rule.highTemp.limit) {
+            advice = rule.highTemp.advice;
+            alert = true;
+        } else if (rule.humidity && humidity >= rule.humidity.limit) {
+            advice = rule.humidity.advice;
+            alert = true;
+        } else if (rule.rain && code >= rule.rain.code) {
+            advice = rule.rain.advice;
+            alert = true;
+        } else if (rule.wind && wind >= rule.wind.limit) {
+            advice = rule.wind.advice;
+            alert = true;
+        }
+
+        return { text: advice, isAlert: alert };
+    },
+
+    /**
+     * Fetch weather once and cache it for the session
+     */
+    fetchWeather: async function() {
+        if (window.localWeatherData) return window.localWeatherData;
+        
+        return new Promise((resolve) => {
+            navigator.geolocation.getCurrentPosition(
+                async (pos) => {
+                    try {
+                        const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${pos.coords.latitude}&longitude=${pos.coords.longitude}&current_weather=true&hourly=relativehumidity_2m`);
+                        window.localWeatherData = await res.json();
+                        resolve(window.localWeatherData);
+                    } catch (e) { resolve(null); }
+                },
+                async () => {
+                    // Fallback Tunis
+                    try {
+                        const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=36.8065&longitude=10.1815&current_weather=true&hourly=relativehumidity_2m`);
+                        window.localWeatherData = await res.json();
+                        resolve(window.localWeatherData);
+                    } catch (e) { resolve(null); }
+                }
+            );
+        });
+    }
+};
+</script>

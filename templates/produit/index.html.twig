@@ -15,13 +15,6 @@
 <section class="py-5">
     <div class="container">
 
-        {% for message in app.flashes('success') %}
-            <div class="alert alert-success alert-dismissible fade show">
-                {{ message }}
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            </div>
-        {% endfor %}
-
         <!-- Barre actions -->
         <div class="d-flex justify-content-between align-items-center mb-4">
             <h2 class="text-success">📦 Nos Produits</h2>
@@ -33,6 +26,20 @@
                 <a href="{{ path('app_produit_export') }}" class="btn btn-outline-success">
                     <i class="bi bi-download"></i> CSV
                 </a>
+                <button type="button" class="btn btn-info text-white fw-bold shadow-sm px-3" data-bs-toggle="modal" data-bs-target="#weatherModal">
+                    <i class="bi bi-cloud-sun"></i> Check Weather
+                </button>
+            </div>
+        </div>
+
+        <!-- Weather Modal -->
+        <div class="modal fade" id="weatherModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content border-0" style="border-radius: 20px; background: transparent;">
+                    <div class="modal-body p-0">
+                        {% include 'inc/_weather_widget.html.twig' %}
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -42,11 +49,32 @@
             <div class="col-lg-3 col-md-4 col-sm-6 mb-4 produit-card" data-nom="{{ produit.nom|lower }}">
                 <div class="card h-100 shadow-sm border-0 {{ produit.promo ? 'border border-danger' : '' }}" style="border-radius: 15px;">
 
-                    {% if produit.promo %}
-                    <div class="position-absolute top-0 end-0 m-2">
-                        <span class="badge bg-danger">🔥 PROMO -{{ produit.tauxPromo }}%</span>
+                    <!-- Actions absolues en haut à droite (Promo + Supprimer) -->
+                    <div class="position-absolute top-0 end-0 m-2 d-flex flex-column align-items-end gap-1" style="z-index: 10;">
+                        {% if produit.promo %}
+                            <span class="badge bg-danger shadow-sm">🔥 -{{ produit.tauxPromo }}%</span>
+                        {% endif %}
+                        <form method="post" action="{{ path('app_produit_delete', {'id': produit.idProduit}) }}" onsubmit="return confirm('Supprimer ce produit ?')">
+                            <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ produit.idProduit) }}">
+                            <button class="btn btn-danger btn-sm rounded-circle shadow flex-center" style="width: 32px; height: 32px; padding: 0; display:flex; align-items:center; justify-content:center;" title="Supprimer">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </form>
                     </div>
-                    {% endif %}
+
+                    <!-- Actions absolues en haut à gauche (QR Code + Météo Info) -->
+                    <div class="position-absolute top-0 start-0 m-2 d-flex flex-column gap-1" style="z-index: 10;">
+                        <a href="{{ path('app_produit_qrcode', {'id': produit.idProduit}) }}" 
+                           class="btn btn-dark btn-sm rounded-circle shadow" style="width: 32px; height: 32px; padding: 0; display:flex; align-items:center; justify-content:center;" title="QR Code">
+                            <i class="bi bi-qr-code"></i>
+                        </a>
+                        <button class="btn btn-info btn-sm rounded-circle shadow weather-status-btn" 
+                                data-category="{{ produit.categorie }}"
+                                style="width: 32px; height: 32px; padding: 0; display:flex; align-items:center; justify-content:center; background: #0dcaf0; border: none; color: white;" 
+                                title="Conseil Météo">
+                            <i class="bi bi-cloud-sun"></i>
+                        </button>
+                    </div>
 
                     <!-- Image -->
                     <div class="text-center pt-3">
@@ -79,17 +107,9 @@
 
                     <div class="card-footer bg-transparent border-0 text-center pb-3">
                         <a href="{{ path('app_produit_edit', {'id': produit.idProduit}) }}"
-                           class="btn btn-sm btn-outline-success me-1">
+                           class="btn btn-outline-success w-75 rounded-pill fw-bold shadow-sm">
                             <i class="bi bi-pencil"></i> Modifier
                         </a>
-                        <form method="post" action="{{ path('app_produit_delete', {'id': produit.idProduit}) }}"
-                              style="display:inline"
-                              onsubmit="return confirm('Supprimer ce produit ?')">
-                            <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ produit.idProduit) }}">
-                            <button class="btn btn-sm btn-outline-danger">
-                                <i class="bi bi-trash"></i> Supprimer
-                            </button>
-                        </form>
                     </div>
                 </div>
             </div>
@@ -107,12 +127,35 @@
 {% endblock %}
 
 {% block javascripts %}
+{% include 'inc/_product_weather_script.html.twig' %}
 <script>
-document.getElementById('recherche').addEventListener('input', function() {
-    const val = this.value.toLowerCase();
-    document.querySelectorAll('.produit-card').forEach(card => {
-        card.style.display = card.dataset.nom.includes(val) ? '' : 'none';
+document.addEventListener('DOMContentLoaded', async function() {
+    // 🔍 Recherche existante
+    document.getElementById('recherche').addEventListener('input', function() {
+        const val = this.value.toLowerCase();
+        document.querySelectorAll('.produit-card').forEach(card => {
+            card.style.display = card.dataset.nom.includes(val) ? '' : 'none';
+        });
     });
+
+    // 🌤️ Intelligence Météo
+    const weatherData = await ProductWeatherIntelligence.fetchWeather();
+    if (weatherData) {
+        document.querySelectorAll('.weather-status-btn').forEach(btn => {
+            const category = btn.dataset.category;
+            const advice = ProductWeatherIntelligence.getAdvice(category, weatherData);
+            
+            if (advice.isAlert) {
+                btn.style.background = '#dc3545'; // Rouge alerte
+                btn.innerHTML = '<i class="bi bi-exclamation-triangle-fill"></i>';
+            }
+
+            btn.addEventListener('click', (e) => {
+                e.preventDefault();
+                alert(`🌤️ Conseil Agricole (${category}) :\n\n${advice.text}`);
+            });
+        });
+    }
 });
 </script>
 {% endblock %}

@@ -1,6 +1,5 @@
 {% extends app.session.get('user_role') == 'FOURNISSEUR' ? 'fournisseur.html.twig' : (app.session.get('user_role') == 'AGRICULTEUR' ? 'agriculteur.html.twig' : 'base.html.twig') %}
 
-
 {% block title %}Gestion des Stocks{% endblock %}
 
 {% block body %}
@@ -15,142 +14,175 @@
 <section class="py-5">
     <div class="container">
 
-        {% for message in app.flashes('success') %}
-            <div class="alert alert-success alert-dismissible fade show">
-                {{ message }}
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            </div>
-        {% endfor %}
+```
+    {% for message in app.flashes('success') %}
+        <div class="alert alert-success alert-dismissible fade show">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    {% endfor %}
 
-        <!-- Statistiques -->
-        <div class="row mb-4">
-            <div class="col-md-4">
-                <div class="card text-white text-center p-3" style="background: linear-gradient(to right, #4a7c3a, #66bb6a); border-radius: 15px;">
-                    <h2>{{ stocks|length }}</h2>
-                    <p>Total Stocks</p>
-                </div>
-            </div>
-            <div class="col-md-4">
-                <div class="card text-white text-center p-3 bg-danger" style="border-radius: 15px;">
-                    <h2>{{ stocks|filter(s => s.quantite <= s.seuilAlert)|length }}</h2>
-                    <p>Stocks Critiques</p>
-                </div>
-            </div>
-            <div class="col-md-4">
-                <div class="card text-white text-center p-3 bg-info" style="border-radius: 15px;">
-                    <h2>{{ stocks|filter(s => s.quantite > s.seuilAlert)|length }}</h2>
-                    <p>Stocks OK</p>
-                </div>
+    <!-- Statistiques -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card text-white text-center p-3" style="background: linear-gradient(to right, #4a7c3a, #66bb6a); border-radius: 15px;">
+                <h2>{{ stocks|length }}</h2>
+                <p>Total Stocks</p>
             </div>
         </div>
-
-        <!-- Barre actions -->
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <h2 class="text-success">🗃️ Stocks</h2>
-            <div class="d-flex gap-2">
-                <input type="text" id="recherche" class="form-control"
-                       placeholder="🔍 Rechercher..." style="width: 250px;">
-                <a href="{{ path('app_stock_new') }}" class="btn btn-success">
-                    <i class="bi bi-plus-circle"></i> Ajouter
-                </a>
+        <div class="col-md-4">
+            <div class="card text-white text-center p-3 bg-danger" style="border-radius: 15px;">
+                <h2>{{ stocks|filter(s => s.disponible <= s.seuilAlert)|length }}</h2>
+                <p>Stocks Critiques</p>
             </div>
         </div>
+        <div class="col-md-4">
+            <div class="card text-white text-center p-3 bg-info" style="border-radius: 15px;">
+                <h2>{{ stocks|filter(s => s.disponible > s.seuilAlert)|length }}</h2>
+                <p>Stocks OK</p>
+            </div>
+        </div>
+    </div>
 
-        <!-- Cartes -->
-        <div class="row" id="stocks-container">
-            {% for stock in stocks %}
-            {% set niveau = stock.quantite > 0 ? (stock.disponible / stock.quantite * 100) : 0 %}
-            {% set couleur = niveau <= 20 ? 'danger' : (niveau <= 50 ? 'warning' : 'success') %}
+    <!-- Conseil -->
+    <div class="mb-5 p-4 bg-white rounded-4 shadow-sm border-start border-4 border-success">
+        <h6 class="fw-bold mb-1">💡 Conseil de gestion</h6>
+        <p class="small text-muted mb-0">
+            Analysez vos stocks et utilisez le dashboard pour une meilleure décision.
+        </p>
+    </div>
 
-            <div class="col-lg-3 col-md-4 col-sm-6 mb-4 stock-card"
-                 data-nom="{{ stock.produit ? stock.produit.nom|lower : '' }}">
-                <div class="card h-100 shadow-sm border-0" style="border-radius: 15px;">
+    <!-- Barre actions -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="text-success">🗃️ Stocks</h2>
 
-                    {% if stock.disponible <= stock.seuilAlert %}
-                    <div class="position-absolute top-0 end-0 m-2">
-                        <span class="badge bg-danger">⚠️ Alerte</span>
-                    </div>
+        <div class="d-flex gap-2">
+            <input type="text" id="recherche" class="form-control"
+                   placeholder="🔍 Rechercher..." style="width: 250px;">
+
+            <a href="{{ path('app_home') }}" class="btn btn-outline-secondary">
+                <i class="bi bi-house"></i> Accueil
+            </a>
+
+            <a href="{{ path('stock_dashboard') }}" class="btn btn-primary shadow-sm">
+                📊 Dashboard AI
+            </a>
+
+            <a href="{{ path('app_stock_new') }}" class="btn btn-success">
+                <i class="bi bi-plus-circle"></i> Ajouter
+            </a>
+        </div>
+    </div>
+
+    <!-- Cartes -->
+    <div class="row" id="stocks-container">
+        {% for stock in stocks %}
+        {% set niveau = stock.quantite > 0 ? (stock.disponible / stock.quantite * 100) : 0 %}
+        {% set couleur = niveau <= 20 ? 'danger' : (niveau <= 50 ? 'warning' : 'success') %}
+
+        <div class="col-lg-3 col-md-4 col-sm-6 mb-4 stock-card"
+             data-nom="{{ stock.produit ? stock.produit.nom|lower : '' }}">
+
+            <div class="card h-100 shadow-sm border-0" style="border-radius: 15px;">
+
+                {% if stock.disponible <= stock.seuilAlert %}
+                <div class="position-absolute top-0 end-0 m-2">
+                    <span class="badge bg-danger">⚠️ Alerte</span>
+                </div>
+                {% endif %}
+
+                <div class="text-center pt-4">
+                    {% if stock.produit and stock.produit.imagePath %}
+                        <img src="{{ asset('uploads/images/' ~ stock.produit.imagePath) }}"
+                             class="rounded-circle" width="90" height="90"
+                             style="object-fit: cover; border: 3px solid #5a8c4a;">
+                    {% else %}
+                        <div class="rounded-circle bg-success d-inline-flex align-items-center justify-content-center"
+                             style="width:90px; height:90px; font-size:36px;">
+                            🌿
+                        </div>
+                    {% endif %}
+                </div>
+
+                <div class="card-body text-center">
+                    <h5 class="card-title fw-bold">
+                        {{ stock.produit ? stock.produit.nom : 'Produit inconnu' }}
+                    </h5>
+
+                    {% if stock.produit %}
+                        <span class="badge bg-success mb-2">{{ stock.produit.categorie }}</span>
                     {% endif %}
 
-                    <div class="text-center pt-4">
-                        {% if stock.produit and stock.produit.imagePath %}
-                            <img src="{{ asset('uploads/images/' ~ stock.produit.imagePath) }}"
-                                 class="rounded-circle" width="90" height="90"
-                                 style="object-fit: cover; border: 3px solid #5a8c4a;">
-                        {% else %}
-                            <div class="rounded-circle bg-success d-inline-flex align-items-center justify-content-center"
-                                 style="width:90px; height:90px; font-size:36px;">
-                                🌿
-                            </div>
-                        {% endif %}
-                    </div>
-
-                    <div class="card-body text-center">
-                        <h5 class="card-title fw-bold">
-                            {{ stock.produit ? stock.produit.nom : 'Produit inconnu' }}
-                        </h5>
-                        {% if stock.produit %}
-                            <span class="badge bg-success mb-2">{{ stock.produit.categorie }}</span>
-                        {% endif %}
-
-                        <div class="my-3">
-                            <div class="d-flex justify-content-between small text-muted mb-1">
-                                <span>Disponible</span>
-                                <span>{{ stock.disponible }} / {{ stock.quantite }}</span>
-                            </div>
-                            <div class="progress" style="height: 8px; border-radius: 10px;">
-                                <div class="progress-bar bg-{{ couleur }}"
-                                     style="width: {{ niveau }}%"></div>
-                            </div>
+                    <div class="my-3">
+                        <div class="d-flex justify-content-between small text-muted mb-1">
+                            <span>Disponible</span>
+                            <span>{{ stock.disponible }} / {{ stock.quantite }}</span>
                         </div>
 
-                        <div class="row text-center mt-2">
-                            <div class="col-4">
-                                <div class="fw-bold text-success">{{ stock.quantite }}</div>
-                                <div class="small text-muted">Total</div>
-                            </div>
-                            <div class="col-4">
-                                <div class="fw-bold text-primary">{{ stock.disponible }}</div>
-                                <div class="small text-muted">Dispo</div>
-                            </div>
-                            <div class="col-4">
-                                <div class="fw-bold text-danger">{{ stock.seuilAlert }}</div>
-                                <div class="small text-muted">Seuil</div>
-                            </div>
+                        <div class="progress" style="height: 8px; border-radius: 10px;">
+                            <div class="progress-bar bg-{{ couleur }}"
+                                 style="width: {{ niveau }}%"></div>
                         </div>
                     </div>
 
-                    <div class="card-footer bg-transparent border-0 text-center pb-3">
-                        <a href="{{ path('app_stock_edit', {'id': stock.idStock}) }}"
-                           class="btn btn-sm btn-outline-success me-1">
-                            <i class="bi bi-pencil"></i> Modifier
-                        </a>
-                        <form method="post" action="{{ path('app_stock_delete', {'id': stock.idStock}) }}"
-                              style="display:inline"
-                              onsubmit="return confirm('Supprimer ce stock ?')">
-                            <input type="hidden" name="_token"
-                                   value="{{ csrf_token('delete' ~ stock.idStock) }}">
-                            <button class="btn btn-sm btn-outline-danger">
-                                <i class="bi bi-trash"></i> Supprimer
-                            </button>
-                        </form>
+                    <div class="row text-center mt-2">
+                        <div class="col-4">
+                            <div class="fw-bold text-success">{{ stock.quantite }}</div>
+                            <div class="small text-muted">Total</div>
+                        </div>
+                        <div class="col-4">
+                            <div class="fw-bold text-primary">{{ stock.disponible }}</div>
+                            <div class="small text-muted">Dispo</div>
+                        </div>
+                        <div class="col-4">
+                            <div class="fw-bold text-danger">{{ stock.seuilAlert }}</div>
+                            <div class="small text-muted">Seuil</div>
+                        </div>
                     </div>
                 </div>
+
+                <div class="card-footer bg-transparent border-0 text-center pb-3">
+                    <a href="{{ path('app_stock_edit', {'id': stock.idStock}) }}"
+                       class="btn btn-sm btn-outline-success me-1">
+                        Modifier
+                    </a>
+
+                    <form method="post"
+                          action="{{ path('app_stock_delete', {'id': stock.idStock}) }}"
+                          style="display:inline"
+                          onsubmit="return confirm('Supprimer ce stock ?')">
+
+                        <input type="hidden" name="_token"
+                               value="{{ csrf_token('delete' ~ stock.idStock) }}">
+
+                        <button class="btn btn-sm btn-outline-danger">
+                            Supprimer
+                        </button>
+                    </form>
+                </div>
+
             </div>
-            {% else %}
-            <div class="col-12 text-center py-5">
-                <h4 class="text-muted">Aucun stock trouvé 📦</h4>
-                <a href="{{ path('app_stock_new') }}" class="btn btn-success mt-3">Ajouter un stock</a>
-            </div>
-            {% endfor %}
         </div>
 
+        {% else %}
+        <div class="col-12 text-center py-5">
+            <h4 class="text-muted">Aucun stock trouvé 📦</h4>
+            <a href="{{ path('app_stock_new') }}" class="btn btn-success mt-3">
+                Ajouter un stock
+            </a>
+        </div>
+        {% endfor %}
     </div>
+
+</div>
+```
+
 </section>
 
 {% endblock %}
 
 {% block javascripts %}
+
 <script>
 document.getElementById('recherche').addEventListener('input', function() {
     const val = this.value.toLowerCase();
@@ -159,4 +191,5 @@ document.getElementById('recherche').addEventListener('input', function() {
     });
 });
 </script>
+
 {% endblock %}

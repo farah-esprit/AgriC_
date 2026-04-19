@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <style>
+        body { font-family: Arial, sans-serif; background: #f4f4f4; padding: 20px; }
+        .container { background: white; border-radius: 10px; padding: 30px; max-width: 600px; margin: auto; }
+        .header { background: linear-gradient(to right, #4a7c3a, #66bb6a); color: white; padding: 20px; border-radius: 10px 10px 0 0; text-align: center; }
+        .footer { text-align: center; color: #aaa; font-size: 12px; margin-top: 20px; }
+        .badge { background: #66bb6a; color: white; padding: 5px 10px; border-radius: 5px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th { background: #f0f0f0; padding: 10px; text-align: left; }
+        td { padding: 10px; border-bottom: 1px solid #eee; }
+        .total { font-size: 18px; font-weight: bold; color: #4a7c3a; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h2>🔔 Nouvelle Commande — AgriC</h2>
+        </div>
+        <p>Bonjour {{ admin.nom }},</p>
+        <p>Une nouvelle commande a été passée sur AgriC. Voici les détails :</p>
+        <table>
+            <tr>
+                <th>ID Commande</th>
+                <td>{{ commande.idCommande }}</td>
+            </tr>
+            <tr>
+                <th>Client</th>
+                <td>{{ commande.user.nom }} ({{ commande.user.email }})</td>
+            </tr>
+            <tr>
+                <th>Produit</th>
+                <td>{{ commande.produit.nom }}</td>
+            </tr>
+            <tr>
+                <th>Quantité</th>
+                <td>{{ commande.quantiteCommandee }}</td>
+            </tr>
+            <tr>
+                <th>Prix Total</th>
+                <td class="total">{{ commande.prixTotal }} €</td>
+            </tr>
+            <tr>
+                <th>Statut</th>
+                <td><span class="badge">{{ commande.statut }}</span></td>
+            </tr>
+            <tr>
+                <th>Date</th>
+                <td>{{ commande.dateCommande }}</td>
+            </tr>
+        </table>
+        <p>Veuillez vérifier et traiter cette commande.</p>
+        <div class="footer">
+            <p>AgriC — Plateforme agricole</p>
+        </div>
+    </div>
+</body>
+</html>

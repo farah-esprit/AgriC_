@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <style>
+        body { font-family: Arial, sans-serif; background: #f4f4f4; padding: 20px; }
+        .container { background: white; border-radius: 10px; padding: 30px; max-width: 600px; margin: auto; }
+        .header { background: linear-gradient(to right, #4a7c3a, #66bb6a); color: white; padding: 20px; border-radius: 10px 10px 0 0; text-align: center; }
+        .footer { text-align: center; color: #aaa; font-size: 12px; margin-top: 20px; }
+        .badge { background: #66bb6a; color: white; padding: 5px 10px; border-radius: 5px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th { background: #f0f0f0; padding: 10px; text-align: left; }
+        td { padding: 10px; border-bottom: 1px solid #eee; }
+        .total { font-size: 18px; font-weight: bold; color: #4a7c3a; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h2>🌿 AgriC — Confirmation de Commande</h2>
+        </div>
+
+        <div style="padding: 20px;">
+            <p>Bonjour <strong>{{ commande.user.nom }}</strong>,</p>
+            <p>Votre commande a bien été enregistrée. Voici le récapitulatif :</p>
+
+            <table>
+                <tr>
+                    <th>Détail</th>
+                    <th>Info</th>
+                </tr>
+                <tr>
+                    <td>🌾 Produit</td>
+                    <td>{{ commande.produit.nom }}</td>
+                </tr>
+                <tr>
+                    <td>📦 Quantité</td>
+                    <td>{{ commande.quantiteCommandee }}</td>
+                </tr>
+                <tr>
+                    <td>📅 Date</td>
+                    <td>{{ commande.dateCommande }}</td>
+                </tr>
+                <tr>
+                    <td>🔄 Statut</td>
+                    <td><span class="badge">{{ commande.statut }}</span></td>
+                </tr>
+                <tr>
+                    <td>💰 Prix Total</td>
+                    <td class="total">{{ commande.prixTotal|number_format(2) }} TND</td>
+                </tr>
+            </table>
+
+            <p style="margin-top: 20px;">Merci pour votre confiance ! 🙏</p>
+        </div>
+
+        <div class="footer">
+            © {{ "now"|date("Y") }} AgriC — Plateforme Agricole
+        </div>
+    </div>
+</body>
+</html>

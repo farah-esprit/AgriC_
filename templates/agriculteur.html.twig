@@ -231,7 +231,6 @@
                 {% endfor %}
             {% endfor %}
         </div>
-
         {% block body %}
         <section id="hero" class="hero section">
             <div class="container">
@@ -356,6 +355,14 @@
             });
         });
     </script>
+    {% if app.request.attributes.get('_route') matches '/^app_(produit|stock|commande)/' %}
+        {% include 'inc/_chatbot.html.twig' %}
+    {% endif %}
+
     {% block javascripts %}{% endblock %}
+
+        });
+    </script>
+    {{ include('@MercurySeriesFlashy/flashy.html.twig') }}
 </body>
 </html>

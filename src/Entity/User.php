@@ -10,11 +10,13 @@ use Symfony\Component\Validator\Constraints as Assert;
 use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
+use Gedmo\Mapping\Annotation as Gedmo;
 
 #[ORM\Entity(repositoryClass: UserRepository::class)]
 #[ORM\Table(name: 'user')]
 #[UniqueEntity(fields: ['email'], message: 'Cet email est déjà utilisé.')]
 #[UniqueEntity(fields: ['telephone'], message: 'Ce numéro est déjà utilisé.')]
+#[Gedmo\Loggable]
 class User implements UserInterface, PasswordAuthenticatedUserInterface
 {
     #[ORM\Id]
@@ -30,11 +32,13 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         minMessage: 'Le nom doit contenir au moins {{ limit }} caractères.',
         maxMessage: 'Le nom ne peut pas dépasser {{ limit }} caractères.'
     )]
+    #[Gedmo\Versioned]
     private ?string $nom = null;
 
     #[ORM\Column(type: 'string', length: 255)]
     #[Assert\NotBlank(message: "L'email est obligatoire.")]
     #[Assert\Email(message: "L'email '{{ value }}' n'est pas valide.")]
+    #[Gedmo\Versioned]
     private ?string $email = null;
 
     #[ORM\Column(type: 'string', length: 20, nullable: true)]
@@ -42,6 +46,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         pattern: '/^[0-9]{8,15}$/',
         message: 'Le numéro doit contenir entre 8 et 15 chiffres.'
     )]
+    #[Gedmo\Versioned]
     private ?string $telephone = null;
 
     #[ORM\Column(type: 'string', length: 255, name: 'motDePasse')]
@@ -70,9 +75,11 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     private ?\DateTimeImmutable $resetTokenRequestedAt = null;
 
     #[ORM\Column(type: 'string', length: 50, nullable: true)]
+    #[Gedmo\Versioned]
     private ?string $role = 'AGRICULTEUR';
 
     #[ORM\Column(type: 'string', length: 50, nullable: true, name: 'etatCompte')]
+    #[Gedmo\Versioned]
     private ?string $etatCompte = 'INACTIF';
 
     #[ORM\Column(type: 'boolean')]
@@ -112,6 +119,9 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column(type: 'string', length: 255, nullable: true)]
     private ?string $totpSecret = null;
 
+    #[ORM\Column(type: 'string', length: 255, nullable: true, name: 'face_image_path')]
+    private ?string $faceImagePath = null;
+
     public function getUserId(): ?int
     {
         return $this->userId;
@@ -125,6 +135,17 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function setTotpSecret(?string $totpSecret): self
     {
         $this->totpSecret = $totpSecret;
+        return $this;
+    }
+
+    public function getFaceImagePath(): ?string
+    {
+        return $this->faceImagePath;
+    }
+
+    public function setFaceImagePath(?string $faceImagePath): self
+    {
+        $this->faceImagePath = $faceImagePath;
         return $this;
     }
 

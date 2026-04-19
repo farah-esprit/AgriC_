@@ -2,13 +2,123 @@
 
 {% block title %}Gestion Utilisateurs{% endblock %}
 
+{% block stylesheets %}
+{{ parent() }}
+<style>
+/* ── Stats Cards ── */
+.stat-card {
+    border: none;
+    border-radius: 16px;
+    padding: 1.5rem;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    box-shadow: 0 4px 20px rgba(0,0,0,.12);
+    transition: transform .2s, box-shadow .2s;
+}
+.stat-card:hover { transform: translateY(-4px); box-shadow: 0 8px 28px rgba(0,0,0,.18); }
+.stat-card .stat-icon { font-size: 2.4rem; opacity: .85; }
+.stat-card .stat-value { font-size: 2rem; font-weight: 700; line-height: 1; }
+.stat-card .stat-label { font-size: .85rem; opacity: .85; }
+.stat-card.total    { background: linear-gradient(135deg,#1e3a5f,#2563eb); }
+.stat-card.active   { background: linear-gradient(135deg,#14532d,#22c55e); }
+.stat-card.blocked  { background: linear-gradient(135deg,#7f1d1d,#ef4444); }
+
+/* ── Chart section ── */
+.chart-card {
+    border: none;
+    border-radius: 16px;
+    box-shadow: 0 4px 20px rgba(0,0,0,.08);
+}
+.chart-card .card-header {
+    background: transparent;
+    border-bottom: 1px solid #f0f0f0;
+    font-weight: 600;
+    color: #1e3a5f;
+    padding: 1rem 1.5rem;
+}
+
+/* ── Table tweaks ── */
+#usersTable th { background: #f8fafc; font-weight: 600; color: #374151; border-bottom: 2px solid #e5e7eb; }
+#usersTable tbody tr:hover { background: #f0fdf4; }
+.badge { font-size: .78rem; padding: .45em .75em; border-radius: 8px; }
+
+/* ── Buttons ── */
+.btn-history { background: linear-gradient(135deg,#0ea5e9,#6366f1); color:#fff; border:none; border-radius:8px; padding:.3rem .7rem; font-size:.8rem; transition: opacity .2s; }
+.btn-history:hover { opacity:.85; color:#fff; }
+
+/* ── Modal ── */
+#historyModal .modal-header { background: linear-gradient(135deg,#1e3a5f,#2563eb); color:#fff; border-radius: 12px 12px 0 0; }
+#historyModal .modal-title { font-weight: 700; }
+#historyModal .timeline-item { border-left: 3px solid #22c55e; padding: .6rem 1rem; margin-bottom:.8rem; border-radius: 0 8px 8px 0; background: #f8fafc; }
+#historyModal .timeline-date { font-size:.78rem; color:#6b7280; }
+#historyModal .timeline-action { font-weight: 600; color:#1e3a5f; }
+#historyModal .timeline-field { font-size:.82rem; background:#e0f2fe; border-radius:6px; padding:.2rem .5rem; display:inline-block; margin:.15rem; }
+#historyModal .modal-body { max-height: 420px; overflow-y: auto; }
+.spinner-border-sm { width: 1.2rem; height: 1.2rem; }
+</style>
+{% endblock %}
+
 {% block admin_content %}
 <div class="container-fluid">
     <h1 class="mb-4"><i class="fas fa-users"></i> Gestion des utilisateurs</h1>
 
-    <div class="card">
-        <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
-            <h5 class="mb-0">Liste des utilisateurs</h5>
+    {# ── Cartes de statistiques ── #}
+    <div class="row g-3 mb-4">
+        <div class="col-md-4">
+            <div class="stat-card total">
+                <div class="stat-icon"><i class="fas fa-users"></i></div>
+                <div>
+                    <div class="stat-value">{{ totalUsers }}</div>
+                    <div class="stat-label">Total utilisateurs</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="stat-card active">
+                <div class="stat-icon"><i class="fas fa-user-check"></i></div>
+                <div>
+                    <div class="stat-value">{{ activeUsers }}</div>
+                    <div class="stat-label">Comptes actifs</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="stat-card blocked">
+                <div class="stat-icon"><i class="fas fa-user-slash"></i></div>
+                <div>
+                    <div class="stat-value">{{ blockedUsers }}</div>
+                    <div class="stat-label">Comptes bloqués</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {# ── Graphiques ── #}
+    <div class="row g-3 mb-4">
+        <div class="col-md-5">
+            <div class="card chart-card h-100">
+                <div class="card-header"><i class="fas fa-chart-pie me-2 text-success"></i>Répartition des rôles</div>
+                <div class="card-body d-flex justify-content-center align-items-center" style="height:260px;">
+                    {{ render_chart(pieChart, {'style': 'max-height:240px;'}) }}
+                </div>
+            </div>
+        </div>
+        <div class="col-md-7">
+            <div class="card chart-card h-100">
+                <div class="card-header"><i class="fas fa-chart-line me-2 text-primary"></i>Nouvelles inscriptions (6 derniers mois)</div>
+                <div class="card-body" style="height:260px;">
+                    {{ render_chart(lineChart, {'style': 'max-height:230px;width:100%;'}) }}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {# ── Tableau principal ── #}
+    <div class="card" style="border:none; border-radius:16px; box-shadow:0 4px 20px rgba(0,0,0,.08);">
+        <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2" style="background:transparent; border-bottom:1px solid #f0f0f0; padding:1rem 1.5rem;">
+            <h5 class="mb-0" style="color:#1e3a5f; font-weight:700;">📋 Liste des utilisateurs</h5>
             <div class="d-flex gap-2 align-items-center flex-wrap">
                 <input type="text" id="searchInput" class="form-control form-control-sm"
                        placeholder="🔍 Rechercher par nom ou email..." style="width:260px;">
@@ -17,7 +127,6 @@
                     <option value="agriculteur">Agriculteur</option>
                     <option value="fournisseur">Fournisseur</option>
                     <option value="expert">Expert</option>
-                    <option value="admin">Admin</option>
                 </select>
                 <a href="{{ path('admin_users_export_csv') }}" class="btn btn-sm btn-success">
                     <i class="fas fa-file-csv"></i> Exporter CSV
@@ -26,26 +135,28 @@
         </div>
         <div class="card-body">
             <div class="table-responsive">
-                <table class="table table-striped table-hover" id="usersTable">
+                <table class="table table-hover" id="usersTable">
                     <thead>
                         <tr>
-                            <th>Nom</th>
-                            <th>Email</th>
+                            <th class="sortable" data-sort="nom" style="cursor:pointer;" title="Trier par nom">Nom <i class="fas fa-sort text-muted ms-1"></i></th>
+                            <th class="sortable" data-sort="email" style="cursor:pointer;" title="Trier par email">Email <i class="fas fa-sort text-muted ms-1"></i></th>
                             <th>Téléphone</th>
-                            <th>Rôle</th>
-                            <th>État</th>
-                            <th>Date création</th>
+                            <th class="sortable" data-sort="role" style="cursor:pointer;" title="Trier par rôle">Rôle <i class="fas fa-sort text-muted ms-1"></i></th>
+                            <th class="sortable" data-sort="etat" style="cursor:pointer;" title="Trier par état">État <i class="fas fa-sort text-muted ms-1"></i></th>
+                            <th class="sortable" data-sort="date" style="cursor:pointer;" title="Trier par date">Date création <i class="fas fa-sort text-muted ms-1"></i></th>
                             <th>Actions</th>
                         </tr>
                     </thead>
                     <tbody id="usersTableBody">
                         {% for user in users %}
                         <tr
-                            data-nom="{{ user.nom|lower }}"
-                            data-email="{{ user.email|lower }}"
-                            data-role="{{ user.role|lower }}"
+                            data-nom="{{ user.nom|lower|e('html_attr') }}"
+                            data-email="{{ user.email|lower|e('html_attr') }}"
+                            data-role="{{ user.role|lower|e('html_attr') }}"
+                            data-etat="{{ user.etatCompte|lower|e('html_attr') }}"
+                            data-date="{{ user.dateCreation ? user.dateCreation|date('YmdHis') : '00000000000000' }}"
                         >
-                            <td>{{ user.nom }}</td>
+                            <td><strong>{{ user.nom }}</strong></td>
                             <td>{{ user.email }}</td>
                             <td>{{ user.telephone ?? 'N/A' }}</td>
                             <td>
@@ -67,7 +178,7 @@
                                 {% endif %}
                             </td>
                             <td>{{ user.dateCreation ? user.dateCreation|date('d/m/Y') : 'N/A' }}</td>
-                            <td>
+                            <td class="d-flex gap-1 flex-wrap">
                                 <a href="{{ path('admin_user_toggle', {id: user.userId}) }}"
                                    class="btn btn-sm {% if user.etatCompte == 'ACTIF' %}btn-danger{% else %}btn-success{% endif %}"
                                    onclick="return confirm('Êtes-vous sûr ?')">
@@ -77,6 +188,11 @@
                                         <i class="fas fa-unlock"></i> Activer
                                     {% endif %}
                                 </a>
+                                <button class="btn-history"
+                                        onclick="loadHistory({{ user.userId }}, '{{ user.nom|e('js') }}')"
+                                        title="Voir l'historique">
+                                    <i class="fas fa-history"></i> Historique
+                                </button>
                             </td>
                         </tr>
                         {% else %}
@@ -93,6 +209,29 @@
         </div>
     </div>
 </div>
+
+{# ── Modale Historique ── #}
+<div class="modal fade" id="historyModal" tabindex="-1" aria-labelledby="historyModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content" style="border:none; border-radius:12px; overflow:hidden;">
+            <div class="modal-header">
+                <h5 class="modal-title" id="historyModalLabel">
+                    <i class="fas fa-history me-2"></i>Historique — <span id="historyUserName"></span>
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="historyModalBody">
+                <div class="text-center py-4">
+                    <div class="spinner-border text-primary" role="status"></div>
+                    <p class="mt-2 text-muted">Chargement…</p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fermer</button>
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}
 
 {% block javascripts %}
@@ -100,22 +239,32 @@
 <script>
 document.addEventListener('DOMContentLoaded', function () {
     const searchInput = document.getElementById('searchInput');
-    const roleFilter = document.getElementById('roleFilter');
-    if (!searchInput || !roleFilter) return;
+    const roleFilter  = document.getElementById('roleFilter');
+    const tbody       = document.getElementById('usersTableBody');
+    const tableHeaders = document.querySelectorAll('th.sortable');
+    
+    let sortCol = '';
+    let sortAsc = true;
 
-    function filterTable() {
+    if (!searchInput || !roleFilter || !tbody) return;
+
+    function filterAndSortTable() {
         const search = searchInput.value.toLowerCase().trim();
-        const role = roleFilter.value.toLowerCase();
-        const rows = document.querySelectorAll('#usersTableBody tr');
+        const role   = roleFilter.value.toLowerCase();
+        let rows = Array.from(tbody.querySelectorAll('tr'));
         let visibleCount = 0;
 
+        // 1. Filter
         rows.forEach(function(row) {
-            const nom        = row.getAttribute('data-nom') || '';
-            const emailFull  = row.getAttribute('data-email') || '';
-            const emailLocal = emailFull.split('@')[0];
-            const rowRole    = row.getAttribute('data-role') || '';
+            // Ignorer la ligne "Aucun utilisateur trouvé"
+            if (row.children.length === 1) return;
 
-            const matchSearch = (search === '' || nom.startsWith(search) || emailLocal.startsWith(search));
+            const nom        = row.getAttribute('data-nom')   || '';
+            const emailFull  = row.getAttribute('data-email') || '';
+            const rowRole    = row.getAttribute('data-role')  || '';
+
+            // Utilisation de .includes() au lieu de .startsWith() pour une recherche plus souple
+            const matchSearch = (search === '' || nom.includes(search) || emailFull.includes(search));
             const matchRole   = (role === '' || rowRole === role);
 
             if (matchSearch && matchRole) {
@@ -126,11 +275,129 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         });
 
-        document.getElementById('noResults').style.display = visibleCount === 0 ? 'block' : 'none';
+        // 2. Sort
+        if (sortCol !== '') {
+            rows.sort((a, b) => {
+                // Toujours garder la ligne "Aucun résultat" à la fin
+                if (a.children.length === 1) return 1;
+                if (b.children.length === 1) return -1;
+
+                let valA = a.getAttribute('data-' + sortCol) || '';
+                let valB = b.getAttribute('data-' + sortCol) || '';
+
+                if (sortCol === 'date') {
+                    // Les dates sont formatées en YmdHis donc comparables comme entiers/chaines
+                    return sortAsc ? valA.localeCompare(valB) : valB.localeCompare(valA);
+                }
+
+                if (valA < valB) return sortAsc ? -1 : 1;
+                if (valA > valB) return sortAsc ? 1 : -1;
+                return 0;
+            });
+
+            // Ré-attacher les lignes dans le DOM pour appliquer le tri visuellement
+            rows.forEach(row => tbody.appendChild(row));
+        }
+
+        const noResultsEl = document.getElementById('noResults');
+        if (noResultsEl) {
+            noResultsEl.style.display = visibleCount === 0 ? 'block' : 'none';
+        }
     }
 
-    searchInput.addEventListener('input', filterTable);
-    roleFilter.addEventListener('change', filterTable);
+    searchInput.addEventListener('input', filterAndSortTable);
+    roleFilter.addEventListener('change', filterAndSortTable);
+
+    // Initialisation du tri sur les entêtes
+    tableHeaders.forEach(th => {
+        th.addEventListener('click', () => {
+            const col = th.getAttribute('data-sort');
+            
+            // Si même colonne, on inverse le tri, sinon on trie ASC
+            if (sortCol === col) {
+                sortAsc = !sortAsc;
+            } else {
+                sortCol = col;
+                sortAsc = true;
+            }
+
+            // Mise à jour des icônes de tri
+            tableHeaders.forEach(header => {
+                const icon = header.querySelector('i');
+                if (icon) icon.className = 'fas fa-sort text-muted ms-1';
+            });
+            const activeIcon = th.querySelector('i');
+            if (activeIcon) {
+                activeIcon.className = sortAsc ? 'fas fa-sort-up ms-1 text-primary' : 'fas fa-sort-down ms-1 text-primary';
+            }
+
+            filterAndSortTable();
+        });
+    });
 });
+
+function loadHistory(userId, userName) {
+    document.getElementById('historyUserName').textContent = userName;
+    document.getElementById('historyModalBody').innerHTML = `
+        <div class="text-center py-4">
+            <div class="spinner-border text-primary" role="status"></div>
+            <p class="mt-2 text-muted">Chargement de l'historique…</p>
+        </div>`;
+
+    const modal = new bootstrap.Modal(document.getElementById('historyModal'));
+    modal.show();
+
+    fetch(`/admin/utilisateur/${userId}/historique`)
+        .then(r => r.json())
+        .then(data => {
+            const body = document.getElementById('historyModalBody');
+            if (!data.history || data.history.length === 0) {
+                body.innerHTML = `
+                    <div class="text-center py-5 text-muted">
+                        <i class="fas fa-inbox fa-3x mb-3 opacity-25"></i>
+                        <p>Aucun historique disponible pour cet utilisateur.</p>
+                        <small>Les modifications futures seront enregistrées automatiquement.</small>
+                    </div>`;
+                return;
+            }
+
+            let html = '';
+            data.history.forEach(function(entry) {
+                let fieldsHtml = '';
+                if (entry.champs && entry.champs.length > 0) {
+                    entry.champs.forEach(function(f) {
+                        const val = f.nouvelle !== null && f.nouvelle !== '' ? f.nouvelle : '(vide)';
+                        fieldsHtml += `<span class="timeline-field"><strong>${f.champ}</strong> → ${val}</span>`;
+                    });
+                }
+
+                const actionColor = entry.action === 'Création' ? '#22c55e' :
+                                    entry.action === 'Modification' ? '#3b82f6' : '#ef4444';
+                const actionIcon  = entry.action === 'Création' ? 'fa-plus-circle' :
+                                    entry.action === 'Modification' ? 'fa-edit' : 'fa-trash';
+
+                html += `
+                    <div class="timeline-item" style="border-left-color:${actionColor};">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <span class="timeline-action">
+                                <i class="fas ${actionIcon} me-1" style="color:${actionColor};"></i>
+                                ${entry.action}
+                            </span>
+                            <span class="timeline-date"><i class="fas fa-clock me-1"></i>${entry.date}</span>
+                        </div>
+                        <div>${fieldsHtml || '<em class="text-muted small">Aucun champ tracé.</em>'}</div>
+                    </div>`;
+            });
+
+            body.innerHTML = html;
+        })
+        .catch(() => {
+            document.getElementById('historyModalBody').innerHTML = `
+                <div class="alert alert-danger">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    Erreur lors du chargement de l'historique.
+                </div>`;
+        });
+}
 </script>
 {% endblock %}

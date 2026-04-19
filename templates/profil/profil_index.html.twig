@@ -109,7 +109,7 @@
                         <hr class="mt-4">
 
                         {# Boutons #}
-                        <div class="d-flex gap-3 mt-4">
+                        <div class="d-flex flex-wrap gap-3 mt-4">
                             {% if user.totpSecret %}
                                 <span class="btn btn-secondary" style="background:#6c757d;border:none;pointer-events:none;">
                                     🛡️ 2FA Activée
@@ -117,6 +117,20 @@
                             {% else %}
                                 <a href="{{ path('app_2fa_setup') }}" class="btn" style="background:#e67e22;color:white;border:none;" title="Sécurité Google Authenticator">
                                     🛡️ Activer 2FA
+                                </a>
+                            {% endif %}
+
+                            {% if user.faceImagePath %}
+                                <a href="{{ path('face_setup') }}" class="btn d-flex align-items-center gap-2"
+                                   style="background:linear-gradient(135deg,#7BA00E,#5c7a0b);color:#fff;border:none;box-shadow:0 4px 12px rgba(123,160,14,0.25);"
+                                   title="Mettre à jour votre visage de connexion">
+                                    <i class="fas fa-check-circle"></i> Connexion Faciale ✓
+                                </a>
+                            {% else %}
+                                <a href="{{ path('face_setup') }}" class="btn d-flex align-items-center gap-2"
+                                   style="background:#f1f5f9;color:#334155;border:1px solid #cbd5e1;"
+                                   title="Activer la connexion par visage">
+                                    <i class="fas fa-camera"></i> Activer Face ID
                                 </a>
                             {% endif %}
 

@@ -1,0 +1,331 @@
+{% extends 'base.html.twig' %}
+{% block title %}Connexion par visage — AgriConnect{% endblock %}
+
+{% block body %}
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@700;800&display=swap');
+
+    .face-login-wrapper {
+        min-height: calc(100vh - 80px);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 50%, #f1f5f9 100%);
+        padding: 3rem 1rem;
+        font-family: 'Inter', sans-serif;
+    }
+    .face-card {
+        background: #fff;
+        border-radius: 28px;
+        padding: 3rem;
+        width: 100%;
+        max-width: 560px;
+        box-shadow: 0 20px 60px rgba(0,0,0,0.07);
+        text-align: center;
+    }
+    .face-card-icon {
+        width: 80px; height: 80px;
+        background: linear-gradient(135deg, #7BA00E, #5c7a0b);
+        border-radius: 24px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2.5rem;
+        color: #fff;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 10px 25px rgba(123, 160, 14, 0.3);
+    }
+    .face-title {
+        font-family: 'Outfit', sans-serif;
+        font-size: 2rem;
+        font-weight: 800;
+        color: #0f172a;
+        margin-bottom: 0.5rem;
+    }
+    .face-subtitle {
+        color: #64748b;
+        margin-bottom: 1.5rem;
+        line-height: 1.6;
+    }
+
+    /* Email Input */
+    .email-group {
+        text-align: left;
+        margin-bottom: 1.5rem;
+    }
+    .email-group label {
+        display: block;
+        font-weight: 600;
+        color: #334155;
+        margin-bottom: 0.5rem;
+        font-size: 0.95rem;
+    }
+    .email-group input {
+        width: 100%;
+        padding: 0.9rem 1.2rem;
+        border: 2px solid #e2e8f0;
+        border-radius: 14px;
+        font-size: 1rem;
+        font-family: 'Inter', sans-serif;
+        color: #0f172a;
+        transition: border-color 0.2s, box-shadow 0.2s;
+        outline: none;
+    }
+    .email-group input:focus {
+        border-color: #7BA00E;
+        box-shadow: 0 0 0 4px rgba(123,160,14,0.1);
+    }
+
+    /* Camera */
+    .camera-container {
+        position: relative;
+        width: 100%;
+        aspect-ratio: 4/3;
+        border-radius: 20px;
+        overflow: hidden;
+        background: #0f172a;
+        margin-bottom: 1.5rem;
+    }
+    #cameraFeed {
+        width: 100%; height: 100%;
+        object-fit: cover;
+        transform: scaleX(-1);
+        display: block;
+    }
+    .camera-overlay {
+        position: absolute;
+        top: 50%; left: 50%;
+        transform: translate(-50%, -50%);
+        width: 220px; height: 220px;
+        border-radius: 50%;
+        pointer-events: none;
+        box-shadow: 0 0 0 9999px rgba(0,0,0,0.4);
+    }
+    .camera-overlay.scanning {
+        border: 3px solid #7BA00E;
+        animation: scan-ring 1.5s ease-in-out infinite;
+    }
+    .camera-overlay.success {
+        border: 4px solid #22c55e;
+        box-shadow: 0 0 0 9999px rgba(0,0,0,0.4), 0 0 40px rgba(34,197,94,0.6);
+    }
+    .camera-overlay.error {
+        border: 4px solid #ef4444;
+        box-shadow: 0 0 0 9999px rgba(0,0,0,0.4), 0 0 40px rgba(239,68,68,0.5);
+    }
+    @keyframes scan-ring {
+        0%, 100% { box-shadow: 0 0 0 9999px rgba(0,0,0,0.4), 0 0 0 0 rgba(123,160,14,0.5); }
+        50%       { box-shadow: 0 0 0 9999px rgba(0,0,0,0.4), 0 0 0 14px rgba(123,160,14,0); }
+    }
+
+    .status-label {
+        position: absolute;
+        bottom: 12px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: rgba(0,0,0,0.7);
+        color: #fff;
+        padding: 0.4rem 1rem;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        white-space: nowrap;
+    }
+
+    /* Buttons */
+    .btn-face {
+        padding: 1rem 2rem;
+        border-radius: 14px;
+        font-weight: 700;
+        font-size: 1.05rem;
+        font-family: 'Inter', sans-serif;
+        border: none;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        width: 100%;
+        justify-content: center;
+        margin-bottom: 0.75rem;
+    }
+    .btn-face-verify {
+        background: linear-gradient(135deg, #7BA00E, #5c7a0b);
+        color: #fff;
+        box-shadow: 0 8px 20px rgba(123,160,14,0.25);
+    }
+    .btn-face-verify:hover { transform: translateY(-3px); box-shadow: 0 12px 30px rgba(123,160,14,0.35); }
+    .btn-face-verify:disabled { opacity: 0.6; transform: none; cursor: not-allowed; }
+    .btn-face-alt {
+        background: #f8fafc;
+        color: #334155;
+        border: 1px solid #e2e8f0;
+        font-size: 0.95rem;
+    }
+    .btn-face-alt:hover { background: #f1f5f9; }
+
+    .alert-face {
+        border-radius: 14px;
+        padding: 1rem 1.25rem;
+        font-weight: 600;
+        margin-bottom: 1.5rem;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        text-align: left;
+    }
+    .alert-face.success { background: #f0fdf4; color: #15803d; border: 1px solid #bbf7d0; }
+    .alert-face.error   { background: #fef2f2; color: #b91c1c; border: 1px solid #fecaca; }
+    .alert-face.info    { background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; }
+
+    .divider { display: flex; align-items: center; gap: 1rem; color: #94a3b8; font-size: 0.9rem; margin: 1rem 0; }
+    .divider::before, .divider::after { content: ''; flex: 1; height: 1px; background: #e2e8f0; }
+
+    canvas { display: none; }
+</style>
+
+<div class="face-login-wrapper">
+    <div class="face-card">
+        <div class="face-card-icon">
+            <i class="fas fa-face-viewfinder" id="headerIcon"></i>
+        </div>
+        <h1 class="face-title">Connexion Faciale</h1>
+        <p class="face-subtitle">Entrez votre email, puis regardez la caméra pour vous connecter instantanément.</p>
+
+        <!-- Feedback messages -->
+        <div id="feedbackMsg" class="alert-face" style="display:none;"></div>
+
+        <!-- Email -->
+        <div class="email-group">
+            <label for="emailInput"><i class="fas fa-envelope me-2" style="color:#7BA00E;"></i>Votre adresse email</label>
+            <input type="email" id="emailInput" placeholder="exemple@agriconnect.com" required autofocus>
+        </div>
+
+        <!-- Phase 1 : Bouton démarrer -->
+        <div id="phaseStart">
+            <button class="btn-face btn-face-verify" onclick="startVerification()">
+                <i class="fas fa-camera"></i> Démarrer la reconnaissance
+            </button>
+        </div>
+
+        <!-- Phase 2 : Caméra active + analyse -->
+        <div id="phaseCamera" style="display:none;">
+            <div class="camera-container">
+                <video id="cameraFeed" autoplay playsinline muted></video>
+                <div class="camera-overlay scanning" id="cameraOverlay"></div>
+                <div class="status-label" id="statusLabel">
+                    <i class="fas fa-spinner fa-spin me-1"></i> Analyse en cours...
+                </div>
+            </div>
+            <button class="btn-face btn-face-verify" id="btnCapture" onclick="captureAndVerify()">
+                <i class="fas fa-circle-dot"></i> Analyser mon visage
+            </button>
+        </div>
+
+        <canvas id="captureCanvas"></canvas>
+
+        <div class="divider">ou</div>
+
+        <a href="{{ path('app_signin') }}" class="btn-face btn-face-alt">
+            <i class="fas fa-lock"></i> Connexion par email &amp; mot de passe
+        </a>
+
+        <p style="margin-top:1rem; color:#94a3b8; font-size:0.85rem;">
+            <i class="fas fa-info-circle me-1"></i> Vous n'avez pas encore configuré la connexion faciale ?
+            <a href="{{ path('app_signin') }}" style="color:#7BA00E; font-weight:600;">Connectez-vous d'abord</a>
+            puis activez-la depuis votre profil.
+        </p>
+    </div>
+</div>
+
+<script>
+let stream = null;
+
+async function startVerification() {
+    const email = document.getElementById('emailInput').value.trim();
+    if (!email) {
+        showFeedback('error', 'Veuillez entrer votre adresse email pour continuer.');
+        return;
+    }
+
+    try {
+        stream = await navigator.mediaDevices.getUserMedia({ video: { width: 640, height: 480, facingMode: 'user' } });
+        document.getElementById('cameraFeed').srcObject = stream;
+
+        document.getElementById('phaseStart').style.display  = 'none';
+        document.getElementById('phaseCamera').style.display = 'block';
+        showFeedback('info', '<i class="fas fa-eye me-1"></i> Regardez bien la caméra, puis cliquez sur "Analyser mon visage".');
+    } catch(e) {
+        showFeedback('error', '❌ Accès à la caméra refusé. Vérifiez les permissions de votre navigateur.');
+    }
+}
+
+async function captureAndVerify() {
+    const video  = document.getElementById('cameraFeed');
+    const canvas = document.getElementById('captureCanvas');
+    canvas.width  = video.videoWidth;
+    canvas.height = video.videoHeight;
+
+    const ctx = canvas.getContext('2d');
+    ctx.translate(canvas.width, 0);
+    ctx.scale(-1, 1);
+    ctx.drawImage(video, 0, 0);
+    const imageBase64 = canvas.toDataURL('image/jpeg', 0.9);
+
+    // Arrêter la caméra
+    if (stream) stream.getTracks().forEach(t => t.stop());
+
+    // UI : Analyse en cours
+    document.getElementById('btnCapture').disabled = true;
+    document.getElementById('btnCapture').innerHTML = '<i class="fas fa-spinner fa-spin"></i> Analyse en cours...';
+    document.getElementById('statusLabel').innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Vérification...';
+    showFeedback('info', '🤖 Le modèle analyse votre visage, veuillez patienter...');
+
+    try {
+        const response = await fetch('{{ path("face_login_verify") }}', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                email: document.getElementById('emailInput').value.trim(),
+                image: imageBase64
+            }),
+        });
+        const data = await response.json();
+
+        const overlay = document.getElementById('cameraOverlay');
+        const statusLabel = document.getElementById('statusLabel');
+
+        if (data.success) {
+            overlay.className = 'camera-overlay success';
+            statusLabel.innerHTML = '<i class="fas fa-check me-1"></i> ✅ Connecté !';
+            showFeedback('success', data.message);
+            setTimeout(() => { window.location.href = data.redirect; }, 1500);
+        } else {
+            overlay.className = 'camera-overlay error';
+            statusLabel.innerHTML = '<i class="fas fa-times me-1"></i> Echec';
+            showFeedback('error', data.message || '❌ Reconnaissance échouée, veuillez réessayer.');
+
+            // Permettre un nouvel essai
+            setTimeout(() => {
+                document.getElementById('phaseCamera').style.display = 'none';
+                document.getElementById('phaseStart').style.display  = 'block';
+                document.getElementById('btnCapture').disabled = false;
+                document.getElementById('btnCapture').innerHTML = '<i class="fas fa-circle-dot"></i> Analyser mon visage';
+            }, 2500);
+        }
+    } catch(e) {
+        showFeedback('error', '❌ Erreur réseau. Assurez-vous que le service Python est démarré sur le port 8001.');
+        document.getElementById('btnCapture').disabled = false;
+        document.getElementById('btnCapture').innerHTML = '<i class="fas fa-circle-dot"></i> Analyser mon visage';
+    }
+}
+
+function showFeedback(type, message) {
+    const el = document.getElementById('feedbackMsg');
+    if (!message) { el.style.display = 'none'; return; }
+    el.className = 'alert-face ' + type;
+    el.innerHTML = message;
+    el.style.display = 'flex';
+}
+</script>
+{% endblock %}

@@ -157,7 +157,7 @@ class AuthController extends AbstractController
             $user = $em->getRepository(User::class)->findOneBy(['email' => $email]);
             if ($user && $passwordHasher->isPasswordValid($user, $password)) {
                 if ($user->getEtatCompte() !== 'ACTIF') {
-                    $this->addFlash('error', "❌ Votre compte est désactivé. Contactez l'administrateur.");
+                    $this->addFlash('error', "❌ Adresse ou mot de passe incorrect.");
                     return $this->redirectToRoute('app_signin');
                 }
 

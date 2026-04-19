@@ -4,9 +4,11 @@ namespace App\Entity;
 
 use App\Repository\ProfilRepository;
 use Doctrine\ORM\Mapping as ORM;
+use Gedmo\Mapping\Annotation as Gedmo;
 
 #[ORM\Entity(repositoryClass: ProfilRepository::class)]
 #[ORM\Table(name: 'profil')]
+#[Gedmo\Loggable]
 class Profil
 {
     #[ORM\Id]
@@ -15,12 +17,15 @@ class Profil
     private ?int $id = null;
 
     #[ORM\Column(type: 'string', nullable: true)]
+    #[Gedmo\Versioned]
     private ?string $bio = null;
 
     #[ORM\Column(type: 'string', nullable: true)]
+    #[Gedmo\Versioned]
     private ?string $telephone = null;
 
     #[ORM\Column(type: 'string', nullable: true)]
+    #[Gedmo\Versioned]
     private ?string $image = null;
 
     #[ORM\Column(type: 'integer', nullable: true)]

@@ -1,0 +1,305 @@
+{% extends 'base.html.twig' %}
+{% block title %}Configurer la connexion faciale — AgriConnect{% endblock %}
+
+{% block body %}
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@700;800&display=swap');
+
+    .face-setup-wrapper {
+        min-height: calc(100vh - 80px);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 50%, #f1f5f9 100%);
+        padding: 3rem 1rem;
+        font-family: 'Inter', sans-serif;
+    }
+    .face-card {
+        background: #fff;
+        border-radius: 28px;
+        padding: 3rem;
+        width: 100%;
+        max-width: 560px;
+        box-shadow: 0 20px 60px rgba(0,0,0,0.07);
+        text-align: center;
+    }
+    .face-card-icon {
+        width: 80px; height: 80px;
+        background: linear-gradient(135deg, #7BA00E, #5c7a0b);
+        border-radius: 24px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2.5rem;
+        color: #fff;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 10px 25px rgba(123, 160, 14, 0.3);
+    }
+    .face-title {
+        font-family: 'Outfit', sans-serif;
+        font-size: 2rem;
+        font-weight: 800;
+        color: #0f172a;
+        margin-bottom: 0.5rem;
+    }
+    .face-subtitle {
+        color: #64748b;
+        margin-bottom: 2rem;
+        line-height: 1.6;
+    }
+
+    /* Webcam */
+    .camera-container {
+        position: relative;
+        width: 100%;
+        aspect-ratio: 4/3;
+        border-radius: 20px;
+        overflow: hidden;
+        background: #0f172a;
+        margin-bottom: 1.5rem;
+        box-shadow: inset 0 0 0 3px rgba(123,160,14,0.3);
+    }
+    #cameraFeed {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transform: scaleX(-1); /* Effet miroir */
+        display: block;
+    }
+    .camera-overlay {
+        position: absolute;
+        top: 50%; left: 50%;
+        transform: translate(-50%, -50%);
+        width: 200px; height: 200px;
+        border: 3px solid rgba(123, 160, 14, 0.8);
+        border-radius: 50%;
+        pointer-events: none;
+        box-shadow: 0 0 0 9999px rgba(0,0,0,0.35);
+        animation: pulse-ring 2s infinite;
+    }
+    @keyframes pulse-ring {
+        0%, 100% { box-shadow: 0 0 0 9999px rgba(0,0,0,0.35), 0 0 0 0 rgba(123,160,14,0.4); }
+        50% { box-shadow: 0 0 0 9999px rgba(0,0,0,0.35), 0 0 0 12px rgba(123,160,14,0); }
+    }
+    .camera-placeholder {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        height: 100%;
+        color: #94a3b8;
+        gap: 1rem;
+    }
+    .camera-placeholder i { font-size: 4rem; }
+
+    /* Captured preview */
+    #capturedPreview {
+        display: none;
+        width: 100%;
+        border-radius: 20px;
+        object-fit: cover;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+        transform: scaleX(-1);
+    }
+
+    /* Buttons */
+    .btn-face {
+        padding: 1rem 2rem;
+        border-radius: 14px;
+        font-weight: 700;
+        font-size: 1.05rem;
+        font-family: 'Inter', sans-serif;
+        border: none;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+    }
+    .btn-face-start {
+        background: linear-gradient(135deg, #7BA00E, #5c7a0b);
+        color: #fff;
+        box-shadow: 0 8px 20px rgba(123,160,14,0.25);
+    }
+    .btn-face-start:hover { transform: translateY(-3px); box-shadow: 0 12px 30px rgba(123,160,14,0.35); }
+    .btn-face-capture {
+        background: linear-gradient(135deg, #3b82f6, #2563eb);
+        color: #fff;
+        box-shadow: 0 8px 20px rgba(59,130,246,0.25);
+    }
+    .btn-face-capture:hover { transform: translateY(-3px); }
+    .btn-face-retry {
+        background: #f1f5f9;
+        color: #334155;
+    }
+    .btn-face-retry:hover { background: #e2e8f0; }
+    .btn-face-save {
+        background: linear-gradient(135deg, #7BA00E, #5c7a0b);
+        color: #fff;
+        box-shadow: 0 8px 20px rgba(123,160,14,0.25);
+        width: 100%;
+        justify-content: center;
+    }
+    .btn-face-save:hover { transform: translateY(-3px); box-shadow: 0 12px 30px rgba(123,160,14,0.35); }
+
+    .alert-face {
+        border-radius: 14px;
+        padding: 1rem 1.25rem;
+        font-weight: 600;
+        margin-bottom: 1.5rem;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    .alert-face.success { background: #f0fdf4; color: #15803d; border: 1px solid #bbf7d0; }
+    .alert-face.error   { background: #fef2f2; color: #b91c1c; border: 1px solid #fecaca; }
+
+    canvas { display: none; }
+</style>
+
+<div class="face-setup-wrapper">
+    <div class="face-card">
+        <div class="face-card-icon">
+            <i class="fas fa-face-smile"></i>
+        </div>
+        <h1 class="face-title">Connexion Faciale</h1>
+        <p class="face-subtitle">
+            Enregistrez votre visage pour vous connecter rapidement sans mot de passe. <br>
+            Regardez la caméra, restez dans le cercle et prenez une photo.
+        </p>
+
+        <!-- Feedback messages -->
+        <div id="feedbackMsg" class="alert-face" style="display:none;"></div>
+
+        <!-- Phase 1 : démarrer la caméra -->
+        <div id="phaseStart">
+            <div class="camera-container">
+                <div class="camera-placeholder">
+                    <i class="fas fa-camera"></i>
+                    <span style="font-weight:600;">Activez la caméra pour commencer</span>
+                </div>
+            </div>
+            <button class="btn-face btn-face-start" onclick="startCamera()">
+                <i class="fas fa-camera"></i> Activer la caméra
+            </button>
+        </div>
+
+        <!-- Phase 2 : caméra active -->
+        <div id="phaseCapture" style="display:none;">
+            <div class="camera-container">
+                <video id="cameraFeed" autoplay playsinline muted></video>
+                <div class="camera-overlay"></div>
+            </div>
+            <button class="btn-face btn-face-capture" onclick="capturePhoto()">
+                <i class="fas fa-circle-dot"></i> Capturer ma photo
+            </button>
+        </div>
+
+        <!-- Phase 3 : photo capturée, prête à sauvegarder -->
+        <div id="phasePreview" style="display:none;">
+            <img id="capturedPreview" src="" alt="Photo capturée" style="display:block; aspect-ratio:4/3;">
+            <div style="display:flex; gap:1rem; margin-bottom:1.5rem;">
+                <button class="btn-face btn-face-retry" onclick="retakePhoto()" style="flex:1; justify-content:center;">
+                    <i class="fas fa-redo"></i> Reprendre
+                </button>
+                <button class="btn-face btn-face-save" onclick="saveFace()" style="flex:2;">
+                    <i class="fas fa-check-circle"></i> Enregistrer
+                </button>
+            </div>
+        </div>
+
+        <!-- Canvas caché pour capture -->
+        <canvas id="captureCanvas"></canvas>
+
+        <a href="{{ path('user_profil') }}" style="display:block; color:#64748b; font-size:0.9rem; margin-top:1rem; text-decoration:none;">
+            <i class="fas fa-arrow-left me-1"></i> Retour au profil
+        </a>
+    </div>
+</div>
+
+<script>
+let stream = null;
+let capturedBase64 = null;
+
+async function startCamera() {
+    try {
+        stream = await navigator.mediaDevices.getUserMedia({ video: { width: 640, height: 480 } });
+        document.getElementById('cameraFeed').srcObject = stream;
+        document.getElementById('phaseStart').style.display   = 'none';
+        document.getElementById('phaseCapture').style.display = 'block';
+    } catch(e) {
+        showFeedback('error', '❌ Impossible d\'accéder à la caméra : ' + e.message);
+    }
+}
+
+function capturePhoto() {
+    const video  = document.getElementById('cameraFeed');
+    const canvas = document.getElementById('captureCanvas');
+    canvas.width  = video.videoWidth;
+    canvas.height = video.videoHeight;
+    const ctx = canvas.getContext('2d');
+    // Miroir horizontalement pour correspondre à l'affichage
+    ctx.translate(canvas.width, 0);
+    ctx.scale(-1, 1);
+    ctx.drawImage(video, 0, 0);
+
+    capturedBase64 = canvas.toDataURL('image/jpeg', 0.9);
+
+    // Arrêter la caméra
+    if (stream) stream.getTracks().forEach(t => t.stop());
+
+    // Afficher la prévisualisation
+    const preview = document.getElementById('capturedPreview');
+    preview.src = capturedBase64;
+
+    document.getElementById('phaseCapture').style.display = 'none';
+    document.getElementById('phasePreview').style.display = 'block';
+}
+
+function retakePhoto() {
+    capturedBase64 = null;
+    document.getElementById('phasePreview').style.display = 'none';
+    document.getElementById('feedbackMsg').style.display  = 'none';
+    document.getElementById('phaseStart').style.display   = 'block';
+}
+
+async function saveFace() {
+    if (!capturedBase64) return;
+
+    showFeedback('', '');
+    document.querySelector('.btn-face-save').disabled = true;
+    document.querySelector('.btn-face-save').innerHTML = '<i class="fas fa-spinner fa-spin"></i> Enregistrement...';
+
+    try {
+        const response = await fetch('{{ path("face_save") }}', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ image: capturedBase64 }),
+        });
+        const data = await response.json();
+
+        if (data.success) {
+            showFeedback('success', data.message);
+            setTimeout(() => { window.location.href = '{{ path("user_profil") }}'; }, 2000);
+        } else {
+            showFeedback('error', data.message || 'Une erreur est survenue.');
+            document.querySelector('.btn-face-save').disabled = false;
+            document.querySelector('.btn-face-save').innerHTML = '<i class="fas fa-check-circle"></i> Enregistrer';
+        }
+    } catch(e) {
+        showFeedback('error', '❌ Erreur réseau, veuillez réessayer.');
+        document.querySelector('.btn-face-save').disabled = false;
+        document.querySelector('.btn-face-save').innerHTML = '<i class="fas fa-check-circle"></i> Enregistrer';
+    }
+}
+
+function showFeedback(type, message) {
+    const el = document.getElementById('feedbackMsg');
+    if (!message) { el.style.display = 'none'; return; }
+    el.className = 'alert-face ' + type;
+    el.innerHTML = `<i class="fas ${type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'}"></i> ${message}`;
+    el.style.display = 'flex';
+}
+</script>
+{% endblock %}

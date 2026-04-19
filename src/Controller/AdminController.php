@@ -4,9 +4,12 @@ namespace App\Controller;
 
 use App\Entity\Admin;
 use App\Entity\User;
+use App\Entity\Profil;
 use App\Form\AdminProfileType;
 use Doctrine\ORM\EntityManagerInterface;
+use Gedmo\Loggable\Entity\LogEntry;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
@@ -15,6 +18,8 @@ use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\String\Slugger\SluggerInterface;
 use Symfony\Component\HttpFoundation\File\Exception\FileException;
+use Symfony\UX\Chartjs\Builder\ChartBuilderInterface;
+use Symfony\UX\Chartjs\Model\Chart;
 
 class AdminController extends AbstractController
 {
@@ -24,7 +29,7 @@ class AdminController extends AbstractController
         EntityManagerInterface $em
     ): Response {
         if (!$session->get('admin_id')) {
-            return $this->redirectToRoute('admin_login');
+            return $this->redirectToRoute('app_signin');
         }
 
         $users   = $em->getRepository(User::class)->findAll();
@@ -56,7 +61,7 @@ class AdminController extends AbstractController
 
         if (!$admin) {
             $this->addFlash('error', 'Admin introuvable.');
-            return $this->redirectToRoute('admin_login');
+            return $this->redirectToRoute('app_signin');
         }
 
         $form = $this->createForm(AdminProfileType::class, $admin);
@@ -106,17 +111,167 @@ class AdminController extends AbstractController
     #[Route('/admin/utilisateurs', name: 'admin_users')]
     public function users(
         EntityManagerInterface $em,
-        SessionInterface $session
+        SessionInterface $session,
+        ChartBuilderInterface $chartBuilder
     ): Response {
         if (!$session->get('admin_id')) {
-            return $this->redirectToRoute('admin_login');
+            return $this->redirectToRoute('app_signin');
         }
 
         $users = $em->getRepository(User::class)->findAll();
 
-        return $this->render('admin/users.html.twig', [
-            'users' => $users,
+        // --- Stats pour les graphiques ---
+        $roleCount = ['AGRICULTEUR' => 0, 'FOURNISSEUR' => 0, 'Autre' => 0];
+        foreach ($users as $u) {
+            $r = strtoupper($u->getRole() ?? 'Autre');
+            if (isset($roleCount[$r])) {
+                $roleCount[$r]++;
+            } else {
+                $roleCount['Autre']++;
+            }
+        }
+
+        // Inscriptions par mois (6 derniers mois)
+        $monthLabels = [];
+        $monthData   = [];
+        for ($i = 5; $i >= 0; $i--) {
+            $dt = new \DateTime("-{$i} months");
+            $monthLabels[] = $dt->format('M Y');
+            $monthData[]   = 0;
+        }
+        foreach ($users as $u) {
+            $dc = $u->getDateCreation();
+            if (!$dc) continue;
+            for ($i = 5; $i >= 0; $i--) {
+                $dt = new \DateTime("-{$i} months");
+                if ($dc->format('Y-m') === $dt->format('Y-m')) {
+                    $monthData[5 - $i]++;
+                    break;
+                }
+            }
+        }
+
+        // --- Graphique Pie: répartition rôles ---
+        $pieChart = $chartBuilder->createChart(Chart::TYPE_PIE);
+        $pieChart->setData([
+            'labels' => ['👨‍🌾 Agriculteur', '🚚 Fournisseur', 'Autre'],
+            'datasets' => [[
+                'data'            => array_values($roleCount),
+                'backgroundColor' => ['#22c55e', '#3b82f6', '#a855f7'],
+                'borderColor'     => ['#16a34a', '#2563eb', '#9333ea'],
+                'borderWidth'     => 2,
+            ]],
         ]);
+        $pieChart->setOptions([
+            'plugins' => [
+                'legend' => ['position' => 'bottom'],
+                'tooltip' => ['enabled' => true],
+            ],
+        ]);
+
+        // --- Graphique Line: inscriptions par mois ---
+        $lineChart = $chartBuilder->createChart(Chart::TYPE_LINE);
+        $lineChart->setData([
+            'labels' => $monthLabels,
+            'datasets' => [[
+                'label'           => 'Nouvelles inscriptions',
+                'data'            => $monthData,
+                'borderColor'     => '#22c55e',
+                'backgroundColor' => 'rgba(34,197,94,0.15)',
+                'fill'            => true,
+                'tension'         => 0.4,
+                'pointBackgroundColor' => '#16a34a',
+                'pointRadius'     => 5,
+            ]],
+        ]);
+        $lineChart->setOptions([
+            'scales' => [
+                'y' => ['beginAtZero' => true, 'ticks' => ['stepSize' => 1]],
+            ],
+            'plugins' => [
+                'legend' => ['display' => false],
+            ],
+        ]);
+
+        return $this->render('admin/users.html.twig', [
+            'users'     => $users,
+            'pieChart'  => $pieChart,
+            'lineChart' => $lineChart,
+            'totalUsers'   => count($users),
+            'activeUsers'  => count(array_filter($users, fn($u) => $u->getEtatCompte() === 'ACTIF')),
+            'blockedUsers' => count(array_filter($users, fn($u) => $u->getEtatCompte() !== 'ACTIF')),
+        ]);
+    }
+
+    #[Route('/admin/utilisateur/{id}/historique', name: 'admin_user_history', methods: ['GET'])]
+    public function userHistory(
+        int $id,
+        EntityManagerInterface $em,
+        SessionInterface $session
+    ): JsonResponse {
+        if (!$session->get('admin_id')) {
+            return new JsonResponse(['error' => 'Non autorisé'], 403);
+        }
+
+        $user = $em->getRepository(User::class)->find($id);
+        if (!$user) {
+            return new JsonResponse(['error' => 'Utilisateur introuvable'], 404);
+        }
+
+        $logs = $em->getRepository(LogEntry::class)->getLogEntries($user);
+        
+        $profil = $em->getRepository(Profil::class)->findOneBy(['userId' => $id]);
+        $profilLogs = $profil ? $em->getRepository(LogEntry::class)->getLogEntries($profil) : [];
+
+        $allLogs = array_merge($logs, $profilLogs);
+        
+        // Trier les logs par date (du plus récent au plus ancien)
+        usort($allLogs, function ($a, $b) {
+            return $b->getLoggedAt() <=> $a->getLoggedAt();
+        });
+
+        $history = [];
+        foreach ($allLogs as $log) {
+            $fieldLabels = [
+                'nom'        => 'Nom',
+                'email'      => 'Email',
+                'telephone'  => 'Téléphone',
+                'role'       => 'Rôle',
+                'etatCompte' => 'État du compte',
+                'bio'        => 'Bio',
+                'image'      => 'Image de profil',
+            ];
+            $actionLabels = [
+                'create' => 'Création',
+                'update' => 'Modification',
+                'remove' => 'Suppression',
+            ];
+
+            $data = $log->getData() ?? [];
+            $fields = [];
+            foreach ($data as $field => $value) {
+                // Pour éviter d'afficher des logs internes non pertinents
+                if (!isset($fieldLabels[$field]) && $field !== 'telephone') continue;
+                
+                $fields[] = [
+                    'champ'    => $fieldLabels[$field] ?? ucfirst($field),
+                    'nouvelle' => $value,
+                ];
+            }
+            
+            if (empty($fields) && $log->getAction() !== 'create') {
+                continue; // Ne pas afficher si aucun champ suivi n'a changé
+            }
+
+            $history[] = [
+                'date'    => $log->getLoggedAt()->format('d/m/Y à H:i'),
+                'action'  => $actionLabels[$log->getAction()] ?? $log->getAction(),
+                'version' => $log->getVersion(),
+                'champs'  => $fields,
+            ];
+        }
+
+        return new JsonResponse(['user' => $user->getNom(), 'history' => $history]);
     }
 
     #[Route('/admin/utilisateurs/export-csv', name: 'admin_users_export_csv')]
@@ -127,7 +282,7 @@ class AdminController extends AbstractController
         if (!$session->get('admin_id')) {
             // StreamedResponse ne peut pas faire de redirect — on redirige via Response classique
             return new StreamedResponse(function () {
-                header('Location: ' . $this->generateUrl('admin_login'));
+                header('Location: ' . $this->generateUrl('app_signin'));
             });
         }
 
@@ -170,7 +325,7 @@ class AdminController extends AbstractController
         SessionInterface $session
     ): Response {
         if (!$session->get('admin_id')) {
-            return $this->redirectToRoute('admin_login');
+            return $this->redirectToRoute('app_signin');
         }
 
         $user = $em->getRepository(User::class)->find($id);

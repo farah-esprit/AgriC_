@@ -1,4 +1,4 @@
-{% extends 'base.html.twig' %}
+{% extends app.session.get('user_role') == 'FOURNISSEUR' ? 'fournisseur.html.twig' : (app.session.get('user_role') == 'AGRICULTEUR' ? 'agriculteur.html.twig' : 'base.html.twig') %}
 
 {% block title %}Authentification 2FA - AgriConnect{% endblock %}
 

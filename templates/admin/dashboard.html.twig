@@ -5,142 +5,218 @@
 {% block admin_content %}
 
 <style>
+    /* Add generic animations */
+    @keyframes fadeUp {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes pulseSoft {
+        0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4); }
+        70% { box-shadow: 0 0 0 6px rgba(16, 185, 129, 0); }
+        100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+    }
+
+    .dash-container {
+        animation: fadeUp 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
     .dash-header {
         display: flex;
         justify-content: space-between;
-        align-items: center;
-        margin-bottom: 2rem;
+        align-items: flex-end;
+        margin-bottom: 2.5rem;
+        padding-bottom: 1.5rem;
+        border-bottom: 1px solid rgba(0,0,0,0.05);
     }
     .dash-title {
         font-family: 'Outfit', sans-serif;
-        font-size: 2.2rem;
-        font-weight: 700;
-        color: #111;
-        margin: 0;
-        letter-spacing: -0.03em;
+        font-size: 2.5rem;
+        font-weight: 800;
+        background: linear-gradient(135deg, #0f172a 0%, #475569 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        margin: 0 0 0.5rem 0;
+        letter-spacing: -0.04em;
     }
     .dash-subtitle {
         color: #64748b;
-        font-size: 0.95rem;
+        font-size: 1rem;
         font-family: 'Inter', sans-serif;
+        font-weight: 500;
     }
     .badge-status {
-        background: #ecfdf5;
+        background: rgba(16, 185, 129, 0.1);
         color: #059669;
-        padding: 0.5rem 1rem;
+        padding: 0.6rem 1.25rem;
         border-radius: 30px;
-        font-weight: 600;
-        border: 1px solid #10b981;
+        font-weight: 700;
         display: inline-flex;
         align-items: center;
-        gap: 8px;
+        gap: 10px;
+        box-shadow: 0 0 0 1px rgba(16, 185, 129, 0.2);
+        font-family: 'Inter', sans-serif;
+        font-size: 0.9rem;
+    }
+    .badge-status i {
+        border-radius: 50%;
+        animation: pulseSoft 2s infinite;
     }
     
     /* Premium KPI Cards */
     .kpi-card {
         background: #ffffff;
-        border-radius: 16px;
-        padding: 1.5rem;
-        border: 1px solid rgba(0,0,0,0.06);
-        box-shadow: 0 4px 15px rgba(0,0,0,0.03);
-        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        border-radius: 24px;
+        padding: 2rem;
+        border: 1px solid rgba(255,255,255,0.8);
+        box-shadow: 0 10px 30px rgba(0,0,0,0.03), inset 0 1px 0 rgba(255,255,255,1);
+        transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
         position: relative;
         overflow: hidden;
         height: 100%;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
     }
     .kpi-card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 12px 30px rgba(0,0,0,0.08);
+        transform: translateY(-8px);
+        box-shadow: 0 20px 40px rgba(0,0,0,0.06), inset 0 1px 0 rgba(255,255,255,1);
     }
+    /* Subtle background glow effect for cards */
     .kpi-card::after {
         content: '';
         position: absolute;
-        top: 0;
-        right: 0;
-        width: 150px;
-        height: 150px;
-        background: linear-gradient(135deg, rgba(123, 160, 14, 0.1), transparent);
+        top: -50px; right: -50px;
+        width: 150px; height: 150px;
+        background: radial-gradient(circle, var(--glow-color) 0%, transparent 70%);
+        opacity: 0.1;
         border-radius: 50%;
-        transform: translate(30%, -30%);
+        pointer-events: none;
     }
+
+    .kpi-card:nth-child(1) { --glow-color: #0f172a; }
+    .kpi-card:nth-child(2) { --glow-color: #7BA00E; }
+    .kpi-card:nth-child(3) { --glow-color: #ef4444; }
+    
     .icon-wrapper {
-        width: 48px;
-        height: 48px;
-        border-radius: 12px;
+        width: 60px;
+        height: 60px;
+        border-radius: 18px;
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 1.4rem;
-        margin-bottom: 1rem;
+        font-size: 1.6rem;
+        margin-bottom: 1.5rem;
+        position: relative;
+        z-index: 1;
+        transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+    .kpi-card:hover .icon-wrapper {
+        transform: scale(1.15) rotate(5deg);
+    }
+    .kpi-content {
+        position: relative;
+        z-index: 1;
     }
     .kpi-label {
         font-family: 'Inter', sans-serif;
-        font-size: 0.85rem;
+        font-size: 0.9rem;
         text-transform: uppercase;
-        letter-spacing: 0.5px;
+        letter-spacing: 1.5px;
         color: #64748b;
-        font-weight: 600;
+        font-weight: 700;
+        margin-bottom: 0.5rem;
     }
     .kpi-value {
         font-family: 'Outfit', sans-serif;
-        font-size: 2.5rem;
-        font-weight: 700;
-        color: #111;
-        line-height: 1.2;
+        font-size: 3.5rem;
+        font-weight: 800;
+        color: #0f172a;
+        line-height: 1;
+        letter-spacing: -0.03em;
     }
-    
-    /* Charts & Action Cards */
+    .kpi-card.active-card .kpi-value {
+        background: linear-gradient(135deg, #7BA00E 0%, #5c7a0b 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+    .kpi-card.blocked-card .kpi-value {
+        background: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+
+    /* Cards content */
     .content-card {
         background: #ffffff;
-        border-radius: 16px;
-        padding: 1.5rem;
-        border: 1px solid rgba(0,0,0,0.06);
-        box-shadow: 0 4px 15px rgba(0,0,0,0.03);
+        border-radius: 24px;
+        padding: 2rem;
+        border: 1px solid rgba(0,0,0,0.04);
+        box-shadow: 0 10px 30px rgba(0,0,0,0.02);
         height: 100%;
+        transition: box-shadow 0.3s ease;
+    }
+    .content-card:hover {
+        box-shadow: 0 15px 40px rgba(0,0,0,0.04);
     }
     .card-heading {
         font-family: 'Outfit', sans-serif;
-        font-size: 1.2rem;
-        font-weight: 600;
-        color: #111;
-        margin-bottom: 1.5rem;
+        font-size: 1.3rem;
+        font-weight: 700;
+        color: #0f172a;
+        margin-bottom: 2rem;
         display: flex;
         align-items: center;
-        gap: 10px;
+        gap: 14px;
     }
-    .card-heading i { color: #7BA00E; }
+    .card-heading-icon {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 42px;
+        height: 42px;
+        border-radius: 12px;
+        background: rgba(123, 160, 14, 0.1);
+        color: #7BA00E;
+        font-size: 1.1rem;
+    }
     
+    /* Action Buttons */
     .action-btn {
         display: flex;
         align-items: center;
         justify-content: center;
-        gap: 10px;
-        padding: 1rem;
-        border-radius: 12px;
-        font-weight: 600;
+        gap: 12px;
+        padding: 1.25rem;
+        border-radius: 16px;
+        font-weight: 700;
         text-decoration: none;
-        transition: all 0.3s ease;
-        margin-bottom: 1rem;
+        transition: all 0.3s cubic-bezier(0.165, 0.84, 0.44, 1);
+        margin-bottom: 1.2rem;
+        font-size: 1.1rem;
+        font-family: 'Inter', sans-serif;
     }
     .btn-manage {
         background: #f8fafc;
-        color: #0f172a;
+        color: #334155;
         border: 1px solid #e2e8f0;
     }
     .btn-manage:hover {
-        background: #f1f5f9;
+        background: #ffffff;
+        color: #0f172a;
         border-color: #cbd5e1;
-        color: #000;
+        transform: translateY(-4px);
+        box-shadow: 0 12px 25px rgba(0,0,0,0.06);
     }
     .btn-profile {
-        background: #7BA00E;
+        background: linear-gradient(135deg, #8fbb11 0%, #7BA00E 100%);
         color: #fff;
+        border: none;
+        box-shadow: 0 8px 15px rgba(123, 160, 14, 0.2);
     }
     .btn-profile:hover {
-        background: #5c7a0b;
+        transform: translateY(-4px);
+        box-shadow: 0 15px 30px rgba(123, 160, 14, 0.35);
         color: #fff;
-        transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(123, 160, 14, 0.3);
     }
     
     /* Info List */
@@ -150,120 +226,167 @@
         margin: 0;
     }
     .info-list li {
-        padding: 1rem 0;
-        border-bottom: 1px solid #e2e8f0;
+        padding: 1.25rem 0;
+        border-bottom: 1px dashed #e2e8f0;
         display: flex;
         align-items: center;
-        gap: 12px;
+        gap: 16px;
         color: #334155;
-        font-weight: 500;
+        font-weight: 600;
+        font-size: 1rem;
+        font-family: 'Inter', sans-serif;
     }
-    .info-list li:last-child { border-bottom: none; }
-    .info-list i { color: #94a3b8; }
+    .info-list li:last-child { border-bottom: none; padding-bottom: 0; }
+    .info-list li .info-icon {
+        width: 42px;
+        height: 42px;
+        background: #f1f5f9;
+        color: #64748b;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.1rem;
+        transition: background 0.3s ease, color 0.3s ease;
+    }
+    .info-list li:hover .info-icon {
+        background: rgba(123, 160, 14, 0.1);
+        color: #7BA00E;
+    }
 </style>
 
-<!-- HEADER -->
-<div class="dash-header">
-    <div>
-        <h2 class="dash-title">Tableau de bord</h2>
-        <div class="dash-subtitle">Bienvenue, {{ app.session.get('admin_prenom') }} {{ app.session.get('admin_nom') }}</div>
-    </div>
-    <div class="badge-status">
-        <i class="fas fa-circle" style="font-size: 0.5rem; animation: pulse 2s infinite;"></i> En ligne
-    </div>
-</div>
-
-<!-- STATS -->
-<div class="row g-4 mb-4">
-    <!-- USERS -->
-    <div class="col-md-4">
-        <div class="kpi-card">
-            <div class="icon-wrapper" style="background: rgba(15, 23, 42, 0.05); color: #0f172a;">
-                <i class="fas fa-users"></i>
-            </div>
-            <div class="kpi-label">Total utilisateurs</div>
-            <div class="kpi-value">{{ total_users }}</div>
+<div class="dash-container">
+    <!-- HEADER -->
+    <div class="dash-header">
+        <div>
+            <h2 class="dash-title">Tableau de bord</h2>
+            <div class="dash-subtitle">Aperçu général de l'activité. Bienvenue, <strong>{{ app.session.get('admin_prenom') }} {{ app.session.get('admin_nom') }}</strong>.</div>
+        </div>
+        <div class="badge-status">
+            <i class="fas fa-circle" style="font-size: 0.5rem;"></i> En ligne
         </div>
     </div>
 
-    <!-- ACTIVE -->
-    <div class="col-md-4">
-        <div class="kpi-card">
-            <div class="icon-wrapper" style="background: rgba(123, 160, 14, 0.1); color: #7BA00E;">
-                <i class="fas fa-user-check"></i>
+    <!-- STATS -->
+    <div class="row g-4 mb-5">
+        <!-- USERS -->
+        <div class="col-md-4">
+            <div class="kpi-card">
+                <div class="icon-wrapper" style="background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); color: #fff; box-shadow: 0 8px 15px rgba(15,23,42,0.2);">
+                    <i class="fas fa-users"></i>
+                </div>
+                <div class="kpi-content">
+                    <div class="kpi-label">Total utilisateurs</div>
+                    <div class="kpi-value">{{ total_users }}</div>
+                </div>
             </div>
-            <div class="kpi-label">Comptes actifs</div>
-            <div class="kpi-value" style="color: #5c7a0b;">{{ active_users }}</div>
         </div>
-    </div>
 
-    <!-- BLOCKED -->
-    <div class="col-md-4">
-        <div class="kpi-card">
-            <div class="icon-wrapper" style="background: rgba(239, 68, 68, 0.1); color: #ef4444;">
-                <i class="fas fa-user-lock"></i>
+        <!-- ACTIVE -->
+        <div class="col-md-4">
+            <div class="kpi-card active-card">
+                <div class="icon-wrapper" style="background: linear-gradient(135deg, #8fbb11 0%, #7BA00E 100%); color: #fff; box-shadow: 0 8px 15px rgba(123, 160, 14, 0.25);">
+                    <i class="fas fa-user-check"></i>
+                </div>
+                <div class="kpi-content">
+                    <div class="kpi-label" style="color: #5c7a0b;">Comptes actifs</div>
+                    <div class="kpi-value">{{ active_users }}</div>
+                </div>
             </div>
-            <div class="kpi-label">Comptes bloqués</div>
-            <div class="kpi-value" style="color: #b91c1c;">{{ blocked_users }}</div>
         </div>
-    </div>
-</div>
 
-<!-- GRAPHS -->
-<div class="row g-4 mb-4">
-    <!-- EVOLUTION CHART -->
-    <div class="col-lg-8">
-        <div class="content-card">
-            <h5 class="card-heading">
-                <i class="fas fa-chart-area"></i> Évolution des Utilisateurs
-            </h5>
-            <div style="height: 300px; width: 100%;">
-                <canvas id="userGrowthChart"></canvas>
+        <!-- BLOCKED -->
+        <div class="col-md-4">
+            <div class="kpi-card blocked-card">
+                <div class="icon-wrapper" style="background: linear-gradient(135deg, #f87171 0%, #ef4444 100%); color: #fff; box-shadow: 0 8px 15px rgba(239, 68, 68, 0.25);">
+                    <i class="fas fa-user-lock"></i>
+                </div>
+                <div class="kpi-content">
+                    <div class="kpi-label" style="color: #b91c1c;">Comptes bloqués</div>
+                    <div class="kpi-value">{{ blocked_users }}</div>
+                </div>
             </div>
         </div>
     </div>
 
-    <!-- RATIO CHART -->
-    <div class="col-lg-4">
-        <div class="content-card">
-            <h5 class="card-heading">
-                <i class="fas fa-chart-pie"></i> Répartition des Comptes
-            </h5>
-            <div style="height: 300px; width: 100%; display: flex; justify-content: center; align-items: center;">
-                <canvas id="userRatioChart"></canvas>
+    <!-- GRAPHS -->
+    <div class="row g-4 mb-5">
+        <!-- EVOLUTION CHART -->
+        <div class="col-lg-8">
+            <div class="content-card">
+                <h5 class="card-heading">
+                    <div class="card-heading-icon"><i class="fas fa-chart-area"></i></div> 
+                    Évolution des Utilisateurs
+                </h5>
+                <div style="height: 320px; width: 100%;">
+                    <canvas id="userGrowthChart"></canvas>
+                </div>
             </div>
         </div>
-    </div>
-</div>
 
-<!-- ACTIONS & INFOS -->
-<div class="row g-4 mb-4">
-    <div class="col-lg-6">
-        <div class="content-card">
-            <h5 class="card-heading">
-                <i class="fas fa-bolt"></i> Actions Rapides
-            </h5>
-            <div class="d-flex flex-column" style="margin-top: 1.5rem;">
-                <a href="{{ path('admin_users') }}" class="action-btn btn-manage">
-                    <i class="fas fa-users-cog"></i> Gérer les Utilisateurs Actifs
-                </a>
-                <a href="{{ path('admin_profile') }}" class="action-btn btn-profile">
-                    <i class="fas fa-user-edit"></i> Modifier Mon Profil
-                </a>
+        <!-- RATIO CHART -->
+        <div class="col-lg-4">
+            <div class="content-card">
+                <h5 class="card-heading">
+                    <div class="card-heading-icon"><i class="fas fa-chart-pie"></i></div> 
+                    Répartition
+                </h5>
+                <div style="height: 320px; width: 100%; display: flex; justify-content: center; align-items: center;">
+                    <canvas id="userRatioChart"></canvas>
+                </div>
             </div>
         </div>
     </div>
 
-    <div class="col-lg-6">
-        <div class="content-card">
-            <h5 class="card-heading">
-                <i class="fas fa-info-circle"></i> Info Session
-            </h5>
-            <ul class="info-list">
-                <li><i class="fas fa-envelope"></i> {{ app.session.get('admin_email') ?? 'admin@agriconnect.com' }}</li>
-                <li><i class="fas fa-shield-alt"></i> Rôle : Administrateur Principal</li>
-                <li><i class="fas fa-clock"></i> Date : {{ "now"|date("d/m/Y - H:i") }}</li>
-            </ul>
+    <!-- ACTIONS & INFOS -->
+    <div class="row g-4 mb-5">
+        <div class="col-lg-6">
+            <div class="content-card">
+                <h5 class="card-heading">
+                    <div class="card-heading-icon"><i class="fas fa-bolt"></i></div> 
+                    Actions Rapides
+                </h5>
+                <div class="d-flex flex-column" style="margin-top: 1.5rem;">
+                    <a href="{{ path('admin_users') }}" class="action-btn btn-manage">
+                        <i class="fas fa-users-cog"></i> Gérer les Utilisateurs
+                    </a>
+                    <a href="{{ path('admin_profile') }}" class="action-btn btn-profile">
+                        <i class="fas fa-user-edit"></i> Modifier Mon Profil
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-6">
+            <div class="content-card">
+                <h5 class="card-heading">
+                    <div class="card-heading-icon"><i class="fas fa-shield-alt"></i></div> 
+                    Session Active
+                </h5>
+                <ul class="info-list">
+                    <li>
+                        <div class="info-icon"><i class="fas fa-envelope"></i></div>
+                        <div>
+                            <div style="font-size:0.8rem; color:#64748b; font-weight:700; text-transform:uppercase;">Email Connecté</div>
+                            <div>{{ app.session.get('admin_email') ?? 'admin@agriconnect.com' }}</div>
+                        </div>
+                    </li>
+                    <li>
+                        <div class="info-icon"><i class="fas fa-user-tag"></i></div>
+                        <div>
+                            <div style="font-size:0.8rem; color:#64748b; font-weight:700; text-transform:uppercase;">Rôle</div>
+                            <div>Administrateur Principal</div>
+                        </div>
+                    </li>
+                    <li>
+                        <div class="info-icon"><i class="fas fa-clock"></i></div>
+                        <div>
+                            <div style="font-size:0.8rem; color:#64748b; font-weight:700; text-transform:uppercase;">Horodatage</div>
+                            <div>{{ "now"|date("d/m/Y - H:i") }}</div>
+                        </div>
+                    </li>
+                </ul>
+            </div>
         </div>
     </div>
 </div>
@@ -274,12 +397,16 @@
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     
+    // Global Chart Settings for Premium Look
+    Chart.defaults.font.family = "'Inter', sans-serif";
+    Chart.defaults.color = '#64748b';
+    
     // --- 1. GROWTH LINE CHART ---
     const growthCtx = document.getElementById('userGrowthChart').getContext('2d');
     
     // Create elegant gradient for the line chart fill
-    let gradientFill = growthCtx.createLinearGradient(0, 0, 0, 300);
-    gradientFill.addColorStop(0, 'rgba(123, 160, 14, 0.4)');
+    let gradientFill = growthCtx.createLinearGradient(0, 0, 0, 320);
+    gradientFill.addColorStop(0, 'rgba(123, 160, 14, 0.5)');
     gradientFill.addColorStop(1, 'rgba(123, 160, 14, 0.0)');
 
     new Chart(growthCtx, {
@@ -291,14 +418,16 @@ document.addEventListener('DOMContentLoaded', function() {
                 data: [5, 12, 10, 18, 25, 23],
                 borderColor: '#7BA00E',
                 backgroundColor: gradientFill,
-                borderWidth: 3,
-                pointBackgroundColor: '#fff',
+                borderWidth: 4,
+                pointBackgroundColor: '#ffffff',
                 pointBorderColor: '#7BA00E',
-                pointBorderWidth: 2,
-                pointRadius: 4,
-                pointHoverRadius: 6,
+                pointBorderWidth: 3,
+                pointRadius: 5,
+                pointHoverRadius: 8,
+                pointHoverBackgroundColor: '#7BA00E',
+                pointHoverBorderColor: '#ffffff',
                 fill: true,
-                tension: 0.4 // Smooth curves
+                tension: 0.45 // Very smooth curves
             }]
         },
         options: {
@@ -307,22 +436,30 @@ document.addEventListener('DOMContentLoaded', function() {
             plugins: {
                 legend: { display: false },
                 tooltip: {
-                    backgroundColor: '#111',
-                    padding: 10,
-                    titleFont: { family: 'Inter', size: 13 },
-                    bodyFont: { family: 'Inter', size: 14, weight: 'bold' },
-                    displayColors: false
+                    backgroundColor: 'rgba(15, 23, 42, 0.9)',
+                    padding: 12,
+                    titleFont: { family: 'Inter', size: 13, weight: '600' },
+                    bodyFont: { family: 'Outfit', size: 16, weight: '700' },
+                    displayColors: false,
+                    cornerRadius: 10,
+                    boxPadding: 6
                 }
+            },
+            interaction: {
+                intersect: false,
+                mode: 'index',
             },
             scales: {
                 y: {
                     beginAtZero: true,
-                    grid: { color: 'rgba(0,0,0,0.04)', drawBorder: false },
-                    ticks: { font: { family: 'Inter' }, color: '#94a3b8' }
+                    border: { display: false },
+                    grid: { drawBorder: false },
+                    ticks: { font: { weight: '500' }, padding: 10 }
                 },
                 x: {
+                    border: { display: false },
                     grid: { display: false, drawBorder: false },
-                    ticks: { font: { family: 'Inter' }, color: '#94a3b8' }
+                    ticks: { font: { weight: '600' }, padding: 10, color: '#94a3b8' }
                 }
             }
         }
@@ -345,27 +482,34 @@ document.addEventListener('DOMContentLoaded', function() {
                 data: [finalActive, finalBlocked],
                 backgroundColor: ['#7BA00E', '#ef4444'],
                 hoverBackgroundColor: ['#8fbb11', '#f87171'],
-                borderWidth: 0,
-                hoverOffset: 4
+                borderWidth: 5, // Creates a gap effect between segments
+                borderColor: '#ffffff',
+                hoverOffset: 6
             }]
         },
         options: {
             responsive: true,
             maintainAspectRatio: false,
-            cutout: '75%',
+            cutout: '72%',
+            layout: {
+                padding: { top: 10, bottom: 20 }
+            },
             plugins: {
                 legend: {
                     position: 'bottom',
                     labels: {
-                        font: { family: 'Inter', size: 13, weight: '500' },
+                        font: { family: 'Inter', size: 14, weight: '600' },
                         color: '#334155',
                         usePointStyle: true,
-                        padding: 20
+                        pointStyle: 'circle',
+                        padding: 25
                     }
                 },
                 tooltip: {
-                    backgroundColor: '#111',
-                    bodyFont: { family: 'Inter', size: 14 },
+                    backgroundColor: 'rgba(15, 23, 42, 0.9)',
+                    padding: 12,
+                    bodyFont: { family: 'Inter', size: 15, weight: '700' },
+                    cornerRadius: 10,
                     callbacks: {
                         label: function(context) {
                             return ' ' + context.label + ' : ' + context.raw;

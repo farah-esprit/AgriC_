@@ -274,7 +274,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 btnPredict.innerHTML = '<i class="bi bi-arrow-repeat"></i> Relancer la simulation';
 
                 if (data.error) {
-                    alert('Erreur IA : ' + data.error);
+                    let msg = 'Erreur IA : ' + data.error;
+                    if (data.details) {
+                        msg += '\n\nDétails : ' + data.details;
+                    }
+                    alert(msg);
                     return;
                 }
 

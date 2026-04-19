@@ -191,7 +191,33 @@
             </div>
         </div>
     </div>
+    </div>
     {% endif %}
+
+    <!-- Section Intelligence Artificielle (Prédiction) -->
+    <div class="card shadow-sm border-0 mt-4" style="border-radius:15px; background: linear-gradient(145deg, #f3f4f6, #ffffff);">
+        <div class="card-body p-4 text-center">
+            <h5 class="fw-bold mb-3">🤖 Intelligence Artificielle - Prédiction des Réclamations</h5>
+            <p class="text-muted small mb-4">Notre modèle Scikit-Learn (Random Forest) analyse la capacité, la durée et la météo prévue pour anticiper le flux de réclamations.</p>
+            
+            <button id="btn-predict-ai" class="btn btn-dark px-4 py-2" style="border-radius:25px;">
+                <i class="bi bi-magic text-warning"></i> Lancer l'analyse prédictive IA
+            </button>
+
+            <div id="ai-loading" class="d-none mt-3">
+                <div class="spinner-border text-dark" role="status">
+                    <span class="visually-hidden">Chargement...</span>
+                </div>
+                <p class="mt-2 text-muted small fade-in"><em>Entraînement des arbres de décision en cours...</em></p>
+            </div>
+
+            <div id="ai-result" class="d-none mt-4 text-center p-3" style="border-radius:12px; background: #fff; border: 1px solid #e0e0e0;">
+                <h3 class="mb-0 fw-bold" id="ai-number">--</h3>
+                <p class="text-muted small">Réclamations estimées</p>
+                <div id="ai-alert" class="badge bg-success fs-6 px-3 py-2 mt-2">Niveau de risque acceptable</div>
+            </div>
+        </div>
+    </div>
 
 </div>
 {% endblock %}
@@ -225,4 +251,53 @@
         .openPopup();
 </script>
 {% endif %}
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const btnPredict = document.getElementById('btn-predict-ai');
+    if (btnPredict) {
+        btnPredict.addEventListener('click', function() {
+            // Afficher le chargement
+            btnPredict.classList.add('d-none');
+            document.getElementById('ai-loading').classList.remove('d-none');
+            document.getElementById('ai-result').classList.add('d-none');
+
+            // Appel AJAX vers le contrôleur
+            fetch('{{ path('app_evenement_predict_risk', {'idEvenement': evenement.idEvenement}) }}', {
+                method: 'POST',
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('ai-loading').classList.add('d-none');
+                btnPredict.classList.remove('d-none');
+                btnPredict.innerHTML = '<i class="bi bi-arrow-repeat"></i> Relancer la simulation';
+
+                if (data.error) {
+                    alert('Erreur IA : ' + data.error);
+                    return;
+                }
+
+                // Affichage du résultat
+                document.getElementById('ai-result').classList.remove('d-none');
+                document.getElementById('ai-number').textContent = data.prediction_reclamations + ' plaintes';
+                
+                const alertBadge = document.getElementById('ai-alert');
+                if (data.alerte_critique) {
+                    alertBadge.className = 'badge bg-danger fs-6 px-3 py-2 mt-2';
+                    alertBadge.innerHTML = '⚠️ ALERTE CRITIQUE : Risque élevé (' + data.ratio + '%) !';
+                } else {
+                    alertBadge.className = 'badge bg-success fs-6 px-3 py-2 mt-2';
+                    alertBadge.innerHTML = '✅ Risque maîtrisable (' + data.ratio + '%)';
+                }
+            })
+            .catch(error => {
+                document.getElementById('ai-loading').classList.add('d-none');
+                btnPredict.classList.remove('d-none');
+                alert("Erreur de connexion avec le module IA.");
+            });
+        });
+    }
+});
+</script>
 {% endblock %}

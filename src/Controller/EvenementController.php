@@ -9,9 +9,12 @@ use App\Repository\EvenementRepository;
 use App\Service\WeatherService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
+use Symfony\Component\Process\Process;
+use Symfony\Component\Process\Exception\ProcessFailedException;
 use Symfony\Component\Routing\Attribute\Route;
 
 #[Route('/evenement')]
@@ -157,5 +160,59 @@ class EvenementController extends AbstractController
         }
 
         return $this->redirectToRoute('app_evenement_index', [], Response::HTTP_SEE_OTHER);
+    }
+
+    #[Route('/{idEvenement}/predict-risk', name: 'app_evenement_predict_risk', methods: ['POST'])]
+    public function predictRisk(Evenement $evenement, WeatherService $weatherService): JsonResponse
+    {
+        $duree = 24;
+        if ($evenement->getDateDebut() && $evenement->getDateFin()) {
+            $diff = $evenement->getDateDebut()->diff($evenement->getDateFin());
+            $duree = ($diff->days * 24) + $diff->h;
+            if ($duree <= 0) $duree = 24;
+        }
+
+        $capacite = $evenement->getCapaciteMax() ?: 1000;
+
+        $temp = 25;
+        $pluie = 0.0;
+        $lieu = $evenement->getLieu();
+        if ($lieu) {
+            $city = explode(',', $lieu)[0];
+            $weather = $weatherService->getWeatherForCity($city);
+            if ($weather) {
+                $temp = $weather['temperature'];
+                // Simulation de pluie si on a d'autres données
+                $pluie = isset($weather['rain']) ? 5.0 : 0.0;
+            }
+        }
+
+        $scriptPath = $this->getParameter('kernel.project_dir') . '/predict_complaints.py';
+        
+        $process = new Process([
+            'python', 
+            $scriptPath, 
+            '--json',
+            '--capacite', (string)$capacite,
+            '--duree', (string)$duree,
+            '--temp', (string)$temp,
+            '--pluie', (string)$pluie
+        ]);
+
+        try {
+            $process->mustRun();
+            $output = $process->getOutput();
+            // L'output doit être du JSON
+            $data = json_decode($output, true);
+            if (!$data) {
+                return new JsonResponse(['error' => 'Erreur de parsing JSON de l\'IA'], 500);
+            }
+            return new JsonResponse($data);
+        } catch (ProcessFailedException $exception) {
+            return new JsonResponse([
+                'error' => 'Échec de l\'exécution du modèle IA',
+                'details' => $exception->getMessage()
+            ], 500);
+        }
     }
 }

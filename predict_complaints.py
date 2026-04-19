@@ -126,32 +126,57 @@ def verifier_alerte_risque(prediction_reclamations, capacite_max):
         return False
 
 # ==========================================
-# EXÉCUTION DU SCRIPT
+# EXÉCUTION DU SCRIPT (Mode CLI / Web API)
 # ==========================================
 if __name__ == "__main__":
-    # 1. Génération de la base de données (Phase Data Engineering)
+    import argparse
+    import json
+    import sys
+    import os
+
+    parser = argparse.ArgumentParser(description="Prédire les réclamations d'un événement")
+    parser.add_argument('--json', action='store_true', help='Activer la sortie JSON pour Symfony')
+    parser.add_argument('--capacite', type=int, default=2500, help='Capacité max')
+    parser.add_argument('--duree', type=int, default=48, help='Durée en heures')
+    parser.add_argument('--temp', type=int, default=34, help='Température en °C')
+    parser.add_argument('--pluie', type=float, default=0.0, help='Pluie en mm')
+    args = parser.parse_args()
+
+    # Si on est en mode JSON, on désactive temporairement le print standard pour ne pas polluer la réponse
+    if args.json:
+        old_stdout = sys.stdout
+        sys.stdout = open(os.devnull, 'w')
+
+    # 1. Génération et Entraînement
     df_train = generate_mock_data(1000)
-    
-    # 2. Initialisation et entraînement du système (Phase Machine Learning)
     predictor = EventRiskPredictor()
     predictor.train(df_train)
 
-    # 3. Validation métier (Simulation pour le Dashboard Administrateur)
-    print("--- Simulation pour le prochain événement de la semaine ---")
-    event_capacite = 2500       # Grand événement
-    event_duree_h = 48          # Sur deux jours
-    event_temp = 34             # Canicule prévue par l'API météo
-    event_pluie = 0.0           # Pas de pluie
-
-    print(f"Spécificités : Capacité={event_capacite}, Durée={event_duree_h}h, Météo={event_temp}°C avec {event_pluie}mm de pluie")
-
-    # Calcul prédictif
+    # 2. Prédiction
     volume_estime = predictor.predict_event_risk(
-        capacite_max=event_capacite,
-        duree_heures=event_duree_h,
-        temperature=event_temp,
-        pluie_mm=event_pluie
+        capacite_max=args.capacite,
+        duree_heures=args.duree,
+        temperature=args.temp,
+        pluie_mm=args.pluie
     )
 
-    # Déclenchement ou non de l'alerte
-    verifier_alerte_risque(volume_estime, event_capacite)
+    # 3. Évaluation
+    SEUIL_CRITIQUE_VOLUME = 30
+    SEUIL_CRITIQUE_RATIO = 0.02
+    ratio_plaintes = volume_estime / args.capacite if args.capacite > 0 else 0
+    alerte = (volume_estime >= SEUIL_CRITIQUE_VOLUME) or (ratio_plaintes >= SEUIL_CRITIQUE_RATIO)
+
+    # 4. Sortie
+    if args.json:
+        # Réactiver la sortie standard pour imprimer le JSON
+        sys.stdout.close()
+        sys.stdout = old_stdout
+        print(json.dumps({
+            "prediction_reclamations": volume_estime,
+            "alerte_critique": bool(alerte),
+            "ratio": round(ratio_plaintes * 100, 2)
+        }))
+    else:
+        print("--- Simulation pour le prochain événement ---")
+        print(f"Spécificités : Capacité={args.capacite}, Durée={args.duree}h, Météo={args.temp}°C avec {args.pluie}mm de pluie")
+        verifier_alerte_risque(volume_estime, args.capacite)

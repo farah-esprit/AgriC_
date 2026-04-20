@@ -1,13 +1,12 @@
 parameters:
   images_directory: '%kernel.project_dir%/public/uploads/images'
-  openweather_api_key: '%env(OPENWEATHER_API_KEY)%'
+  open_weather_api_key: '%env(OPEN_WEATHER_API_KEY)%'
+  app.gemini_api_key: '%env(GEMINI_API_KEY)%'
 
 services:
   _defaults:
     autowire: true
     autoconfigure: true
-    bind:
-      $images_directory: '%images_directory%'
 
   App\:
     resource: '../src/'
@@ -18,19 +17,5 @@ services:
 
   App\Service\WeatherService:
     arguments:
-      $apiKey: '%openweather_api_key%'
-
-  App\Service\DiagnosticAiService:
-    arguments:
-      $httpClient: '@http_client'
-      $logger: '@logger'
-
-  App\Service\PlantNetService:
-    arguments:
-      $httpClient: '@http_client'
-      $logger: '@logger'
-      $plantNetApiKey: '%env(PLANTNET_API_KEY)%'
-
-  App\Doctrine\Migrations\SimpleTableMetadataStorage:
-    arguments:
-      $connection: '@doctrine.dbal.default_connection'
+      $openWeatherApiKey: '%open_weather_api_key%'
+

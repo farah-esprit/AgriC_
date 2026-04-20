@@ -1,0 +1,271 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Mon Profil - AgriConnect Forum{% endblock %}
+
+{% block body %}
+<style>
+    /* Cinematic Design System */
+    :root {
+        --glass-bg: rgba(255, 255, 255, 0.9);
+        --glass-border: rgba(255, 255, 255, 0.5);
+    }
+
+    .glass-card {
+        background: var(--glass-bg);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border: 1px solid var(--glass-border);
+        border-radius: 24px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+        transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        overflow: hidden;
+        margin-bottom: 2rem;
+    }
+
+    .glass-card:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 15px 45px rgba(0, 0, 0, 0.1);
+    }
+
+    .premium-header {
+        background: linear-gradient(135deg, #166534 0%, #15803d 100%);
+        color: white;
+        padding: 40px;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .premium-header::before {
+        content: "";
+        position: absolute;
+        top: -50%;
+        right: -20%;
+        width: 300px;
+        height: 300px;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 50%;
+    }
+
+    .stat-card-premium {
+        padding: 25px;
+        border-radius: 20px;
+        background: white;
+        border: 1px solid #f1f5f9;
+        transition: all 0.3s ease;
+        position: relative;
+    }
+
+    .stat-card-premium:hover {
+        border-color: var(--primary-color);
+        background: rgba(var(--primary-color-rgb), 0.02);
+    }
+
+    .stat-icon {
+        width: 45px;
+        height: 45px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.4rem;
+        margin-bottom: 15px;
+    }
+
+    .activity-item {
+        padding: 15px;
+        border-radius: 15px;
+        border-bottom: 1px solid #f1f5f9;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        color: inherit;
+        display: block;
+    }
+
+    .activity-item:hover {
+        background: #f8fafc;
+        padding-left: 20px;
+        color: var(--primary-color);
+    }
+
+    .activity-item:last-child { border-bottom: none; }
+</style>
+
+<div class="container py-5">
+    <div class="row align-items-center mb-5">
+        <div class="col-lg-8">
+            <h1 class="display-4 fw-black mb-0" style="color: #0f172a; letter-spacing: -1px;">
+                Espace <span style="color: var(--primary-color);">Personnel</span>
+            </h1>
+            <p class="text-muted lead">{{ user.nom }} • Membre AgriConnect depuis {{ user.dateCreation ? user.dateCreation|date('M Y') : 'Rejoint récemment' }}</p>
+        </div>
+        <div class="col-lg-4 text-lg-end">
+            <a href="{{ path('thread_index') }}" class="btn btn-outline-dark rounded-pill px-4">
+                <i class="bi bi-arrow-left me-2"></i>Retour au Forum
+            </a>
+        </div>
+    </div>
+
+    <!-- Stories Bar (Cinematic Version) -->
+    <div class="mb-5">
+        {% include 'story/_stories_bar.html.twig' %}
+    </div>
+
+    <div class="row g-4">
+        <!-- 👤 IDENTITY CARD -->
+        <div class="col-lg-4">
+            <div class="glass-card h-100 mb-0">
+                <div class="premium-header text-center">
+                    <div style="width: 100px; height: 100px; background: rgba(255,255,255,0.2); border-radius: 30px; margin: 0 auto 20px; display: flex; align-items: center; justify-content: center; font-size: 3rem; backdrop-filter: blur(10px); color: white;">
+                        {{ user.nom|first|upper }}
+                    </div>
+                    <h3 class="mb-1 fw-black">{{ user.nom }}</h3>
+                    <div class="d-flex justify-content-center gap-2 mt-2">
+                        <span class="badge bg-white text-dark px-3 py-2 rounded-pill shadow-sm" style="font-weight: 700; font-size: 0.75rem;">
+                            <i class="bi bi-patch-check-fill text-primary me-1"></i> {{ user.rank }}
+                        </span>
+                        <span class="badge bg-white text-success px-3 py-2 rounded-pill shadow-sm" style="font-weight: 700; font-size: 0.75rem;">
+                             {{ user.xp }} XP
+                        </span>
+                    </div>
+                </div>
+                
+                <div class="card-body p-4">
+                    <div class="mb-4">
+                        <label class="small text-uppercase fw-bold text-muted letter-spacing-1 mb-3">Informations de contact</label>
+                        <div class="d-flex align-items-center gap-3 mb-3">
+                            <div class="stat-icon bg-light text-primary mb-0"><i class="bi bi-envelope"></i></div>
+                            <div>
+                                <div class="small text-muted">Email</div>
+                                <div class="fw-bold">{{ user.email }}</div>
+                            </div>
+                        </div>
+                        <div class="d-flex align-items-center gap-3 mb-3">
+                            <div class="stat-icon bg-light text-success mb-0"><i class="bi bi-check-circle"></i></div>
+                            <div>
+                                <div class="small text-muted">Statut du compte</div>
+                                <span class="badge bg-success-soft text-success">{{ user.etatCompte }}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 🛡️ SECURITY / STRIKES -->
+                    <div style="background: #fff5f5; border-radius: 20px; padding: 20px; border: 1px solid #ffe3e3;">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span class="small fw-black text-danger uppercase"><i class="bi bi-shield-exclamation me-1"></i> Risque Sanction</span>
+                            <span class="fw-black text-danger">{{ user.strikes }}/5</span>
+                        </div>
+                        <div class="progress" style="height: 10px; border-radius: 20px; background: rgba(0,0,0,0.05);">
+                            {% set strike_percent = (user.strikes / 5) * 100 %}
+                            <div class="progress-bar bg-danger" style="width: {{ strike_percent }}%; border-radius: 20px;"></div>
+                        </div>
+                    </div>
+
+                    <div class="mt-4 pt-4 border-top">
+                        <a href="{{ path('thread_new') }}" class="btn btn-primary w-100 rounded-pill py-3 fw-bold mb-3 shadow-sm">
+                            <i class="bi bi-plus-circle me-2"></i>Nouveau Sujet
+                        </a>
+                        <a href="{{ path('app_logout') }}" class="btn btn-outline-danger w-100 rounded-pill py-2">
+                            Se déconnecter
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 📊 DASHBOARD & ACTIVITY -->
+        <div class="col-lg-8">
+            <div class="glass-card p-4 p-md-5 mb-4">
+                <div class="d-flex align-items-center gap-3 mb-5">
+                    <div class="stat-icon bg-success text-white mb-0"><i class="bi bi-grid-fill"></i></div>
+                    <h3 class="mb-0 fw-black">Tableau de Bord</h3>
+                </div>
+
+                <!-- Stats Grid -->
+                <div class="row g-4 mb-5">
+                    <div class="col-md-3">
+                        <div class="stat-card-premium text-center border-bottom-success" style="border-bottom: 4px solid #16a34a !important;">
+                            <div class="stat-icon bg-success-soft text-success mx-auto"><i class="bi bi-chat-dots"></i></div>
+                            <h2 class="fw-black mb-1">{{ threadsCount }}</h2>
+                            <div class="small text-muted fw-bold">Sujets</div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="stat-card-premium text-center border-bottom-info" style="border-bottom: 4px solid #0ea5e9 !important;">
+                            <div class="stat-icon bg-blue-soft text-info mx-auto"><i class="bi bi-reply"></i></div>
+                            <h2 class="fw-black mb-1">{{ responsesCount }}</h2>
+                            <div class="small text-muted fw-bold">Réponses</div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="stat-card-premium text-center border-bottom-danger" style="border-bottom: 4px solid #ef4444 !important;">
+                            <div class="stat-icon bg-red-soft text-danger mx-auto"><i class="bi bi-heart"></i></div>
+                            <h2 class="fw-black mb-1">{{ totalLikesReceived }}</h2>
+                            <div class="small text-muted fw-bold">J'aime 👍</div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="stat-card-premium text-center border-bottom-warning" style="border-bottom: 4px solid #f59e0b !important;">
+                            <div class="stat-icon bg-yellow-soft text-warning mx-auto"><i class="bi bi-stars"></i></div>
+                            <h2 class="fw-black mb-1">{{ totalLikesGiven }}</h2>
+                            <div class="small text-muted fw-bold">Donnés</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Message d'encouragement dynamique -->
+                <div class="p-4 rounded-4 mb-5" style="background: linear-gradient(90deg, #f8fafc 0%, #f1f5f9 100%); border: 1px solid #e2e8f0;">
+                    <div class="d-flex align-items-center gap-3">
+                        <div style="font-size: 2.5rem;">🚜</div>
+                        <div>
+                            <h5 class="fw-black mb-1">Votre impact sur la communauté</h5>
+                            <p class="mb-0 text-muted">{% if threadsCount > 0 %}Vous êtes un pilier de notre réseau agricole avec <strong>{{ threadsCount }}</strong> sujets partagés !{% else %}Commencez à partager vos expériences pour augmenter votre impact.{% endif %}</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Partages & Activité -->
+                <div class="row g-5">
+                    <div class="col-md-12">
+                        <h4 class="fw-black mb-4 d-flex align-items-center gap-2">
+                            <i class="bi bi-share text-primary"></i> Mes Partages
+                        </h4>
+                        {% if user.sharedThreads|length > 0 %}
+                            <div class="d-flex flex-column gap-2">
+                                {% for shared in user.sharedThreads %}
+                                    <a href="{{ path('thread_show', {id: shared.id}) }}" class="activity-item">
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <div>
+                                                <div class="fw-bold fs-6 mb-0">{{ shared.title }}</div>
+                                                <div class="small text-muted">Publié par {{ shared.authorName }} • {{ shared.createdAt|date('d/m/Y') }}</div>
+                                            </div>
+                                            <i class="bi bi-chevron-right op-5"></i>
+                                        </div>
+                                    </a>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            <div class="text-center py-5 border-dashed rounded-4">
+                                <i class="bi bi-share fs-1 text-muted opacity-25 d-block mb-2"></i>
+                                <p class="text-muted mb-0">Aucun partage pour le moment.</p>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* Utility classes for the new design */
+    .fw-black { font-weight: 900 !important; }
+    .bg-success-soft { background-color: rgba(22, 163, 74, 0.1); }
+    .bg-blue-soft { background-color: rgba(14, 165, 233, 0.1); }
+    .bg-red-soft { background-color: rgba(239, 68, 68, 0.1); }
+    .bg-yellow-soft { background-color: rgba(245, 158, 11, 0.1); }
+    .border-dashed { border: 2px dashed #e2e8f0; }
+    .uppercase { text-transform: uppercase; }
+    .letter-spacing-1 { letter-spacing: 1px; }
+    .op-5 { opacity: 0.5; }
+</style>
+{% endblock %}

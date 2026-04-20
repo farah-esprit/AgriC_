@@ -1,0 +1,80 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Modifier le sujet - Forum AgriConnect{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <link rel="stylesheet" href="{{ asset('css/forum.css') }}">
+{% endblock %}
+
+{% block body %}
+<div class="container">
+    <!-- Header -->
+    <div class="forum-header">
+        <h1>🌾 Modifier le sujet</h1>
+        <p class="subtitle">Mettez à jour votre sujet</p>
+    </div>
+
+    <!-- Navigation -->
+    <div class="nav">
+        <div class="nav-links">
+            <a href="{{ path('thread_index') }}">← Retour à l'accueil</a>
+            <a href="{{ path('thread_show', {'id': thread.id}) }}">Voir le sujet</a>
+            {% if app.user %}
+                <a href="{{ path('app_profile') }}">Mon profil</a>
+                <a href="{{ path('app_logout') }}">Déconnexion</a>
+            {% else %}
+                <a href="{{ path('app_signin') }}">Connexion</a>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Edit Thread Form -->
+    <div class="form-container">
+        <div class="card">
+            {{ form_start(form) }}
+                <div class="form-group">
+                    {{ form_label(form.title) }}
+                    {{ form_widget(form.title, {'attr': {'class': 'form-control'}}) }}
+                    {{ form_errors(form.title) }}
+                </div>
+
+                <div class="form-group">
+                    {{ form_label(form.content) }}
+                    {{ form_widget(form.content, {'attr': {'rows': 8, 'class': 'form-control'}}) }}
+                    {{ form_errors(form.content) }}
+                </div>
+
+                <div class="form-group">
+                    {{ form_label(form.category) }}
+                    {{ form_widget(form.category, {'attr': {'class': 'form-control'}}) }}
+                    {{ form_errors(form.category) }}
+                </div>
+
+                <div class="form-group">
+                    {{ form_label(form.tags) }}
+                    {{ form_widget(form.tags, {'attr': {'placeholder': 'Séparez les tags par des virgules', 'class': 'form-control'}}) }}
+                    {{ form_errors(form.tags) }}
+                </div>
+
+                <div class="form-group">
+                    {{ form_label(form.attachments) }}
+                    {{ form_widget(form.attachments, {'attr': {'class': 'form-control'}}) }}
+                    {{ form_errors(form.attachments) }}
+                </div>
+
+                <div class="form-group">
+                    {{ form_label(form.status) }}
+                    {{ form_widget(form.status, {'attr': {'class': 'form-control'}}) }}
+                    {{ form_errors(form.status) }}
+                </div>
+
+                <div style="display: flex; gap: 10px; margin-top: 30px;">
+                    <button type="submit" class="btn btn-primary">Mettre à jour</button>
+                    <a href="{{ path('thread_show', {'id': thread.id}) }}" class="btn btn-secondary">Annuler</a>
+                </div>
+            {{ form_end(form) }}
+        </div>
+    </div>
+</div>
+{% endblock %}

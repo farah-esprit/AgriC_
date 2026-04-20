@@ -1,0 +1,86 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Nouveau sujet - Forum AgriConnect{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <link rel="stylesheet" href="{{ asset('css/forum.css') }}">
+{% endblock %}
+
+{% block body %}
+<div class="container">
+    <!-- Header -->
+    <div class="forum-header">
+        <h1>🌾 Créer un nouveau sujet</h1>
+        <p class="subtitle">Partagez vos idées avec la communauté agricole</p>
+    </div>
+
+    <!-- Navigation -->
+    <div class="nav">
+        <div class="nav-links">
+            <a href="{{ path('thread_index') }}">← Retour à l'accueil</a>
+            {% if app.user %}
+                <a href="{{ path('app_profile') }}">Mon profil</a>
+                <a href="{{ path('app_logout') }}">Déconnexion</a>
+            {% else %}
+                <a href="{{ path('app_signin') }}">Connexion</a>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Flash messages -->
+    {% for message in app.flashes('success') %}
+        <div class="alert alert-success">
+            {{ message }}
+        </div>
+    {% endfor %}
+
+    {% for message in app.flashes('error') %}
+        <div class="alert alert-error">
+            {{ message }}
+        </div>
+    {% endfor %}
+
+    <!-- Create Thread Form -->
+    <div class="form-container">
+        <div class="card">
+            {{ form_start(form) }}
+                <div class="form-group">
+                    {{ form_label(form.title) }}
+                    {{ form_widget(form.title, {'attr': {'class': 'form-control'}}) }}
+                    {{ form_errors(form.title) }}
+                </div>
+
+                <div class="form-group">
+                    {{ form_label(form.content) }}
+                    {{ form_widget(form.content, {'attr': {'rows': 8, 'class': 'form-control'}}) }}
+                    {{ form_errors(form.content) }}
+                </div>
+
+                <div class="form-group">
+                    {{ form_label(form.category) }}
+                    {{ form_widget(form.category, {'attr': {'class': 'form-control'}}) }}
+                    {{ form_errors(form.category) }}
+                </div>
+
+                <div class="form-group">
+                    {{ form_label(form.tags) }}
+                    {{ form_widget(form.tags, {'attr': {'placeholder': 'Séparez les tags par des virgules', 'class': 'form-control'}}) }}
+                    {{ form_errors(form.tags) }}
+                </div>
+
+                <div class="form-group">
+                    {{ form_label(form.attachments) }}
+                    {{ form_widget(form.attachments, {'attr': {'class': 'form-control'}}) }}
+                    {{ form_errors(form.attachments) }}
+                </div>
+
+                <div style="display: flex; gap: 12px; margin-top: 32px;">
+                    <button type="submit" class="btn btn-primary" style="flex: 1;">✨ Publier le sujet</button>
+                    <a href="{{ path('thread_index') }}" class="btn btn-secondary" style="flex: 0 0 auto;">Annuler</a>
+                </div>
+            {{ form_end(form) }}
+        </div>
+    </div>
+</div>
+{% endblock %}

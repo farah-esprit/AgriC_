@@ -2,6 +2,17 @@
 
 {% block title %}Liste des Événements{% endblock %}
 
+{% block stylesheets %}
+<style>
+    .star-rating { display: inline-flex; flex-direction: row-reverse; gap: 2px; }
+    .star-rating input { display: none; }
+    .star-rating label { cursor: pointer; font-size: 1.3rem; color: #ddd; transition: color 0.15s; }
+    .star-rating input:checked ~ label,
+    .star-rating label:hover,
+    .star-rating label:hover ~ label { color: #ffc107; }
+</style>
+{% endblock %}
+
 {% block body %}
 <div class="container mt-5 pt-5 mb-5">
     <div class="d-flex justify-content-between align-items-center mb-4">
@@ -11,9 +22,47 @@
         </a>
     </div>
 
+    <!-- Search and Sort Bar -->
+    <div class="card shadow-sm border-0 p-3 mb-5" style="border-radius: 15px;">
+        <form method="get" class="row g-3 align-items-end">
+            <div class="col-md-5">
+                <label class="form-label small fw-bold">Recherche</label>
+                <div class="input-group">
+                    <span class="input-group-text bg-white border-end-0"><i class="bi bi-search"></i></span>
+                    <input type="text" name="q" class="form-control border-start-0" placeholder="Rechercher par titre, lieu..." value="{{ currentSearch }}">
+                </div>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label small fw-bold">Trier par</label>
+                <select name="sort" class="form-select">
+                    <option value="dateDebut" {{ currentSort == 'dateDebut' ? 'selected' : '' }}>Date</option>
+                    <option value="titre" {{ currentSort == 'titre' ? 'selected' : '' }}>Titre</option>
+                    <option value="lieu" {{ currentSort == 'lieu' ? 'selected' : '' }}>Lieu</option>
+                    <option value="capaciteMax" {{ currentSort == 'capaciteMax' ? 'selected' : '' }}>Capacité</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label small fw-bold">Ordre</label>
+                <select name="direction" class="form-select">
+                    <option value="ASC" {{ currentDirection == 'ASC' ? 'selected' : '' }}>Croissant</option>
+                    <option value="DESC" {{ currentDirection == 'DESC' ? 'selected' : '' }}>Décroissant</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-success w-100"><i class="bi bi-filter"></i> Filtrer</button>
+            </div>
+        </form>
+    </div>
+
     {% for message in app.flashes('success') %}
         <div class="alert alert-success alert-dismissible fade show shadow-sm">
             ✅ {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    {% endfor %}
+    {% for message in app.flashes('error') %}
+        <div class="alert alert-danger alert-dismissible fade show shadow-sm">
+            ❌ {{ message }}
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
     {% endfor %}
@@ -24,13 +73,33 @@
                 <div class="col">
                     <div class="card h-100 shadow border-0" style="border-radius:15px;">
                         <div class="card-header text-white px-4 py-3" style="background: linear-gradient(to right,#4a7c3a,#66bb6a); border-radius:15px 15px 0 0;">
-                            <h5 class="mb-0">🎉 {{ evenement.titre }}</h5>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <h5 class="mb-0">🎉 {{ evenement.titre }}</h5>
+                                <div class="badge bg-white text-success shadow-sm px-2 py-1">
+                                    <i class="bi bi-star-fill text-warning"></i> {{ evenement.averageRating }} <small class="text-muted">({{ evenement.notes|length }})</small>
+                                </div>
+                            </div>
                         </div>
                         <div class="card-body px-4 py-3">
-                            <p class="mb-2 text-muted small"><i class="bi bi-calendar"></i> Du {{ evenement.dateDebut }} au {{ evenement.dateFin }}</p>
+                            <p class="mb-2 text-muted small"><i class="bi bi-calendar"></i> Du {{ evenement.dateDebut ? evenement.dateDebut|date('d/m/Y H:i') : 'N/A' }} au {{ evenement.dateFin ? evenement.dateFin|date('d/m/Y H:i') : 'N/A' }}</p>
                             <p class="mb-2"><strong>📍 Lieu:</strong> {{ evenement.lieu ?: 'Non défini' }}</p>
                             <p class="mb-2"><strong>👥 Capacité:</strong> {{ evenement.capaciteMax ?: 'Illimitée' }}</p>
                             <p class="mb-3 text-truncate">{{ evenement.description }}</p>
+
+                            <!-- Inline Star Rating -->
+                            {% if app.session.get('user_id') %}
+                            <form action="{{ path('app_evenement_rate', {'idEvenement': evenement.idEvenement}) }}" method="post" class="mb-2">
+                                <div class="d-flex align-items-center gap-2">
+                                    <span class="small fw-bold text-muted">Notez :</span>
+                                    <div class="star-rating">
+                                        {% for i in 5..1 %}
+                                            <input type="radio" name="note" value="{{ i }}" id="ev{{ evenement.idEvenement }}-star{{ i }}" onchange="this.form.submit()">
+                                            <label for="ev{{ evenement.idEvenement }}-star{{ i }}"><i class="bi bi-star-fill"></i></label>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                            </form>
+                            {% endif %}
                         </div>
                         <div class="card-footer bg-white border-0 px-4 pb-4">
                             <div class="d-flex gap-2">

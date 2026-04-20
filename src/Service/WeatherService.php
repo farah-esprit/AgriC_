@@ -4,149 +4,116 @@ namespace App\Service;
 
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 
-/**
- * Service d'intégration avec l'API OpenWeatherMap.
- * Utilisé par le module Culture pour afficher la météo de chaque localisation.
- */
 class WeatherService
 {
-    private const BASE_URL     = 'https://api.openweathermap.org/data/2.5/weather';
-    private const FORECAST_URL = 'https://api.openweathermap.org/data/2.5/forecast';
-    private const DEFAULT_CITY = 'Tunis';
+    private HttpClientInterface $httpClient;
+    private string $apiKey;
 
-    public function __construct(
-        private readonly HttpClientInterface $httpClient,
-        private readonly string $apiKey
-    ) {}
-
-    /**
-     * Récupère les données météo pour une ville/localisation donnée.
-     * Si la ville est inconnue, retourne la météo de Tunis par défaut.
-     */
-    public function getWeather(string $location): ?array
+    public function __construct(HttpClientInterface $httpClient, string $openWeatherApiKey)
     {
-        dump('=== WeatherService ===');
-        dump('apiKey: ' . substr($this->apiKey, 0, 10) . '...');
-        dump('location: ' . $location);
-
-        if (empty($this->apiKey) || $this->apiKey === 'YOUR_OPENWEATHER_API_KEY') {
-            dump('❌ Clé API vide ou placeholder !');
-            return null;
-        }
-
-        try {
-            $response = $this->httpClient->request('GET', self::BASE_URL, [
-                'query' => [
-                    'q'     => $location,
-                    'appid' => $this->apiKey,
-                    'units' => 'metric',
-                    'lang'  => 'fr',
-                ],
-                'timeout' => 5,
-            ]);
-
-            $statusCode = $response->getStatusCode();
-            dump('statusCode: ' . $statusCode);
-
-            if ($statusCode !== 200) {
-                dump('❌ Erreur HTTP ' . $statusCode . ' → fallback Tunis');
-                if ($location !== self::DEFAULT_CITY) {
-                    return $this->getWeather(self::DEFAULT_CITY);
-                }
-                return null;
-            }
-
-            $data = $response->toArray();
-            dump('✅ Données reçues pour: ' . $data['name']);
-
-            return $this->formatWeatherData($data, $location);
-
-        } catch (\Throwable $e) {
-            dump('❌ Exception: ' . $e->getMessage());
-            return null;
-        }
+        $this->httpClient = $httpClient;
+        $this->apiKey = $openWeatherApiKey;
     }
 
     /**
-     * Récupère les prévisions météo sur 5 jours.
+     * Récupère la météo actuelle pour une ville donnée
      */
-    public function getForecast(string $location): ?array
+    public function getWeatherForCity(string $city): ?array
     {
-        if (empty($this->apiKey) || $this->apiKey === 'YOUR_OPENWEATHER_API_KEY') {
+        // Si la clé API n'est pas configurée, on retourne des données fictives pour la démonstration (très utile pour la soutenance !)
+        if (empty($this->apiKey) || $this->apiKey === 'votre_cle_ici') {
+            return [
+                'temperature' => random_int(20, 35),
+                'feels_like' => random_int(22, 38),
+                'humidity' => random_int(40, 80),
+                'description' => 'Ensoleillé (Mock)',
+                'icon_url' => 'https://openweathermap.org/img/wn/01d@2x.png',
+                'wind_speed' => random_int(10, 30),
+                'city_name' => ucfirst($city),
+                'country' => 'TN',
+            ];
+        }
+
+        if (empty($city)) {
             return null;
         }
 
         try {
-            $response = $this->httpClient->request('GET', self::FORECAST_URL, [
+            $response = $this->httpClient->request('GET', 'https://api.openweathermap.org/data/2.5/weather', [
                 'query' => [
-                    'q'     => $location,
+                    'q' => $city,
                     'appid' => $this->apiKey,
                     'units' => 'metric',
-                    'lang'  => 'fr',
+                    'lang' => 'fr',
                 ],
-                'timeout' => 5,
             ]);
 
             if ($response->getStatusCode() !== 200) {
                 return null;
             }
 
-            return $response->toArray();
-        } catch (\Throwable $e) {
+            $data = $response->toArray();
+
+            return [
+                'temperature' => round($data['main']['temp']),
+                'feels_like' => round($data['main']['feels_like']),
+                'humidity' => $data['main']['humidity'],
+                'description' => ucfirst($data['weather'][0]['description']),
+                'icon' => $data['weather'][0]['icon'],
+                'icon_url' => 'https://openweathermap.org/img/wn/' . $data['weather'][0]['icon'] . '@2x.png',
+                'wind_speed' => round($data['wind']['speed'] * 3.6),
+                'city_name' => $data['name'],
+                'country' => $data['sys']['country'] ?? '',
+            ];
+        } catch (\Exception $e) {
             return null;
         }
     }
 
     /**
-     * Vérifie si une ville est reconnue par OpenWeatherMap.
+     * Récupère les coordonnées GPS d'une ville via Nominatim (OpenStreetMap)
      */
-    public function isValidLocation(string $location): bool
+    public function getCoordinatesForCity(string $city): ?array
     {
-        if (empty($this->apiKey) || $this->apiKey === 'YOUR_OPENWEATHER_API_KEY') {
-            return false;
+        if (empty($city)) {
+            return null;
         }
 
         try {
-            $response = $this->httpClient->request('GET', self::BASE_URL, [
+            $response = $this->httpClient->request('GET', 'https://nominatim.openstreetmap.org/search', [
                 'query' => [
-                    'q'     => $location,
-                    'appid' => $this->apiKey,
-                    'units' => 'metric',
+                    'q' => $city,
+                    'format' => 'json',
+                    'limit' => 1,
                 ],
-                'timeout' => 5,
+                'headers' => [
+                    // Il est important d'avoir un User-Agent valide pour éviter l'erreur 403 Forbidden de Nominatim
+                    'User-Agent' => 'AgriConnectApp/1.0 (contact@agriconnect.com)',
+                ],
             ]);
 
-            return $response->getStatusCode() === 200;
+            $data = $response->toArray();
 
-        } catch (\Throwable $e) {
-            return false;
+            // Fallback: Si Nominatim ne trouve rien, on donne des coordonnées par défaut (Tunis) pour la démo
+            if (empty($data)) {
+                return [
+                    'lat' => 36.8065,
+                    'lon' => 10.1815,
+                    'display_name' => 'Tunis, Tunisie (Par défaut)',
+                ];
+            }
+
+            return [
+                'lat' => (float) $data[0]['lat'],
+                'lon' => (float) $data[0]['lon'],
+                'display_name' => $data[0]['display_name'],
+            ];
+        } catch (\Exception $e) {
+             return [
+                'lat' => 36.8065,
+                'lon' => 10.1815,
+                'display_name' => 'Tunis, Tunisie (Mode Hors-ligne)',
+            ];
         }
-    }
-
-    /**
-     * Retourne l'URL de l'icône météo OpenWeatherMap.
-     */
-    public function getIconUrl(string $iconCode): string
-    {
-        return "https://openweathermap.org/img/wn/{$iconCode}@2x.png";
-    }
-
-    /**
-     * Formate les données brutes de l'API en tableau structuré.
-     */
-    private function formatWeatherData(array $data, string $location): array
-    {
-        return [
-            'ville'       => $data['name'] ?? $location,
-            'pays'        => $data['sys']['country'] ?? '',
-            'temperature' => round($data['main']['temp'] ?? 0, 1),
-            'ressenti'    => round($data['main']['feels_like'] ?? 0, 1),
-            'humidite'    => $data['main']['humidity'] ?? 0,
-            'description' => ucfirst($data['weather'][0]['description'] ?? ''),
-            'icone'       => $data['weather'][0]['icon'] ?? '01d',
-            'vent'        => round(($data['wind']['speed'] ?? 0) * 3.6, 1),
-            'fallback'    => ($data['name'] ?? $location) === self::DEFAULT_CITY
-                                && strtolower($location) !== strtolower(self::DEFAULT_CITY),
-        ];
     }
 }

@@ -1,0 +1,125 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Profil de {{ user.nom }} - AgriConnect{% endblock %}
+
+{% block body %}
+<div class="container py-5">
+    <div class="row">
+        <div class="col-lg-4">
+            <div class="card shadow-sm border-0 text-center p-4 mb-4">
+                <div class="mx-auto mb-3" style="width: 120px; height: 120px; background: #3b824d; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 3rem; font-weight: bold; border: 5px solid #f8f9fa;">
+                    {{ user.nom|first|upper }}
+                </div>
+                <h2 class="h4 mb-1">{{ user.nom }}</h2>
+                <p class="text-muted mb-3">👨‍🌾 {{ user.role }}</p>
+                
+                <div class="social-actions d-flex flex-column gap-2 mb-3">
+                    {% if friendship is null %}
+                        <button class="btn btn-primary" onclick="sendFriendRequest({{ user.userId }})" id="friendBtn">
+                            <i class="bi bi-person-plus-fill me-2"></i> Ajouter en ami
+                        </button>
+                    {% elseif friendship.status == 'pending' %}
+                        {% if friendship.user.userId == app.session.get('user_id') %}
+                            <button class="btn btn-secondary disabled">
+                                <i class="bi bi-clock-history me-2"></i> Demande envoyée
+                            </button>
+                        {% else %}
+                            <div class="d-flex gap-2">
+                                <button class="btn btn-success flex-grow-1" onclick="acceptFriendRequest({{ friendship.id }})">Accepter</button>
+                                <button class="btn btn-danger flex-grow-1" onclick="declineFriendRequest({{ friendship.id }})">Refuser</button>
+                            </div>
+                        {% endif %}
+                    {% elseif friendship.status == 'accepted' %}
+                        <div class="d-flex gap-2">
+                            <button class="btn btn-success disabled w-100">
+                                <i class="bi bi-check-circle-fill me-2"></i> Amis
+                            </button>
+                            <button class="btn btn-outline-primary" onclick="openChat({{ user.userId }}, '{{ user.nom }}')">
+                                <i class="bi bi-chat-text-fill"></i>
+                            </button>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-8">
+            <div class="card shadow-sm border-0 p-4 mb-4">
+                <h3 class="h5 border-bottom pb-2 mb-3">Informations</h3>
+                <div class="row g-3">
+                    <div class="col-sm-6">
+                        <label class="text-muted small d-block">Email</label>
+                        <span>{{ user.email }}</span>
+                    </div>
+                    <div class="col-sm-6">
+                        <label class="text-muted small d-block">Téléphone</label>
+                        <span>{{ user.telephone }}</span>
+                    </div>
+                    <div class="col-sm-12">
+                        <label class="text-muted small d-block">Statut du compte</label>
+                        <span class="badge bg-success">{{ user.etatCompte }}</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card shadow-sm border-0 p-4">
+                <h3 class="h5 border-bottom pb-2 mb-3">Activités récentes</h3>
+                <p class="text-muted italic">Les threads et réponses de l'utilisateur apparaîtront ici...</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+async function sendFriendRequest(id) {
+    const btn = document.getElementById('friendBtn');
+    btn.disabled = true;
+    try {
+        const resp = await fetch(`/friend/request/${id}`, { 
+            method: 'POST',
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        });
+        
+        if (!resp.ok) {
+            const errorText = await resp.text();
+            console.error('Server error:', errorText);
+            throw new Error('Erreur serveur');
+        }
+
+        const data = await resp.json();
+        if (data.success) {
+            btn.innerHTML = '<i class="bi bi-clock-history me-2"></i> Demande envoyée';
+            btn.classList.replace('btn-primary', 'btn-secondary');
+        } else {
+            alert(data.message || 'Une erreur est survenue');
+            btn.disabled = false;
+        }
+    } catch(e) {
+        console.error('Fetch error:', e);
+        alert('Impossible de contacter le serveur. Veuillez réessayer.');
+        btn.disabled = false;
+    }
+}
+
+async function acceptFriendRequest(id) {
+    try {
+        const resp = await fetch(`/friend/accept/${id}`, { method: 'POST' });
+        const data = await resp.json();
+        if (data.success) {
+            location.reload();
+        }
+    } catch(e) {}
+}
+
+async function declineFriendRequest(id) {
+    if (!confirm('Voulez-vous retirer cette relation ?')) return;
+    try {
+        const resp = await fetch(`/friend/decline/${id}`, { method: 'POST' });
+        const data = await resp.json();
+        if (data.success) {
+            location.reload();
+        }
+    } catch(e) {}
+}
+</script>
+{% endblock %}

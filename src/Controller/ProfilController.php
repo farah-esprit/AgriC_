@@ -30,7 +30,7 @@ class ProfilController extends AbstractController
         }
 
         $profil = $em->getRepository(Profil::class)
-            ->findOneBy(['userId' => $user->getUserId()]) ?? new Profil();
+            ->findOneBy(['user' => $user]) ?? new Profil();
 
         $stats = [
             'threads' => 0,
@@ -81,7 +81,7 @@ class ProfilController extends AbstractController
         }
 
         $profil = $em->getRepository(Profil::class)
-            ->findOneBy(['userId' => $user->getUserId()]) ?? (new Profil())->setUserId($user->getUserId());
+            ->findOneBy(['user' => $user]) ?? (new Profil())->setUser($user);
 
         $form = $this->createForm(UserEditType::class, $user)->handleRequest($request);
 
@@ -145,7 +145,8 @@ class ProfilController extends AbstractController
 
         $userId = $session->get('user_id');
 
-        $profil = $em->getRepository(Profil::class)->findOneBy(['userId' => $userId]);
+        $user = $em->getRepository(User::class)->find($userId);
+        $profil = $em->getRepository(Profil::class)->findOneBy(['user' => $user]);
         if ($profil) {
             if ($profil->getImage()) {
                 $path = $this->getParameter('kernel.project_dir').'/public/uploads/profils/'.$profil->getImage();

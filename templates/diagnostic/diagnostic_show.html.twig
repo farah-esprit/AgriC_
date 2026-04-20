@@ -1,18 +1,17 @@
 {% extends 'agriculteur.html.twig' %}
 
-{% block title %}Détail Diagnostic #{{ diagnostic.idDiagnostic }}{% endblock %}
+{% block title %}Détail Diagnostic{% endblock %}
 
 {% block body %}
 <section style="padding: 120px 0 60px;">
     <div class="container">
-        <div class="row justify-content-center g-4">
-            <div class="col-lg-7">
+        <div class="row justify-content-center">
+            <div class="col-lg-6">
 
                 <div class="card shadow border-0" style="border-radius: 15px;">
                     <div class="card-header text-white text-center py-4"
                          style="background: linear-gradient(to right, #4a7c3a, #66bb6a); border-radius: 15px 15px 0 0;">
                         <h3>🩺 Diagnostic #{{ diagnostic.idDiagnostic }}</h3>
-                        <small class="opacity-75">Fiche détaillée</small>
                     </div>
 
                     <div class="card-body p-5">
@@ -24,11 +23,11 @@
                             <tr>
                                 <th style="color: #4a7c3a;">🌿 Culture</th>
                                 <td>
+                                    {# ✅ CORRECTION — utilise directement diagnostic.culture #}
                                     {% if diagnostic.culture %}
                                         <span class="badge" style="background-color: #66bb6a;">
                                             {{ diagnostic.culture.nom }} ({{ diagnostic.culture.type }})
                                         </span>
-                                        <small class="text-muted ms-1">— {{ diagnostic.culture.localisation }}</small>
                                     {% else %}
                                         <span class="text-muted">Aucune culture associée</span>
                                     {% endif %}
@@ -36,7 +35,7 @@
                             </tr>
                             <tr>
                                 <th style="color: #4a7c3a;">🤒 Symptômes</th>
-                                <td>{{ diagnostic.symptomes|nl2br }}</td>
+                                <td>{{ diagnostic.symptomes }}</td>
                             </tr>
                             <tr>
                                 <th style="color: #4a7c3a;">📝 Infos complémentaires</th>
@@ -44,15 +43,10 @@
                             </tr>
                         </table>
 
-                        <div class="d-flex gap-2 mt-4 flex-wrap">
+                        <div class="d-flex gap-2 mt-3">
                             <a href="{{ path('app_diagnostic_edit', {'id': diagnostic.idDiagnostic}) }}"
-                               class="btn btn-warning">
+                               class="btn btn-warning flex-grow-1">
                                 <i class="bi bi-pencil"></i> Modifier
-                            </a>
-                            {# 📄 Export PDF individuel — DomPDF #}
-                            <a href="{{ path('app_diagnostic_pdf', {'id': diagnostic.idDiagnostic}) }}"
-                               class="btn btn-danger" target="_blank" title="Télécharger ce diagnostic en PDF">
-                                <i class="bi bi-file-earmark-pdf"></i> Exporter PDF
                             </a>
                             <a href="{{ path('app_diagnostic_index') }}" class="btn btn-outline-secondary">
                                 <i class="bi bi-arrow-left"></i> Retour

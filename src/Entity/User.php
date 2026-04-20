@@ -79,6 +79,18 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column(type: 'datetime', nullable: true, name: 'date_creation')]
     private ?\DateTimeInterface $dateCreation = null;
 
+    #[ORM\Column(type: 'integer', options: ['default' => 0])]
+    private int $strikes = 0;
+
+    #[ORM\Column(type: 'integer', options: ['default' => 0])]
+    private int $xp = 0;
+
+    #[ORM\ManyToMany(targetEntity: Thread::class)]
+    #[ORM\JoinTable(name: 'user_shared_threads')]
+    #[ORM\JoinColumn(name: 'user_id', referencedColumnName: 'user_id')]
+    #[ORM\InverseJoinColumn(name: 'thread_id', referencedColumnName: 'id')]
+    private Collection $sharedThreads;
+
     #[ORM\OneToMany(mappedBy: 'organisateur', targetEntity: Evenement::class)]
     private Collection $evenements;
 
@@ -91,8 +103,20 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\OneToMany(mappedBy: 'user', targetEntity: Response::class)]
     private Collection $responses;
 
-    #[ORM\OneToMany(mappedBy: 'user', targetEntity: Commande::class)]
-    private Collection $commandes;
+    #[ORM\OneToMany(mappedBy: 'user', targetEntity: Friendship::class)]
+    private Collection $friendshipsSent;
+
+    #[ORM\OneToMany(mappedBy: 'friend', targetEntity: Friendship::class)]
+    private Collection $friendshipsReceived;
+
+    #[ORM\OneToMany(mappedBy: 'sender', targetEntity: ChatMessage::class)]
+    private Collection $messagesSent;
+
+    #[ORM\OneToMany(mappedBy: 'recipient', targetEntity: ChatMessage::class)]
+    private Collection $messagesReceived;
+
+    #[ORM\OneToOne(mappedBy: 'user', targetEntity: Profil::class, cascade: ['persist', 'remove'])]
+    private ?Profil $profile = null;
 
     public function __construct()
     {
@@ -101,6 +125,11 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         $this->threads = new ArrayCollection();
         $this->responses = new ArrayCollection();
         $this->commandes = new ArrayCollection();
+        $this->friendshipsSent = new ArrayCollection();
+        $this->friendshipsReceived = new ArrayCollection();
+        $this->messagesSent = new ArrayCollection();
+        $this->messagesReceived = new ArrayCollection();
+        $this->sharedThreads = new ArrayCollection();
         $this->dateCreation = new \DateTime();
     }
 
@@ -374,5 +403,90 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     {
         $this->resetTokenRequestedAt = $resetTokenRequestedAt;
         return $this;
+    }
+
+    public function getFriendshipsSent(): Collection { return $this->friendshipsSent; }
+    public function getFriendshipsReceived(): Collection { return $this->friendshipsReceived; }
+    public function getMessagesSent(): Collection { return $this->messagesSent; }
+    public function getMessagesReceived(): Collection { return $this->messagesReceived; }
+
+    public function getProfile(): ?Profil
+    {
+        return $this->profile;
+    }
+
+    public function setProfile(?Profil $profile): self
+    {
+        // set the owning side of the relation if necessary
+        if ($profile !== null && $profile->getUser() !== $this) {
+            $profile->setUser($this);
+        }
+
+        $this->profile = $profile;
+
+        return $this;
+    }
+
+    public function getStrikes(): int
+    {
+        return $this->strikes;
+    }
+
+    public function setStrikes(int $strikes): self
+    {
+        $this->strikes = $strikes;
+        return $this;
+    }
+
+    public function getXp(): int
+    {
+        return $this->xp;
+    }
+
+    public function setXp(int $xp): self
+    {
+        $this->xp = $xp;
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, Thread>
+     */
+    public function getSharedThreads(): Collection
+    {
+        return $this->sharedThreads;
+    }
+
+    public function addSharedThread(Thread $thread): self
+    {
+        if (!$this->sharedThreads->contains($thread)) {
+            $this->sharedThreads->add($thread);
+        }
+        return $this;
+    }
+
+    public function removeSharedThread(Thread $thread): self
+    {
+        $this->sharedThreads->removeElement($thread);
+        return $this;
+    }
+
+    /**
+     * Retourne le grade basé sur l'XP
+     */
+    public function getRank(): string
+    {
+        if ($this->xp >= 101) return 'Master 👑';
+        if ($this->xp >= 51) return 'Expert 🔬';
+        if ($this->xp >= 11) return 'Fermier 🚜';
+        return 'Novice 🌾';
+    }
+
+    public function getRankColor(): string
+    {
+        if ($this->xp >= 101) return 'dark';
+        if ($this->xp >= 51) return 'danger';
+        if ($this->xp >= 11) return 'info';
+        return 'success';
     }
 }

@@ -10,7 +10,6 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
-use Symfony\Component\Routing\Attribute\ParamConverter;
 
 #[Route('/produit')]
 class ProduitController extends AbstractController
@@ -82,7 +81,6 @@ class ProduitController extends AbstractController
     }
 
     #[Route('/{id}/edit', name: 'app_produit_edit', methods: ['GET', 'POST'])]
-    #[ParamConverter('produit', options: ['mapping' => ['id' => 'idProduit']])]
     public function edit(Request $request, Produit $produit, EntityManagerInterface $em): Response
     {
         $form = $this->createForm(ProduitType::class, $produit);
@@ -112,7 +110,6 @@ class ProduitController extends AbstractController
     }
 
     #[Route('/{id}/delete', name: 'app_produit_delete', methods: ['POST'])]
-    #[ParamConverter('produit', options: ['mapping' => ['id' => 'idProduit']])]
     public function delete(Request $request, Produit $produit, EntityManagerInterface $em): Response
     {
         if ($this->isCsrfTokenValid('delete' . $produit->getIdProduit(), $request->request->get('_token'))) {

@@ -1,0 +1,293 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}{{ thread.title }} - AgriConnect Forum{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <link rel="stylesheet" href="{{ asset('css/forum.css') }}">
+{% endblock %}
+
+{% block body %}
+<div class="container">
+    <!-- Header -->
+    <div class="forum-header">
+        <h1>🌾 AgriConnect Forum</h1>
+        <p class="subtitle">Connectez-vous avec la communauté agricole</p>
+    </div>
+
+    <!-- Navigation -->
+    <div class="nav">
+        <div class="nav-links">
+            <a href="{{ path('thread_index') }}">← Retour à l'accueil</a>
+            <a href="{{ path('thread_new') }}">Nouveau sujet</a>
+            {% if app.user %}
+                <a href="{{ path('app_profile') }}">Mon profil</a>
+                <a href="{{ path('app_logout') }}">Déconnexion</a>
+            {% else %}
+                <a href="{{ path('app_signin') }}">Connexion</a>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Flash messages -->
+    {% for message in app.flashes('success') %}
+        <div class="alert alert-success">
+            {{ message }}
+        </div>
+    {% endfor %}
+
+    {% for message in app.flashes('error') %}
+        <div class="alert alert-error">
+            {{ message }}
+        </div>
+    {% endfor %}
+
+    <!-- Thread Detail -->
+    <div class="thread-detail">
+        <div class="thread-header">
+            <h1>{{ thread.title }}</h1>
+            <div class="meta" style="display: flex; align-items: center; gap: 8px;">
+                Par 
+                {% if thread.user %}
+                    {% if thread.user.profile and thread.user.profile.image %}
+                        <img src="{{ asset('uploads/profils/' ~ thread.user.profile.image) }}" alt="Avatar" style="width: 24px; height: 24px; border-radius: 50%; object-fit: cover;">
+                    {% else %}
+                        <span class="user-avatar-small" style="width: 24px; height: 24px; background-color: #3b824d; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 10px;">
+                            {{ thread.user.nom|first|upper }}
+                        </span>
+                    {% endif %}
+                    <a href="{{ path('app_profile_show', {'id': thread.user.userId}) }}" style="color: inherit; text-decoration: none;"><strong>{{ thread.user.nom }}</strong></a>
+                {% else %}
+                    <strong>Utilisateur inconnu</strong>
+                {% endif %}
+                le {{ thread.createdAt ? thread.createdAt|date('d/m/Y H:i') : 'Date inconnue' }}
+                {% if thread.category %} • Catégorie: {{ thread.category }}{% endif %}
+                {% if thread.status %} • Statut: {{ thread.status }}{% endif %}
+            </div>
+        </div>
+
+        <div class="card-content content-with-sidebar">
+            <div class="action-sidebar">
+                {% if app.user %}
+                    <form method="post" action="{{ path('thread_like', {'id': thread.id}) }}" style="margin: 0;">
+                        <input type="hidden" name="_token" value="{{ csrf_token('like' ~ thread.id) }}">
+                        <button type="submit" class="sidebar-button success" title="{{ threadLiked ? 'Retirer le like' : 'Aimer ce sujet' }}">
+                            {{ threadLiked ? '💔' : '❤️' }}
+                        </button>
+                    </form>
+                {% endif %}
+                
+                {% if app.user and thread.user and app.user.userId == thread.user.userId %}
+                    <a href="{{ path('thread_edit', {'id': thread.id}) }}" class="sidebar-button secondary" title="Modifier le sujet">
+                        ✏️
+                    </a>
+                {% endif %}
+
+                {% if app.user %}
+                    <button type="button" class="sidebar-button info" id="share-btn-{{ thread.id }}" onclick="shareThread({{ thread.id }})" title="Partager sur mon profil" style="background-color: var(--secondary-color); color: white; border: none; font-size: 1.2rem;">
+                        📢
+                    </button>
+                    <form method="post" id="delete-form-{{ thread.id }}" action="{{ path('thread_delete', {'id': thread.id}) }}" style="display: none;">
+                        <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ thread.id) }}">
+                    </form>
+                {% endif %}
+            </div>
+            
+            <div id="thread-text-{{ thread.id }}">
+                {{ thread.content|nl2br }}
+            </div>
+            <div id="translation-{{ thread.id }}" class="translation-box" style="display: none; margin-top: 15px; padding: 15px; background: #f9f9f9; border-left: 4px solid #3b824d; border-radius: 4px; font-style: italic; color: #444;">
+                <div style="font-size: 0.75rem; font-weight: bold; color: #3b824d; margin-bottom: 5px; text-transform: uppercase;">Traduction par Gemini ✨</div>
+                <div class="translated-content"></div>
+            </div>
+            <div style="margin-top: 15px;">
+                <div class="dropdown">
+                    <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" style="font-size: 0.75rem; padding: 4px 12px; border-radius: 20px;">
+                        🌐 Traduire en...
+                    </button>
+                    <ul class="dropdown-menu shadow border-0" style="border-radius: 12px; font-size: 0.85rem;">
+                        <li><a class="dropdown-item" href="#" onclick="translateText({{ thread.id }}, 'thread-text-{{ thread.id }}', 'français'); return false;">🇫🇷 Français</a></li>
+                        <li><a class="dropdown-item" href="#" onclick="translateText({{ thread.id }}, 'thread-text-{{ thread.id }}', 'anglais'); return false;">🇬🇧 Anglais</a></li>
+                        <li><a class="dropdown-item" href="#" onclick="translateText({{ thread.id }}, 'thread-text-{{ thread.id }}', 'arabe'); return false;">🇹🇳 Arabe</a></li>
+                        <li><a class="dropdown-item" href="#" onclick="translateText({{ thread.id }}, 'thread-text-{{ thread.id }}', 'espagnol'); return false;">🇪🇸 Espagnol</a></li>
+                        <li><a class="dropdown-item" href="#" onclick="translateText({{ thread.id }}, 'thread-text-{{ thread.id }}', 'allemand'); return false;">🇩🇪 Allemand</a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        {% if thread.attachments %}
+            <div class="attachments" style="margin-top: 20px;">
+                <strong>Fichiers joints :</strong>
+                <div style="display: flex; flex-wrap: wrap; gap: 15px; margin-top: 10px;">
+                    {% for filename in thread.attachments|split(',') %}
+                        {% set extension = filename|split('.')|last|lower %}
+                        {% if extension in ['jpg', 'jpeg', 'png', 'gif', 'webp'] %}
+                            <div style="max-width: 250px; border: 1px solid #ddd; padding: 10px; border-radius: 8px; background: #fff;">
+                                <img src="{{ asset('uploads/' ~ filename) }}" alt="Pièce jointe" style="max-width: 100%; height: auto; display: block;" />
+                            </div>
+                        {% elseif extension in ['mp4', 'webm', 'ogg'] %}
+                            <div style="max-width: 320px; border: 1px solid #ddd; padding: 10px; border-radius: 8px; background: #fff;">
+                                <video controls style="width: 100%; height: auto;">
+                                    <source src="{{ asset('uploads/' ~ filename) }}" type="video/{{ extension }}">
+                                    Votre navigateur ne supporte pas la lecture vidéo.
+                                </video>
+                            </div>
+                        {% else %}
+                            <div style="border: 1px solid #ddd; padding: 10px; border-radius: 8px; background: #fff;">
+                                <a href="{{ asset('uploads/' ~ filename) }}" target="_blank">{{ filename }}</a>
+                            </div>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+            </div>
+        {% endif %}
+
+        {% if thread.tags %}
+        <div style="margin-top: 15px;">
+            <strong>Tags:</strong> {{ thread.tags }}
+        </div>
+        {% endif %}
+
+
+    </div>
+
+    <!-- Responses Section -->
+    <div class="responses">
+        <h2 style="color: #333; margin-bottom: 20px;">Réponses ({{ responses|length }})</h2>
+
+        {% for response in responses %}
+        <div class="response-item">
+            <div class="response-meta" style="display: flex; align-items: center; gap: 8px;">
+                {% if response.user %}
+                    {% if response.user.profile and response.user.profile.image %}
+                        <img src="{{ asset('uploads/profils/' ~ response.user.profile.image) }}" alt="Avatar" style="width: 24px; height: 24px; border-radius: 50%; object-fit: cover;">
+                    {% else %}
+                        <span class="user-avatar-small" style="width: 24px; height: 24px; background-color: #3b824d; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 10px;">
+                            {{ response.user.nom|first|upper }}
+                        </span>
+                    {% endif %}
+                    <a href="{{ path('app_profile_show', {'id': response.user.userId}) }}" style="color: inherit; text-decoration: none;"><strong>{{ response.user.nom }}</strong></a>
+                {% else %}
+                    <strong>Utilisateur inconnu</strong>
+                {% endif %}
+                le {{ response.createdAt ? response.createdAt|date('d/m/Y H:i') : 'Date inconnue' }}
+                {% if response.likeCount %}
+                    • ❤️ {{ response.likeCount }} likes
+                {% endif %}
+            </div>
+            <div class="response-content content-with-sidebar">
+                <div class="action-sidebar">
+                    {% if app.user %}
+                        <form method="post" action="{{ path('response_like', {'id': response.id}) }}" style="margin: 0;">
+                            <input type="hidden" name="_token" value="{{ csrf_token('like_response' ~ response.id) }}">
+                            <button type="submit" class="sidebar-button success small" title="{{ responseLiked[response.id] ? 'Retirer le like' : 'Aimer cette réponse' }}">
+                                {{ responseLiked[response.id] ? '💔' : '❤️' }}
+                            </button>
+                        </form>
+                        
+                        {% if response.user and app.user.userId == response.user.userId %}
+                            <a href="{{ path('response_edit', {'id': response.id}) }}" class="sidebar-button secondary small" title="Modifier la réponse">
+                                ✏️
+                            </a>
+                            <form method="post" action="{{ path('response_delete', {'id': response.id}) }}" style="margin: 0;" onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer cette réponse ?')">
+                                <input type="hidden" name="_token" value="{{ csrf_token('delete_response' ~ response.id) }}">
+                                <button type="submit" class="sidebar-button danger small" title="Supprimer la réponse">
+                                    🗑️
+                                </button>
+                            </form>
+                        {% endif %}
+                    {% endif %}
+                </div>
+                
+                <div id="response-text-{{ response.id }}">
+                    {{ response.content|nl2br }}
+                </div>
+                <div id="translation-res-{{ response.id }}" class="translation-box" style="display: none; margin-top: 15px; padding: 15px; background: #fff; border-left: 4px solid #1877f2; border-radius: 4px; font-style: italic; color: #444; border: 1px solid #eee; border-left: 4px solid #1877f2;">
+                    <div style="font-size: 0.75rem; font-weight: bold; color: #1877f2; margin-bottom: 5px; text-transform: uppercase;">Traduction par Gemini ✨</div>
+                    <div class="translated-content"></div>
+                </div>
+                <div style="margin-top: 10px;">
+                    <div class="dropdown">
+                        <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" style="font-size: 0.7rem; padding: 3px 10px; border-radius: 20px;">
+                            🌐 Traduire en...
+                        </button>
+                        <ul class="dropdown-menu shadow border-0" style="border-radius: 12px; font-size: 0.8rem;">
+                            <li><a class="dropdown-item" href="#" onclick="translateText({{ response.id }}, 'response-text-{{ response.id }}', 'français', true); return false;">🇫🇷 Français</a></li>
+                            <li><a class="dropdown-item" href="#" onclick="translateText({{ response.id }}, 'response-text-{{ response.id }}', 'anglais', true); return false;">🇬🇧 Anglais</a></li>
+                            <li><a class="dropdown-item" href="#" onclick="translateText({{ response.id }}, 'response-text-{{ response.id }}', 'arabe', true); return false;">🇹🇳 Arabe</a></li>
+                            <li><a class="dropdown-item" href="#" onclick="translateText({{ response.id }}, 'response-text-{{ response.id }}', 'espagnol', true); return false;">🇪🇸 Espagnol</a></li>
+                            <li><a class="dropdown-item" href="#" onclick="translateText({{ response.id }}, 'response-text-{{ response.id }}', 'allemand', true); return false;">🇩🇪 Allemand</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% else %}
+        <div class="card">
+            <p class="card-content">Aucune réponse pour le moment. Soyez le premier à répondre !</p>
+        </div>
+        {% endfor %}
+
+        <!-- Add Response Form -->
+        {% if app.user %}
+        <div class="card">
+            <h3 style="color: #333; margin-bottom: 20px;">Ajouter une réponse</h3>
+            {{ form_start(responseForm, {'action': path('thread_add_response', {'id': thread.id})}) }}
+                <div class="form-group">
+                    {{ form_label(responseForm.content) }}
+                    {{ form_widget(responseForm.content, {'attr': {'rows': 6}}) }}
+                    {{ form_errors(responseForm.content) }}
+                </div>
+
+                <button type="submit" class="btn btn-primary">Publier la réponse</button>
+            {{ form_end(responseForm) }}
+        </div>
+        {% else %}
+        <div class="card">
+            <p class="card-content">Vous devez être connecté pour répondre à ce sujet.</p>
+            <a href="{{ path('app_signin') }}" class="btn btn-primary">Se connecter</a>
+        </div>
+        {% endif %}
+{% endblock %}
+
+{% block javascripts %}
+<script>
+async function translateText(id, sourceId, targetLang = 'français', isResponse = false) {
+    const textElement = document.getElementById(sourceId);
+    const translationBox = document.getElementById(isResponse ? 'translation-res-' + id : 'translation-' + id);
+    const translatedContent = translationBox.querySelector('.translated-content');
+    
+    // If already showing translation and it's the SAME language, hide it
+    if (translationBox.style.display === 'block' && translationBox.dataset.currentLang === targetLang) {
+        translationBox.style.display = 'none';
+        translationBox.dataset.currentLang = '';
+        return;
+    }
+
+    const originalText = textElement.innerText;
+    translationBox.dataset.currentLang = targetLang;
+    
+    // Show loading
+    translationBox.style.display = 'block';
+    translatedContent.innerHTML = `<div class="spinner-border spinner-border-sm text-primary" role="status"></div> <span style="font-size:0.8rem; color:#888;">Traduction en ${targetLang} par Gemini...</span>`;
+
+    try {
+        const response = await fetch('{{ path('app_translate') }}', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ text: originalText, targetLang: targetLang })
+        });
+        
+        const data = await response.json();
+        if (data.success) {
+            translatedContent.innerText = data.translatedText;
+        } else {
+            translatedContent.innerText = "Désolé, nous ne pouvons pas traduire ce message pour le moment.";
+        }
+    } catch (e) {
+        translatedContent.innerText = "Erreur de connexion au service de traduction.";
+    }
+}
+</script>
+{% endblock %}

@@ -4,9 +4,7 @@ namespace App\Controller;
 
 use App\Entity\Culture;
 use App\Repository\CultureRepository;
-use App\Service\WeatherService;
 use Doctrine\ORM\EntityManagerInterface;
-use Knp\Component\Pager\PaginatorInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -19,55 +17,33 @@ use Symfony\Component\Validator\Validator\ValidatorInterface;
 class CultureController extends AbstractController
 {
     #[Route('/', name: 'app_culture_index', methods: ['GET'])]
-    public function index(
-        Request $request,
-        CultureRepository $cultureRepository,
-        PaginatorInterface $paginator,
-        WeatherService $weatherService
-    ): Response {
-        $userId = $request->getSession()->get('user_id');
-        if (!$userId) {
-            return $this->redirectToRoute('app_signin');
-        }
-
+    public function index(Request $request, CultureRepository $cultureRepository): Response
+    {
         $search         = $request->query->get('search');
         $filterType     = $request->query->get('type');
         $sortSuperficie = $request->query->get('sort');
 
-        $query = match (true) {
-            (bool) $search         => $cultureRepository->search($search, $userId),
-            (bool) $filterType     => $cultureRepository->filterByType($filterType, $userId),
-            (bool) $sortSuperficie => $cultureRepository->orderBySuperficie($userId, $sortSuperficie),
-            default                => $cultureRepository->findAllByUser($userId),
+        $cultures = match (true) {
+            (bool) $search         => $cultureRepository->search($search),
+            (bool) $filterType     => $cultureRepository->filterByType($filterType),
+            (bool) $sortSuperficie => $cultureRepository->orderBySuperficie($sortSuperficie),
+            default                => $cultureRepository->findAll(),
         };
 
-        // 📄 Pagination via KnpPaginatorBundle
-        $cultures = $paginator->paginate(
-            $query,
-            $request->query->getInt('page', 1),
-            10
-        );
-
         $stats = [
-            'total'    => $cultureRepository->countTotal($userId),
-            'moyenne'  => $cultureRepository->getSuperficieMoyenne($userId),
-            'totaleHa' => $cultureRepository->getSuperficieTotal($userId),
-            'max'      => $cultureRepository->getSuperficieMax($userId),
-            'min'      => $cultureRepository->getSuperficieMin($userId),
-            'parType'  => $cultureRepository->countParType($userId),
+            'total'    => $cultureRepository->countTotal(),
+            'moyenne'  => $cultureRepository->getSuperficieMoyenne(),
+            'totaleHa' => $cultureRepository->getSuperficieTotal(),
+            'max'      => $cultureRepository->getSuperficieMax(),
+            'min'      => $cultureRepository->getSuperficieMin(),
+            'parType'  => $cultureRepository->countParType(),
         ];
-
-        // 🌤️ Météo pour le widget fixe en haut de la page
-        $villeMeteo = $request->query->get('ville', 'Tunis');
-        $meteo      = $weatherService->getWeather($villeMeteo);
 
         return $this->render('culture/culture_index.html.twig', [
             'cultures'   => $cultures,
             'stats'      => $stats,
             'search'     => $search,
             'filterType' => $filterType,
-            'meteo'      => $meteo,
-            'villeMeteo' => $villeMeteo,
         ]);
     }
 
@@ -103,14 +79,11 @@ class CultureController extends AbstractController
             }
 
             if (empty($erreurs)) {
-                $user = $em->getRepository(\App\Entity\User::class)->find($request->getSession()->get('user_id'));
-                
                 $culture = new Culture();
                 $culture->setNom($nom);
                 $culture->setType($type);
                 $culture->setSuperficie(floatval($superficie));
                 $culture->setLocalisation($localisation);
-                $culture->setUser($user);
 
                 $em->persist($culture);
                 $em->flush();
@@ -123,45 +96,15 @@ class CultureController extends AbstractController
         return $this->render('culture/culture_new.html.twig', ['erreurs' => $erreurs]);
     }
 
-    // ⚠️ Routes spécifiques DOIVENT être avant les routes paramétrées
-    #[Route('/analyser-image', name: 'app_culture_analyze_image', methods: ['GET'])]
-    public function analyzeImage(): Response
-    {
-        return $this->render('culture/analyze_image.html.twig');
-    }
-
-    /**
-     * Affiche le détail d'une culture + météo en temps réel via OpenWeatherMap API.
-     */
     #[Route('/{id}', name: 'app_culture_show', methods: ['GET'])]
-    public function show(Culture $culture, WeatherService $weatherService, Request $request): Response
+    public function show(Culture $culture): Response
     {
-        // 🔒 Sécurité : Vérifier l'appartenance
-        $userId = $request->getSession()->get('user_id');
-        if (!$culture->getUser() || $culture->getUser()->getUserId() !== $userId) {
-            $this->addFlash('error', "Accès refusé : Cette culture ne vous appartient pas.");
-            return $this->redirectToRoute('app_culture_index');
-        }
-
-        // 🌤️ Météo basée sur la localisation de la culture
-        $meteo = $weatherService->getWeather($culture->getLocalisation() ?? 'Tunis');
-
-        return $this->render('culture/culture_show.html.twig', [
-            'culture' => $culture,
-            'meteo'   => $meteo,
-        ]);
+        return $this->render('culture/culture_show.html.twig', ['culture' => $culture]);
     }
 
     #[Route('/{id}/edit', name: 'app_culture_edit', methods: ['GET', 'POST'])]
     public function edit(Request $request, Culture $culture, EntityManagerInterface $em, ValidatorInterface $validator): Response
     {
-        // 🔒 Sécurité : Vérifier l'appartenance
-        $userId = $request->getSession()->get('user_id');
-        if (!$culture->getUser() || $culture->getUser()->getUserId() !== $userId) {
-            $this->addFlash('error', "Accès refusé : Vous ne pouvez pas modifier cette culture.");
-            return $this->redirectToRoute('app_culture_index');
-        }
-
         $erreurs = [];
 
         if ($request->isMethod('POST')) {
@@ -212,13 +155,6 @@ class CultureController extends AbstractController
     #[Route('/{id}/delete', name: 'app_culture_delete', methods: ['POST'])]
     public function delete(Request $request, Culture $culture, EntityManagerInterface $em): Response
     {
-        // 🔒 Sécurité : Vérifier l'appartenance
-        $userId = $request->getSession()->get('user_id');
-        if (!$culture->getUser() || $culture->getUser()->getUserId() !== $userId) {
-            $this->addFlash('error', "Accès refusé : Vous ne pouvez pas supprimer cette culture.");
-            return $this->redirectToRoute('app_culture_index');
-        }
-
         if ($this->isCsrfTokenValid('delete' . $culture->getIdCulture(), $request->request->get('_token'))) {
             $em->remove($culture);
             $em->flush();
@@ -228,4 +164,3 @@ class CultureController extends AbstractController
         return $this->redirectToRoute('app_culture_index');
     }
 }
-

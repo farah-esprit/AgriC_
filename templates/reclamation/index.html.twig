@@ -2,6 +2,17 @@
 
 {% block title %}Liste des Réclamations{% endblock %}
 
+{% block stylesheets %}
+<style>
+    .chart-container {
+        position: relative;
+        width: 100%;
+        max-width: 280px;
+        margin: 0 auto;
+    }
+</style>
+{% endblock %}
+
 {% block body %}
 <div class="container mt-5 pt-5 mb-5">
     <div class="d-flex justify-content-between align-items-center mb-4">
@@ -9,6 +20,62 @@
         <a href="{{ path('app_reclamation_new') }}" class="btn btn-danger">
             <i class="bi bi-plus-circle"></i> Soumettre une réclamation
         </a>
+    </div>
+
+    <!-- Statistiques Dashboard avec Pie Charts -->
+    <div class="row mb-5">
+        <div class="col-md-6">
+            <div class="card shadow-sm border-0" style="border-radius: 15px;">
+                <div class="card-body text-center">
+                    <h5 class="fw-bold mb-3">📊 Réclamations par Statut</h5>
+                    <div class="chart-container">
+                        <canvas id="chartStatus"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card shadow-sm border-0" style="border-radius: 15px;">
+                <div class="card-body text-center">
+                    <h5 class="fw-bold mb-3">🔥 Réclamations par Priorité</h5>
+                    <div class="chart-container">
+                        <canvas id="chartPriority"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Search and Sort Bar -->
+    <div class="card shadow-sm border-0 p-3 mb-4" style="border-radius: 15px;">
+        <form method="get" class="row g-3 align-items-end">
+            <div class="col-md-5">
+                <label class="form-label small fw-bold">Recherche</label>
+                <div class="input-group">
+                    <span class="input-group-text bg-white border-end-0"><i class="bi bi-search"></i></span>
+                    <input type="text" name="q" class="form-control border-start-0" placeholder="Mot-clé..." value="{{ currentSearch }}">
+                </div>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label small fw-bold">Trier par</label>
+                <select name="sort" class="form-select">
+                    <option value="dateCreation" {{ currentSort == 'dateCreation' ? 'selected' : '' }}>Date</option>
+                    <option value="priorite" {{ currentSort == 'priorite' ? 'selected' : '' }}>Priorité</option>
+                    <option value="statut" {{ currentSort == 'statut' ? 'selected' : '' }}>Statut</option>
+                    <option value="objet" {{ currentSort == 'objet' ? 'selected' : '' }}>Objet</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label small fw-bold">Ordre</label>
+                <select name="direction" class="form-select">
+                    <option value="DESC" {{ currentDirection == 'DESC' ? 'selected' : '' }}>Décroissant</option>
+                    <option value="ASC" {{ currentDirection == 'ASC' ? 'selected' : '' }}>Croissant</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-danger w-100"><i class="bi bi-filter"></i> Filtrer</button>
+            </div>
+        </form>
     </div>
 
     {% for message in app.flashes('success') %}
@@ -37,7 +104,7 @@
                         <tr>
                             <td class="px-4 align-middle">{{ reclamation.idReclamation }}</td>
                             <td class="px-4 align-middle fw-bold">{{ reclamation.objet }}</td>
-                            <td class="px-4 align-middle">{{ reclamation.dateCreation }}</td>
+                            <td class="px-4 align-middle">{{ reclamation.dateCreation ? reclamation.dateCreation|date('d/m/Y H:i') : '' }}</td>
                             <td class="px-4 align-middle">
                                 {% if reclamation.statut == 'Résolu' %}
                                     <span class="badge bg-success">{{ reclamation.statut }}</span>
@@ -61,6 +128,12 @@
                                 <a href="{{ path('app_reclamation_edit', {'idReclamation': reclamation.idReclamation}) }}" class="btn btn-sm btn-outline-warning">
                                     <i class="bi bi-pencil"></i>
                                 </a>
+                                <form method="post" action="{{ path('app_reclamation_delete', {'idReclamation': reclamation.idReclamation}) }}" onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer cette réclamation ?');" style="display:inline-block;">
+                                    <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ reclamation.idReclamation) }}">
+                                    <button class="btn btn-sm btn-outline-danger">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </form>
                             </td>
                         </tr>
                     {% else %}
@@ -74,4 +147,75 @@
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block javascripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+<script>
+    // Données par Statut
+    var statusLabels = [{% for s in statsStatus %}'{{ s.statut }}'{% if not loop.last %}, {% endif %}{% endfor %}];
+    var statusData = [{% for s in statsStatus %}{{ s.count }}{% if not loop.last %}, {% endif %}{% endfor %}];
+    var statusColors = ['#ff6384', '#36a2eb', '#4bc0c0', '#ff9f40', '#9966ff', '#c9cbcf'];
+
+    new Chart(document.getElementById('chartStatus'), {
+        type: 'pie',
+        data: {
+            labels: statusLabels,
+            datasets: [{
+                data: statusData,
+                backgroundColor: statusColors.slice(0, statusLabels.length),
+                borderWidth: 2,
+                borderColor: '#fff'
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: { position: 'bottom', labels: { padding: 15, font: { size: 13 } } },
+                tooltip: {
+                    callbacks: {
+                        label: function(ctx) {
+                            var total = ctx.dataset.data.reduce(function(a, b) { return a + b; }, 0);
+                            var pct = Math.round(ctx.raw / total * 100);
+                            return ctx.label + ': ' + ctx.raw + ' (' + pct + '%)';
+                        }
+                    }
+                }
+            }
+        }
+    });
+
+    // Données par Priorité
+    var prioLabels = [{% for p in statsPriority %}'{{ p.priorite }}'{% if not loop.last %}, {% endif %}{% endfor %}];
+    var prioData = [{% for p in statsPriority %}{{ p.count }}{% if not loop.last %}, {% endif %}{% endfor %}];
+    var prioColors = ['#4bc0c0', '#ffcd56', '#ff6384', '#9966ff', '#36a2eb', '#c9cbcf'];
+
+    new Chart(document.getElementById('chartPriority'), {
+        type: 'pie',
+        data: {
+            labels: prioLabels,
+            datasets: [{
+                data: prioData,
+                backgroundColor: prioColors.slice(0, prioLabels.length),
+                borderWidth: 2,
+                borderColor: '#fff'
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: { position: 'bottom', labels: { padding: 15, font: { size: 13 } } },
+                tooltip: {
+                    callbacks: {
+                        label: function(ctx) {
+                            var total = ctx.dataset.data.reduce(function(a, b) { return a + b; }, 0);
+                            var pct = Math.round(ctx.raw / total * 100);
+                            return ctx.label + ': ' + ctx.raw + ' (' + pct + '%)';
+                        }
+                    }
+                }
+            }
+        }
+    });
+</script>
 {% endblock %}

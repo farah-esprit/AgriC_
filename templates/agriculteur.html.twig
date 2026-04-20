@@ -97,52 +97,6 @@
         #footer a:hover {
             color: #ccc;
         }
-
-        /* Flash Toast premium */
-        .toast-container {
-            position: fixed;
-            top: 100px;
-            right: 20px;
-            z-index: 1060;
-        }
-        .premium-toast {
-            background: white;
-            border-radius: 12px;
-            padding: 16px 20px;
-            margin-bottom: 10px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            border-left: 5px solid #4CAF50;
-            min-width: 300px;
-            animation: slideIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
-            transition: all 0.3s ease;
-        }
-        @keyframes slideIn {
-            from { opacity: 0; transform: translateX(100%); }
-            to { opacity: 1; transform: translateX(0); }
-        }
-        .premium-toast.success { border-left-color: #2E7D32; }
-        .premium-toast.error { border-left-color: #d32f2f; }
-        .premium-toast.warning { border-left-color: #ffa000; }
-        .premium-toast.info { border-left-color: #1976d2; }
-        
-        .premium-toast .icon {
-            font-size: 1.5rem;
-            flex-shrink: 0;
-        }
-        .premium-toast .message {
-            font-size: 0.95rem;
-            font-weight: 500;
-            color: #333;
-            flex-grow: 1;
-        }
-        .premium-toast .btn-close {
-            padding: 0;
-            margin: 0;
-            font-size: 0.8rem;
-        }
     </style>
 
     {% block stylesheets %}{% endblock %}
@@ -163,7 +117,6 @@
                     <li><a href="{{ path('app_home') }}">Accueil</a></li>
                     <li><a href="{{ path('app_culture_index') }}">Mes Cultures</a></li>
                     <li><a href="{{ path('app_diagnostic_index') }}">Diagnostic</a></li>
-                    <li><a href="{{ path('app_calendrier_index') }}">Calendrier IA</a></li>
                     <li><a href="{{ path('app_evenement_index') }}">Événements</a></li>
                     <li><a href="{{ path('app_reclamation_index') }}">Réclamations</a></li>
                     <li><a href="{{ path('thread_index') }}">Forum</a></li>
@@ -192,7 +145,7 @@
                             </li>
                             {% if app.session.get('user_role') == 'EXPERT' %}
                             <li>
-                                <a class="dropdown-item text-primary fw-bold" href="{{ path('forum_admin') }}">
+                                <a class="dropdown-item text-primary fw-bold" href="#">
                                     <i class="bi bi-shield-check"></i> Modération Forum
                                 </a>
                             </li>
@@ -214,24 +167,6 @@
     </header>
 
     <main id="main">
-        {# Flash Messages centralized #}
-        <div class="toast-container">
-            {% for label, messages in app.flashes %}
-                {% for message in messages %}
-                    <div class="premium-toast {{ label }} shadow-lg d-flex align-items-center" role="alert">
-                        <div class="icon">
-                            {% if label == 'success' %}✅
-                            {% elseif label == 'error' %}❌
-                            {% elseif label == 'warning' %}⚠️
-                            {% else %}ℹ️{% endif %}
-                        </div>
-                        <div class="message">{{ message }}</div>
-                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close" onclick="this.parentElement.remove()"></button>
-                    </div>
-                {% endfor %}
-            {% endfor %}
-        </div>
-
         {% block body %}
         <section id="hero" class="hero section">
             <div class="container">
@@ -261,12 +196,6 @@
                                     <a href="{{ path('thread_index') }}" class="d-block p-4 text-center border rounded-4 text-decoration-none hover-shadow transition-all" style="background: #f0f7ff;">
                                         <i class="bi bi-chat-dots fs-1 text-primary mb-2 d-block"></i>
                                         <span class="fw-bold text-dark">Forum Community</span>
-                                    </a>
-                                </div>
-                                <div class="col-md-3">
-                                    <a href="{{ path('app_calendrier_index') }}" class="d-block p-4 text-center border rounded-4 text-decoration-none hover-shadow transition-all" style="background: #fdf2f8;">
-                                        <i class="bi bi-calendar-check fs-1 text-info mb-2 d-block" style="color:#d946ef !important;"></i>
-                                        <span class="fw-bold text-dark">Planning IA</span>
                                     </a>
                                 </div>
                                 <div class="col-md-3">
@@ -315,24 +244,7 @@
     <script src="{{ asset('assets/vendor/bootstrap/js/bootstrap.bundle.min.js') }}"></script>
     <script src="{{ asset('assets/vendor/glightbox/js/glightbox.min.js') }}"></script>
     <script src="{{ asset('assets/vendor/swiper/swiper-bundle.min.js') }}"></script>
-    <!-- Main JS -->
     <script src="{{ asset('assets/js/main.js') }}"></script>
-
-    <script>
-        // Auto-dismiss toasts after 5 seconds
-        document.addEventListener('DOMContentLoaded', function() {
-            setTimeout(function() {
-                var toasts = document.querySelectorAll('.premium-toast');
-                toasts.forEach(function(toast) {
-                    toast.style.opacity = '0';
-                    toast.style.transform = 'translateX(20px)';
-                    setTimeout(function() {
-                        toast.remove();
-                    }, 300);
-                });
-            }, 5000);
-        });
-    </script>
 
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     <script src="https://npmcdn.com/flatpickr/dist/l10n/fr.js"></script>

@@ -12,7 +12,6 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
-use Symfony\Component\Routing\Attribute\ParamConverter;
 
 #[Route('/commande')]
 class CommandeController extends AbstractController
@@ -74,7 +73,6 @@ class CommandeController extends AbstractController
     }
 
     #[Route('/{id}/edit', name: 'app_commande_edit', methods: ['GET', 'POST'])]
-    #[ParamConverter('commande', options: ['mapping' => ['id' => 'idCommande']])]
     public function edit(Request $request, Commande $commande, EntityManagerInterface $em, UserRepository $userRepository): Response
     {
         $ancienneQuantite = $commande->getQuantiteCommandee();
@@ -121,7 +119,6 @@ class CommandeController extends AbstractController
     }
 
     #[Route('/{id}/delete', name: 'app_commande_delete', methods: ['POST'])]
-    #[ParamConverter('commande', options: ['mapping' => ['id' => 'idCommande']])]
     public function delete(Request $request, Commande $commande, EntityManagerInterface $em): Response
     {
         if ($this->isCsrfTokenValid('delete' . $commande->getIdCommande(), $request->request->get('_token'))) {

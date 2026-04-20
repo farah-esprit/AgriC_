@@ -1,0 +1,888 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Story de {{ storyUser.nom }} - AgriConnect{% endblock %}
+
+{% block body %}
+<!-- Story Viewer Modal Style (Fullscreen) -->
+<style>
+    body {
+        margin: 0;
+        padding: 0;
+        background-color: #111;
+        overflow: hidden; /* Prevent scrolling when viewing story */
+    }
+    
+    .story-viewer {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        z-index: 1050;
+        background-color: rgba(0, 0, 0, 0.95);
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+    }
+    
+    .story-header {
+        position: absolute;
+        top: 20px;
+        left: 20px;
+        right: 20px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        z-index: 1060;
+    }
+    
+    .story-user-info {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        color: white;
+    }
+    
+    .story-avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background-color: #3b824d;
+        color: white;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        font-size: 1.2rem;
+        border: 2px solid white;
+        font-weight: bold;
+    }
+    
+    .close-story {
+        color: white;
+        font-size: 2rem;
+        text-decoration: none;
+        cursor: pointer;
+    }
+    
+    .close-story:hover {
+        color: #ccc;
+    }
+
+    .story-content {
+        max-width: 100%;
+        max-height: 80vh;
+        object-fit: contain;
+    }
+    
+    .story-navigation {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        display: flex;
+        justify-content: space-between;
+        top: 0;
+        left: 0;
+    }
+    
+    .nav-zone {
+        width: 50%;
+        height: 100%;
+        cursor: pointer;
+        z-index: 1055;
+    }
+    
+    .progress-container {
+        position: absolute;
+        top: 10px;
+        left: 10px;
+        right: 10px;
+        display: flex;
+        gap: 5px;
+        z-index: 1060;
+    }
+    
+    .progress-bar {
+        height: 3px;
+        background-color: rgba(255, 255, 255, 0.3);
+        flex-grow: 1;
+        border-radius: 2px;
+        overflow: hidden;
+    }
+    
+    .progress-fill {
+        height: 100%;
+        background-color: white;
+        width: 0%;
+        transition: width 0.1s linear;
+    }
+
+    /* Interactions Sidebar */
+    .story-interactions {
+        position: absolute;
+        bottom: 80px;
+        right: 20px;
+        z-index: 1065;
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+    }
+    .interaction-btn {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        color: white;
+        cursor: pointer;
+        font-size: 1.8rem;
+        text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+        transition: transform 0.2s;
+    }
+    .interaction-btn:hover {
+        transform: scale(1.1);
+    }
+    .interaction-btn span {
+        font-size: 0.9rem;
+        font-weight: bold;
+        margin-top: 5px;
+    }
+    .interaction-btn.liked i {
+        color: #e74c3c;
+    }
+    .interaction-btn.liked .bi-heart::before {
+        content: "\f415"; /* bi-heart-fill */
+    }
+
+    /* Floating Comments (Bottom Left) */
+    .floating-comments {
+        position: absolute;
+        bottom: 20px;
+        left: 20px;
+        z-index: 1060;
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-end;
+        gap: 10px;
+        width: 70%;
+        max-width: 300px;
+        height: 180px;
+        overflow: hidden;
+        pointer-events: none; /* Let clicks pass through to nav-zone */
+        mask-image: linear-gradient(to top, black 50%, transparent 100%);
+        -webkit-mask-image: linear-gradient(to top, black 50%, transparent 100%);
+    }
+    .floating-comment {
+        background: rgba(0, 0, 0, 0.4);
+        backdrop-filter: blur(4px);
+        color: white;
+        padding: 8px 12px;
+        border-radius: 12px;
+        font-size: 0.9rem;
+        animation: slideUpFade 0.3s ease-out;
+        display: flex;
+        align-items: flex-start;
+        gap: 8px;
+    }
+    .floating-comment-avatar {
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        background: var(--accent-color, #3b824d);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        font-size: 0.7rem;
+        flex-shrink: 0;
+        border: 1px solid rgba(255,255,255,0.3);
+    }
+    .floating-comment-content {
+        display: flex;
+        flex-direction: column;
+    }
+    .floating-comment-user {
+        font-size: 0.75rem;
+        font-weight: bold;
+        opacity: 0.8;
+    }
+    @keyframes slideUpFade {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Comments Panel */
+    .comments-panel {
+        position: absolute;
+        bottom: -100%;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 100%;
+        max-width: 500px;
+        height: 60vh;
+        background: white;
+        z-index: 1070;
+        border-radius: 20px 20px 0 0;
+        transition: bottom 0.3s ease;
+        display: flex;
+        flex-direction: column;
+        box-shadow: 0 -5px 15px rgba(0,0,0,0.3);
+    }
+    .comments-panel.open {
+        bottom: 0;
+    }
+    .comments-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 15px 20px;
+        border-bottom: 1px solid #eee;
+    }
+    .comments-header h3 { margin: 0; font-size: 1.2rem; }
+    .close-comments { font-size: 1.5rem; cursor: pointer; color: black; }
+    .comments-list {
+        flex-grow: 1;
+        overflow-y: auto;
+        padding: 20px;
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+    }
+    .comment-item {
+        display: flex;
+        gap: 15px;
+    }
+    .comment-avatar {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        background: #3b824d;
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        flex-shrink: 0;
+    }
+    .comment-body {
+        background: #f8f9fa;
+        padding: 10px 15px;
+        border-radius: 15px;
+        flex-grow: 1;
+    }
+    .comment-user { font-weight: bold; font-size: 0.9rem; margin-bottom: 5px; }
+    .comment-text { font-size: 0.95rem; margin: 0; color: #333; }
+    .comment-time { font-size: 0.75rem; color: #aaa; margin-left: 10px; }
+    
+    .comment-form {
+        padding: 15px 20px;
+        border-top: 1px solid #eee;
+        display: flex;
+        gap: 10px;
+        background: white;
+    }
+    .comment-input {
+        flex-grow: 1;
+        border: 1px solid #ddd;
+        border-radius: 20px;
+        padding: 10px 15px;
+        outline: none;
+    }
+    .comment-btn {
+        background: #3b824d;
+        color: white;
+        border: none;
+        border-radius: 20px;
+        padding: 0 20px;
+        cursor: pointer;
+        font-weight: bold;
+    }
+
+    /* Story Views & Author UI */
+    .author-controls {
+        position: absolute;
+        bottom: 20px;
+        left: 20px;
+        z-index: 1065;
+        display: flex;
+        gap: 15px;
+    }
+    .author-btn {
+        background: rgba(0, 0, 0, 0.6);
+        backdrop-filter: blur(4px);
+        color: white;
+        padding: 8px 15px;
+        border-radius: 20px;
+        font-size: 0.9rem;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        transition: background 0.2s;
+    }
+    .author-btn:hover {
+        background: rgba(0, 0, 0, 0.8);
+    }
+    .author-btn.delete-btn {
+        background: rgba(220, 53, 69, 0.7);
+    }
+    .author-btn.delete-btn:hover {
+        background: rgba(220, 53, 69, 0.9);
+    }
+
+    /* Views Panel */
+    .views-panel {
+        position: absolute;
+        bottom: -100%;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 100%;
+        max-width: 500px;
+        height: 60vh;
+        background: white;
+        z-index: 1070;
+        border-radius: 20px 20px 0 0;
+        transition: bottom 0.3s ease;
+        display: flex;
+        flex-direction: column;
+        box-shadow: 0 -5px 15px rgba(0,0,0,0.3);
+    }
+    .views-panel.open {
+        bottom: 0;
+    }
+    .views-list {
+        flex-grow: 1;
+        overflow-y: auto;
+        padding: 15px;
+    }
+
+    @media (max-width: 768px) {
+        .floating-comments { width: 90%; }
+        .author-controls { bottom: 10px; left: 10px; }
+    }
+</style>
+
+<div class="story-viewer" id="storyViewer">
+    <div class="progress-container" id="progressContainer">
+        {% for s in storiesData %}
+            <div class="progress-bar">
+                <div class="progress-fill" id="progress-{{ loop.index0 }}"></div>
+            </div>
+        {% endfor %}
+    </div>
+
+    <div class="story-header">
+        <div class="story-user-info">
+            <div class="story-avatar">{{ storyUser.nom|first|upper }}</div>
+            <strong>{{ storyUser.nom }}</strong>
+            <span style="opacity: 0.7; font-size: 0.9em; margin-left: 10px;" id="storyTime"></span>
+        </div>
+        <a href="javascript:history.back()" class="close-story">✖</a>
+    </div>
+
+    <div class="story-navigation">
+        <div class="nav-zone" onclick="prevStory()"></div>
+        <div class="nav-zone" onclick="nextStory()"></div>
+    </div>
+
+    <div class="story-interactions" id="storyInteractions">
+        <div class="interaction-btn" id="likeBtn" onclick="toggleLike()">
+            <i class="bi bi-heart" id="likeIcon"></i>
+            <span id="likeCount">0</span>
+        </div>
+        <div class="interaction-btn" onclick="openComments()">
+            <i class="bi bi-chat-dots"></i>
+            <span id="commentCount">0</span>
+        </div>
+    </div>
+
+    <div id="mediaContainer" style="z-index: 1050; display: flex; justify-content: center; align-items: center; width: 100%; height: 100%;">
+        <!-- Media will be injected here via JS -->
+    </div>
+
+    <!-- Floating Comments on Screen -->
+    <div class="floating-comments" id="floatingComments">
+        <!-- Injected via JS -->
+    </div>
+
+    <!-- Author Controls: Delete and Views -->
+    <div class="author-controls" id="authorControls" style="display: none;">
+        <div class="author-btn" onclick="openViews()">
+            <i class="bi bi-eye"></i>
+            <span id="viewsCount">0</span> Vues
+        </div>
+        <div class="author-btn delete-btn" onclick="deleteStory()">
+            <i class="bi bi-trash"></i>
+        </div>
+    </div>
+
+    <!-- Comments Panel Overlay -->
+    <div class="comments-panel" id="commentsPanel">
+        <div class="comments-header">
+            <h3>Commentaires (<span id="panelCommentCount">0</span>)</h3>
+            <span class="close-comments" onclick="closeComments()"><i class="bi bi-x-lg"></i></span>
+        </div>
+        <div class="comments-list" id="commentsList">
+            <!-- Comments injected here -->
+            <div style="text-align:center; color:#999; margin-top: 20px;">Chargement...</div>
+        </div>
+        <form class="comment-form" onsubmit="submitComment(event)">
+            <input type="text" id="commentInput" class="comment-input" placeholder="Ajouter un commentaire..." autocomplete="off">
+            <button type="submit" class="comment-btn">Envoyer</button>
+        </form>
+    </div>
+
+    <!-- Views Panel Overlay -->
+    <div class="views-panel" id="viewsPanel">
+        <div class="comments-header" style="border-bottom: 1px solid #eee;">
+            <h3 style="margin:0; font-size:1.1rem; color:#333;">Vues 👁️</h3>
+            <span class="close-comments" onclick="closeViews()"><i class="bi bi-x-lg" style="color:#666;"></i></span>
+        </div>
+        <div class="views-list" id="viewsList">
+            <div style="text-align:center; color:#999; margin-top: 20px;">Chargement...</div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const stories = [
+        {% for s in storiesData %}
+        {
+            id: {{ s.entity.id }},
+            url: "{{ asset('uploads/stories/' ~ s.entity.mediaUrl) }}",
+            type: "{{ s.entity.mediaUrl|split('.')|last|lower in ['mp4', 'webm', 'ogg'] ? 'video' : 'image' }}",
+            time: "{{ s.entity.createdAt|date('H:i') }}",
+            likesCount: {{ s.likesCount }},
+            commentsCount: {{ s.commentsCount }},
+            isLiked: {{ s.isLiked ? 'true' : 'false' }},
+            isAuthor: {{ s.isAuthor ? 'true' : 'false' }},
+            viewsCount: {{ s.viewsCount }},
+            viewRegistered: false
+        }{% if not loop.last %},{% endif %}
+        {% endfor %}
+    ];
+
+    let currentIndex = 0;
+    let storyTimer;
+    let progressInterval;
+    let currentVideo = null; // reference playing video to pause/resume
+    let isPaused = false;
+    let remainingTime = 0;
+    let startTime = 0;
+    let STORY_DURATION = 14000; // 14 seconds
+
+
+    function updateInteractions() {
+        const story = stories[currentIndex];
+        
+        // Update Like UI
+        const btn = document.getElementById('likeBtn');
+        const icon = document.getElementById('likeIcon');
+        document.getElementById('likeCount').innerText = story.likesCount;
+        
+        if (story.isLiked) {
+            btn.classList.add('liked');
+            icon.classList.remove('bi-heart');
+            icon.classList.add('bi-heart-fill');
+        } else {
+            btn.classList.remove('liked');
+            icon.classList.remove('bi-heart-fill');
+            icon.classList.add('bi-heart');
+        }
+        
+        // Update Comments UI
+        document.getElementById('commentCount').innerText = story.commentsCount;
+        document.getElementById('panelCommentCount').innerText = story.commentsCount;
+        
+        // Show/Hide author controls
+        const authorControls = document.getElementById('authorControls');
+        const floatComments = document.getElementById('floatingComments');
+        if (story.isAuthor) {
+            authorControls.style.display = 'flex';
+            floatComments.style.bottom = '80px'; // move up to make room
+            document.getElementById('viewsCount').innerText = story.viewsCount;
+        } else {
+            authorControls.style.display = 'none';
+            floatComments.style.bottom = '20px';
+        }
+    }
+
+    async function toggleLike() {
+        const story = stories[currentIndex];
+        const prevLiked = story.isLiked;
+        
+        // Optimistic UI update
+        story.isLiked = !story.isLiked;
+        story.likesCount = story.isLiked ? story.likesCount + 1 : story.likesCount - 1;
+        updateInteractions();
+
+        try {
+            const resp = await fetch(`/story/${story.id}/like`, { method: 'POST' });
+            const data = await resp.json();
+            if (data.success) {
+                story.likesCount = data.likesCount;
+                story.isLiked = (data.action === 'liked');
+                updateInteractions();
+            }
+        } catch (e) {
+            // Revert on failure
+            story.isLiked = prevLiked;
+            story.likesCount = prevLiked ? story.likesCount + 1 : story.likesCount - 1;
+            updateInteractions();
+            console.error(e);
+        }
+    }
+
+    function openComments() {
+        pauseStory();
+        document.getElementById('commentsPanel').classList.add('open');
+        fetchComments();
+    }
+
+    function closeComments() {
+        document.getElementById('commentsPanel').classList.remove('open');
+        resumeStory();
+    }
+
+    async function fetchComments() {
+        const story = stories[currentIndex];
+        const list = document.getElementById('commentsList');
+        list.innerHTML = '<div style="text-align:center; color:#999; margin-top: 20px;">Chargement...</div>';
+
+        try {
+            const resp = await fetch(`/story/${story.id}/comments`);
+            const data = await resp.json();
+            if (data.success) {
+                list.innerHTML = '';
+                if (data.comments.length === 0) {
+                    list.innerHTML = '<div style="text-align:center; color:#999; margin-top: 20px;">Aucun commentaire pour le moment. Soyez le premier !</div>';
+                } else {
+                    data.comments.forEach(c => {
+                        list.innerHTML += `
+                            <div class="comment-item">
+                                <div class="comment-avatar">${c.userAvatar}</div>
+                                <div class="comment-body">
+                                    <div class="comment-user">${c.userName} <span class="comment-time">${c.date}</span></div>
+                                    <p class="comment-text">${c.content}</p>
+                                </div>
+                            </div>
+                        `;
+                    });
+                }
+            }
+        } catch(e) {
+            list.innerHTML = '<div style="text-align:center; color:red;">Erreur lors du chargement.</div>';
+        }
+    }
+
+    async function submitComment(e) {
+        e.preventDefault();
+        const input = document.getElementById('commentInput');
+        const text = input.value.trim();
+        if (!text) return;
+
+        const story = stories[currentIndex];
+        input.value = ''; // clear quickly
+
+        const prevCount = story.commentsCount;
+
+        try {
+            const resp = await fetch(`/story/${story.id}/comment`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ content: text })
+            });
+            const data = await resp.json();
+            if (data.success) {
+                story.commentsCount = data.commentsCount;
+                updateInteractions();
+                
+                // Construct comment HTML
+                const c = data.comment;
+                const commentHTML = `
+                    <div class="comment-item" style="animation: slideDown 0.3s ease-out;">
+                        <div class="comment-avatar">${c.userAvatar}</div>
+                        <div class="comment-body">
+                            <div class="comment-user">${c.userName} <span class="comment-time">${c.date}</span></div>
+                            <p class="comment-text">${c.content}</p>
+                        </div>
+                    </div>
+                `;
+                
+                const list = document.getElementById('commentsList');
+                // Remove the "Aucun commentaire" placeholder if it exists
+                if (prevCount === 0 || list.innerHTML.includes('Aucun commentaire')) {
+                    list.innerHTML = '';
+                }
+                
+                // Append dynamically to panel
+                list.insertAdjacentHTML('beforeend', commentHTML);
+                // Scroll to bottom
+                list.scrollTop = list.scrollHeight;
+                
+                // Also append dynamically to floating comments
+                appendFloatingComment(c);
+            }
+        } catch(e) {
+            console.error('Erreur', e);
+        }
+    }
+    
+    function appendFloatingComment(c) {
+        const floatContainer = document.getElementById('floatingComments');
+        const floatHTML = `
+            <div class="floating-comment">
+                <div class="floating-comment-avatar">${c.userAvatar}</div>
+                <div class="floating-comment-content">
+                    <span class="floating-comment-user">${c.userName}</span>
+                    <span>${c.content}</span>
+                </div>
+            </div>
+        `;
+        floatContainer.insertAdjacentHTML('beforeend', floatHTML);
+        
+        // Keep max 5 floating comments so it doesn't overflow
+        if (floatContainer.children.length > 5) {
+            floatContainer.removeChild(floatContainer.firstElementChild);
+        }
+    }
+    
+    async function loadFloatingComments(story) {
+        const floatContainer = document.getElementById('floatingComments');
+        floatContainer.innerHTML = '';
+        
+        if (story.commentsCount === 0) return;
+        
+        try {
+            const resp = await fetch(`/story/${story.id}/comments`);
+            const data = await resp.json();
+            if (data.success && data.comments.length > 0) {
+                // Take the last 4 comments max
+                const recentComments = data.comments.slice(-4);
+                recentComments.forEach(c => appendFloatingComment(c));
+            }
+        } catch(e) {
+            console.error('Failed to load floating comments', e);
+        }
+    }
+
+    function pauseStory() {
+        isPaused = true;
+        if (currentVideo) {
+            currentVideo.pause();
+        } else {
+            clearInterval(progressInterval);
+            clearTimeout(storyTimer);
+        }
+    }
+
+    function resumeStory() {
+        // If comments or views panel is open, do not resume
+        if (
+            document.getElementById('commentsPanel').classList.contains('open') || 
+            document.getElementById('viewsPanel').classList.contains('open')
+        ) return;
+
+        isPaused = false;
+        if (currentVideo) {
+            currentVideo.play();
+        } else {
+            // resume the remaining duration
+            progressInterval = setInterval(() => {
+                let elapsed = Date.now() - startTime;
+                let percent = (elapsed / STORY_DURATION) * 100;
+                if (percent >= 100) {
+                    percent = 100;
+                    clearInterval(progressInterval);
+                }
+                document.getElementById('progress-' + currentIndex).style.width = percent + '%';
+            }, 50);
+
+            let elapsedSoFar = Date.now() - startTime;
+            let timeRemaining = STORY_DURATION - elapsedSoFar;
+            storyTimer = setTimeout(() => {
+                nextStory();
+            }, timeRemaining > 0 ? timeRemaining : 0);
+        }
+    }
+
+    function renderStory(index) {
+        if (index < 0) {
+            currentIndex = 0;
+            return;
+        }
+        if (index >= stories.length) {
+            history.back();
+            return;
+        }
+
+        currentIndex = index;
+        const story = stories[currentIndex];
+        
+        // Provide fresh data
+        updateInteractions();
+        loadFloatingComments(story);
+        registerStoryView(story);
+        
+        // Update header time
+        document.getElementById('storyTime').innerText = story.time;
+
+        const container = document.getElementById('mediaContainer');
+        container.innerHTML = ''; // Clear current
+        currentVideo = null;
+        isPaused = false;
+
+        // Reset progress bars
+        for (let i = 0; i < stories.length; i++) {
+            const fill = document.getElementById('progress-' + i);
+            if (i < currentIndex) {
+                fill.style.width = '100%';
+            } else {
+                fill.style.width = '0%';
+            }
+        }
+
+        clearInterval(progressInterval);
+        clearTimeout(storyTimer);
+
+        if (story.type === 'video') {
+            const video = document.createElement('video');
+            video.src = story.url;
+            video.className = 'story-content';
+            video.autoplay = true;
+            video.controls = false;
+            currentVideo = video;
+            
+            video.onended = () => {
+                nextStory();
+            };
+            
+            video.ontimeupdate = () => {
+                if(!isPaused && video.duration) {
+                    const percent = (video.currentTime / video.duration) * 100;
+                    document.getElementById('progress-' + currentIndex).style.width = percent + '%';
+                }
+            };
+
+            container.appendChild(video);
+        } else {
+            const img = document.createElement('img');
+            img.src = story.url;
+            img.className = 'story-content';
+            container.appendChild(img);
+
+            // Start progress animation
+            startTime = Date.now();
+            progressInterval = setInterval(() => {
+                if (isPaused) {
+                    // shift start time so duration extends by paused time
+                    startTime += 50; 
+                    return;
+                }
+                let elapsed = Date.now() - startTime;
+                let percent = (elapsed / STORY_DURATION) * 100;
+                if (percent >= 100) {
+                    percent = 100;
+                    clearInterval(progressInterval);
+                }
+                document.getElementById('progress-' + currentIndex).style.width = percent + '%';
+            }, 50);
+
+            const checkTime = () => {
+                if (isPaused) {
+                    storyTimer = setTimeout(checkTime, 100);
+                    return;
+                }
+                let elapsed = Date.now() - startTime;
+                if (elapsed >= STORY_DURATION) {
+                    nextStory();
+                } else {
+                    storyTimer = setTimeout(checkTime, Number(STORY_DURATION - elapsed));
+                }
+            };
+            storyTimer = setTimeout(checkTime, STORY_DURATION);
+        }
+    }
+
+    function nextStory() {
+        if (!isPaused) renderStory(currentIndex + 1);
+    }
+
+    function prevStory() {
+        if (!isPaused) renderStory(currentIndex - 1);
+    }
+
+    async function registerStoryView(story) {
+        if (story.isAuthor || story.viewRegistered) return;
+        try {
+            await fetch(`/story/${story.id}/view`, { method: 'POST' });
+            story.viewRegistered = true;
+        } catch(e) {}
+    }
+
+    async function openViews() {
+        pauseStory();
+        document.getElementById('viewsPanel').classList.add('open');
+        const list = document.getElementById('viewsList');
+        list.innerHTML = '<div style="text-align:center; color:#999; margin-top: 20px;">Chargement...</div>';
+        
+        const story = stories[currentIndex];
+        try {
+            const resp = await fetch(`/story/${story.id}/views`);
+            const data = await resp.json();
+            if (data.success) {
+                list.innerHTML = '';
+                if (data.viewers.length === 0) {
+                    list.innerHTML = '<div style="text-align:center; color:#999; margin-top: 20px;">Aucune vue pour le moment</div>';
+                } else {
+                    data.viewers.forEach(v => {
+                        list.innerHTML += `
+                            <div style="display:flex; align-items:center; gap:10px; padding:8px 0; border-bottom:1px solid #f5f5f5;">
+                                <div style="width:32px; height:32px; background:#3b824d; color:white; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:bold; font-size: 0.8rem;">${v.avatar}</div>
+                                <div>
+                                    <div style="font-weight:bold; color:#333; font-size: 0.85rem;">${v.name}</div>
+                                    <div style="font-size:0.7rem; color:#888;">${v.date}</div>
+                                </div>
+                            </div>
+                        `;
+                    });
+                }
+            }
+        } catch(e) {
+            console.error('Erreur:', e);
+        }
+    }
+
+    function closeViews() {
+        document.getElementById('viewsPanel').classList.remove('open');
+        resumeStory();
+    }
+
+    async function deleteStory() {
+        if (!confirm('Voulez-vous vraiment supprimer cette Story ?')) return;
+        
+        pauseStory();
+        const story = stories[currentIndex];
+        try {
+            const resp = await fetch(`/story/${story.id}/delete`, { method: 'DELETE' });
+            const data = await resp.json();
+            if (data.success) {
+                // Remove from array and move to next
+                stories.splice(currentIndex, 1);
+                if (stories.length === 0) {
+                    history.back();
+                } else {
+                    renderStory(currentIndex >= stories.length ? stories.length - 1 : currentIndex);
+                }
+            } else {
+                alert('Erreur lors de la suppression');
+                resumeStory();
+            }
+        } catch(e) {
+            console.error('Delete error', e);
+            resumeStory();
+        }
+    }
+
+    // Start with the first story
+    renderStory(0);
+</script>
+{% endblock %}

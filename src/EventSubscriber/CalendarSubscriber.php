@@ -58,13 +58,19 @@ class CalendarSubscriber implements EventSubscriberInterface
 
         foreach ($activities as $activity) {
             $title = $activity->getTitle();
+            $beginAt = $activity->getBeginAt();
+
+            if ($title === null || $beginAt === null) {
+                continue;
+            }
+
             if ($activity->getCulture()) {
                 $title .= " (" . $activity->getCulture()->getNom() . ")";
             }
 
             $event = new Event(
                 $title,
-                $activity->getBeginAt(),
+                $beginAt,
                 $activity->getEndAt()
             );
 
@@ -90,6 +96,9 @@ class CalendarSubscriber implements EventSubscriberInterface
         $this->em->flush();
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     private function getEventOptions(Activity $activity): array
     {
         $type = $activity->getType();
@@ -122,7 +131,7 @@ class CalendarSubscriber implements EventSubscriberInterface
         ];
     }
 
-    private function lightenColor($hex): string
+    private function lightenColor(string $hex): string
     {
         // Version simplifiée : on retourne une couleur pastel fixe pour les tests
         // Ou on pourrait manipuler le HEX

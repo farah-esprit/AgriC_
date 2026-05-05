@@ -1,12 +1,41 @@
 {% extends 'agriculteur.html.twig' %}
 
-{% block title %}Détails de l'Événement{% endblock %}
+{% block title %}Détails de l'Événement - {{ evenement.titre }}{% endblock %}
+
+{% block stylesheets %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<style>
+    #map { height: 350px; border-radius: 12px; }
+    .weather-card {
+        background: linear-gradient(135deg, #1e3c72, #2a5298);
+        color: white;
+        border-radius: 15px;
+        padding: 20px;
+    }
+    .weather-temp { font-size: 3rem; font-weight: bold; }
+    .weather-icon img { width: 80px; }
+    .weather-detail { background: rgba(255,255,255,0.15); border-radius: 10px; padding: 10px; text-align: center; }
+    .rating-stars { display: flex; flex-direction: row-reverse; justify-content: flex-end; }
+    .btn-check:checked ~ label i,
+    .btn-check:hover ~ label i { color: #ffc107 !important; }
+    .cursor-pointer { cursor: pointer; padding: 0 4px; }
+</style>
+{% endblock %}
 
 {% block body %}
 <div class="container mt-5 pt-5 mb-5">
-    <div class="card shadow border-0" style="border-radius:15px;">
+
+    <!-- En-tête -->
+    <div class="card shadow border-0 mb-4" style="border-radius:15px;">
         <div class="card-header text-white px-4 py-3" style="background: linear-gradient(to right,#4a7c3a,#66bb6a); border-radius:15px 15px 0 0;">
-            <h4 class="mb-0">Détails de l'Événement: {{ evenement.titre }}</h4>
+            <div class="d-flex justify-content-between align-items-center">
+                <h4 class="mb-0">🎉 {{ evenement.titre }}</h4>
+                <div class="badge bg-white text-success fs-6 px-3 py-2">
+                    <i class="bi bi-star-fill text-warning"></i>
+                    {{ evenement.averageRating }} / 5
+                    <span class="text-muted small">({{ evenement.notes|length }} votes)</span>
+                </div>
+            </div>
         </div>
         <div class="card-body p-4">
             <table class="table table-bordered">
@@ -25,31 +54,64 @@
                     </tr>
                     <tr>
                         <th>Date de début</th>
-                        <td>{{ evenement.dateDebut }}</td>
+                        <td>{{ evenement.dateDebut ? evenement.dateDebut|date('d/m/Y H:i') : 'N/A' }}</td>
                     </tr>
                     <tr>
                         <th>Date de fin</th>
-                        <td>{{ evenement.dateFin }}</td>
+                        <td>{{ evenement.dateFin ? evenement.dateFin|date('d/m/Y H:i') : 'N/A' }}</td>
                     </tr>
                     <tr>
-                        <th>Lieu</th>
-                        <td>{{ evenement.lieu }}</td>
+                        <th>📍 Lieu</th>
+                        <td><strong>{{ evenement.lieu ?: 'Non défini' }}</strong></td>
                     </tr>
                     <tr>
                         <th>Capacité maximale</th>
                         <td>{{ evenement.capaciteMax }}</td>
                     </tr>
                     <tr>
-                        <th>ID Organisateur</th>
-                        <td>{{ evenement.organisateurId }}</td>
+                        <th>Organisateur</th>
+                        <td>{{ evenement.organisateur ? evenement.organisateur.nom ~ ' (ID: ' ~ evenement.organisateur.userId ~ ')' : 'N/A' }}</td>
+                    </tr>
+                    <tr>
+                        <th>Note Moyenne</th>
+                        <td>
+                            <div class="d-flex align-items-center">
+                                <span class="fs-4 fw-bold me-2">{{ evenement.averageRating }} / 5</span>
+                                <div class="text-warning">
+                                    {% for i in 1..5 %}
+                                        <i class="bi bi-star{{ i <= evenement.averageRating ? '-fill' : '' }}"></i>
+                                    {% endfor %}
+                                </div>
+                                <span class="ms-2 text-muted small">({{ evenement.notes|length }} votes)</span>
+                            </div>
+                        </td>
                     </tr>
                 </tbody>
             </table>
-            
+
+            <!-- Rating Form -->
+            {% if app.session.get('user_id') %}
+            <div class="card bg-light border-0 mt-4" style="border-radius: 12px;">
+                <div class="card-body">
+                    <h5 class="mb-3">⭐ Donnez votre avis</h5>
+                    <form action="{{ path('app_evenement_rate', {'idEvenement': evenement.idEvenement}) }}" method="post" class="d-flex align-items-center">
+                        <div class="rating-stars me-3">
+                            {% for i in 5..1 %}
+                                <input type="radio" name="note" value="{{ i }}" id="star{{ i }}" class="btn-check">
+                                <label for="star{{ i }}" class="cursor-pointer">
+                                    <i class="bi bi-star-fill text-muted fs-3"></i>
+                                </label>
+                            {% endfor %}
+                        </div>
+                        <button type="submit" class="btn btn-primary px-4">Noter</button>
+                    </form>
+                </div>
+            </div>
+            {% endif %}
+
             <div class="d-flex gap-2 mt-4">
                 <a href="{{ path('app_evenement_index') }}" class="btn btn-secondary">Retour à la liste</a>
                 <a href="{{ path('app_evenement_edit', {'idEvenement': evenement.idEvenement}) }}" class="btn btn-warning">Modifier</a>
-                
                 <form method="post" action="{{ path('app_evenement_delete', {'idEvenement': evenement.idEvenement}) }}" onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer cet événement ?');" style="display:inline-block;">
                     <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ evenement.idEvenement) }}">
                     <button class="btn btn-danger">Supprimer</button>
@@ -57,5 +119,189 @@
             </div>
         </div>
     </div>
+
+    <!-- Météo + Carte côte à côte -->
+    {% if evenement.lieu %}
+    <div class="row g-4">
+
+        <!-- Widget Météo OpenWeatherMap -->
+        <div class="col-md-5">
+            {% if weather %}
+            <div class="weather-card h-100">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <h5 class="mb-0 opacity-75">🌦️ Météo actuelle</h5>
+                        <h3 class="fw-bold mt-1">{{ weather.city_name }}{% if weather.country %}, {{ weather.country }}{% endif %}</h3>
+                        <p class="opacity-75 mb-0">{{ weather.description }}</p>
+                    </div>
+                    <div class="weather-icon">
+                        <img src="{{ weather.icon_url }}" alt="{{ weather.description }}">
+                    </div>
+                </div>
+                <div class="weather-temp mt-2">{{ weather.temperature }}°C</div>
+                <p class="opacity-75 mb-3">Ressenti {{ weather.feels_like }}°C</p>
+                <div class="row g-2">
+                    <div class="col-4">
+                        <div class="weather-detail">
+                            <div class="fw-bold">💧 {{ weather.humidity }}%</div>
+                            <small class="opacity-75">Humidité</small>
+                        </div>
+                    </div>
+                    <div class="col-4">
+                        <div class="weather-detail">
+                            <div class="fw-bold">💨 {{ weather.wind_speed }} km/h</div>
+                            <small class="opacity-75">Vent</small>
+                        </div>
+                    </div>
+                    <div class="col-4">
+                        <div class="weather-detail">
+                            <div class="fw-bold">📍 {{ evenement.lieu|split(',')|first }}</div>
+                            <small class="opacity-75">Lieu</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% else %}
+            <div class="card border-0 shadow-sm h-100" style="border-radius:15px;">
+                <div class="card-body d-flex flex-column align-items-center justify-content-center text-center py-5">
+                    <i class="bi bi-cloud-slash text-muted" style="font-size:3rem;"></i>
+                    <p class="text-muted mt-3">Météo indisponible pour ce lieu.<br>
+                    <small>Vérifiez votre clé API OpenWeatherMap dans le fichier <code>.env</code></small></p>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Carte OpenStreetMap + Leaflet.js -->
+        <div class="col-md-7">
+            <div class="card border-0 shadow-sm h-100" style="border-radius:15px; overflow:hidden;">
+                <div class="card-header bg-white py-3 px-4 border-0">
+                    <h5 class="mb-0 fw-bold">🗺️ Localisation : {{ evenement.lieu }}</h5>
+                </div>
+                <div class="card-body p-0">
+                    {% if coordinates %}
+                        <div id="map"></div>
+                    {% else %}
+                        <div class="d-flex flex-column align-items-center justify-content-center py-5 text-center">
+                            <i class="bi bi-geo-alt-fill text-muted" style="font-size:3rem;"></i>
+                            <p class="text-muted mt-3">Impossible de localiser ce lieu sur la carte.</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    </div>
+    {% endif %}
+
+    <!-- Section Intelligence Artificielle (Prédiction) -->
+    <div class="card shadow-sm border-0 mt-4" style="border-radius:15px; background: linear-gradient(145deg, #f3f4f6, #ffffff);">
+        <div class="card-body p-4 text-center">
+            <h5 class="fw-bold mb-3">🤖 Intelligence Artificielle - Prédiction des Réclamations</h5>
+            <p class="text-muted small mb-4">Notre modèle Scikit-Learn (Random Forest) analyse la capacité, la durée et la météo prévue pour anticiper le flux de réclamations.</p>
+            
+            <button id="btn-predict-ai" class="btn btn-dark px-4 py-2" style="border-radius:25px;">
+                <i class="bi bi-magic text-warning"></i> Lancer l'analyse prédictive IA
+            </button>
+
+            <div id="ai-loading" class="d-none mt-3">
+                <div class="spinner-border text-dark" role="status">
+                    <span class="visually-hidden">Chargement...</span>
+                </div>
+                <p class="mt-2 text-muted small fade-in"><em>Entraînement des arbres de décision en cours...</em></p>
+            </div>
+
+            <div id="ai-result" class="d-none mt-4 text-center p-3" style="border-radius:12px; background: #fff; border: 1px solid #e0e0e0;">
+                <h3 class="mb-0 fw-bold" id="ai-number">--</h3>
+                <p class="text-muted small">Réclamations estimées</p>
+                <div id="ai-alert" class="badge bg-success fs-6 px-3 py-2 mt-2">Niveau de risque acceptable</div>
+            </div>
+        </div>
+    </div>
+
 </div>
+{% endblock %}
+
+{% block javascripts %}
+{% if coordinates %}
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+    var lat = {{ coordinates.lat }};
+    var lon = {{ coordinates.lon }};
+    var lieu = "{{ evenement.lieu|e('js') }}";
+
+    var map = L.map('map').setView([lat, lon], 13);
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+    }).addTo(map);
+
+    var greenIcon = L.icon({
+        iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-green.png',
+        shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+        iconSize: [25, 41],
+        iconAnchor: [12, 41],
+        popupAnchor: [1, -34],
+    });
+
+    L.marker([lat, lon], { icon: greenIcon })
+        .addTo(map)
+        .bindPopup('<strong>🎉 ' + lieu + '</strong><br>📍 Lieu de l\'événement')
+        .openPopup();
+</script>
+{% endif %}
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const btnPredict = document.getElementById('btn-predict-ai');
+    if (btnPredict) {
+        btnPredict.addEventListener('click', function() {
+            // Afficher le chargement
+            btnPredict.classList.add('d-none');
+            document.getElementById('ai-loading').classList.remove('d-none');
+            document.getElementById('ai-result').classList.add('d-none');
+
+            // Appel AJAX vers le contrôleur
+            fetch('{{ path('app_evenement_predict_risk', {'idEvenement': evenement.idEvenement}) }}', {
+                method: 'POST',
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('ai-loading').classList.add('d-none');
+                btnPredict.classList.remove('d-none');
+                btnPredict.innerHTML = '<i class="bi bi-arrow-repeat"></i> Relancer la simulation';
+
+                if (data.error) {
+                    let msg = 'Erreur IA : ' + data.error;
+                    if (data.details) {
+                        msg += '\n\nDétails : ' + data.details;
+                    }
+                    alert(msg);
+                    return;
+                }
+
+                // Affichage du résultat
+                document.getElementById('ai-result').classList.remove('d-none');
+                document.getElementById('ai-number').textContent = data.prediction_reclamations + ' plaintes';
+                
+                const alertBadge = document.getElementById('ai-alert');
+                if (data.alerte_critique) {
+                    alertBadge.className = 'badge bg-danger fs-6 px-3 py-2 mt-2';
+                    alertBadge.innerHTML = '⚠️ ALERTE CRITIQUE : Risque élevé (' + data.ratio + '%) !';
+                } else {
+                    alertBadge.className = 'badge bg-success fs-6 px-3 py-2 mt-2';
+                    alertBadge.innerHTML = '✅ Risque maîtrisable (' + data.ratio + '%)';
+                }
+            })
+            .catch(error => {
+                document.getElementById('ai-loading').classList.add('d-none');
+                btnPredict.classList.remove('d-none');
+                alert("Erreur de connexion avec le module IA.");
+            });
+        });
+    }
+});
+</script>
 {% endblock %}

@@ -12,6 +12,7 @@ class StockChatbotService
         private ProduitRepository $produitRepository
     ) {}
 
+    /** @return array<string, mixed> */
     public function getReply(string $message): array
     {
         $message = mb_strtolower(trim($message));
@@ -32,15 +33,18 @@ class StockChatbotService
         return $this->searchProductReply($message);
     }
 
+    /** @return array<string, mixed> */
     private function getAlertsReply(): array
     {
+        /** @var \App\Entity\Stock[] $stocks */
         $stocks = $this->stockRepository->findAll();
         $alerts = [];
 
         foreach ($stocks as $stock) {
-            if ($stock->getDisponible() <= $stock->getSeuilAlert()) {
+            $produit = $stock->getProduit();
+            if ($produit && $stock->getDisponible() <= $stock->getSeuilAlert()) {
                 $alerts[] = sprintf("⚠️ **%s** : %d restant(s) (Seuil: %d)", 
-                    $stock->getProduit()->getNom(), 
+                    $produit->getNom(), 
                     $stock->getDisponible(), 
                     $stock->getSeuilAlert()
                 );
@@ -60,14 +64,19 @@ class StockChatbotService
         ];
     }
 
+    /** @return array<string, mixed> */
     private function getAllStockReply(): array
     {
+        /** @var \App\Entity\Stock[] $stocks */
         $stocks = $this->stockRepository->findAll();
         $lines = [];
 
         foreach ($stocks as $stock) {
+            $produit = $stock->getProduit();
+            if (!$produit) continue;
+            
             $status = $stock->getDisponible() <= $stock->getSeuilAlert() ? '⚠️' : '✅';
-            $lines[] = sprintf("%s **%s** : %d en stock", $status, $stock->getProduit()->getNom(), $stock->getDisponible());
+            $lines[] = sprintf("%s **%s** : %d en stock", $status, $produit->getNom(), $stock->getDisponible());
         }
 
         if (empty($lines)) {
@@ -83,6 +92,7 @@ class StockChatbotService
         ];
     }
 
+    /** @return array<string, mixed> */
     private function getHelpReply(): array
     {
         return [
@@ -91,13 +101,16 @@ class StockChatbotService
         ];
     }
 
+    /** @return array<string, mixed> */
     private function searchProductReply(string $query): array
     {
+        /** @var \App\Entity\Produit[] $produits */
         $produits = $this->produitRepository->findAll();
         $found = null;
 
         foreach ($produits as $p) {
-            if (str_contains(mb_strtolower($p->getNom()), $query)) {
+            $nom = $p->getNom() ?? '';
+            if (str_contains(mb_strtolower($nom), $query)) {
                 $found = $p;
                 break;
             }

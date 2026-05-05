@@ -55,8 +55,8 @@ class FaceController extends AbstractController
             [, $imageBase64] = explode(',', $imageBase64);
         }
 
-        $imageData = base64_decode($imageBase64);
-        if ($imageData === false) {
+        $imageData = base64_decode($imageBase64, true);
+        if (!$imageData) {
             return new JsonResponse(['success' => false, 'message' => 'Image invalide.'], 400);
         }
 
@@ -141,7 +141,11 @@ class FaceController extends AbstractController
             return new JsonResponse(['success' => false, 'message' => 'Image de référence introuvable.'], 500);
         }
 
-        $refImageBase64 = base64_encode(file_get_contents($refImagePath));
+        $imageContent = file_get_contents($refImagePath);
+        if ($imageContent === false) {
+            return new JsonResponse(['success' => false, 'message' => 'Erreur lors de la lecture de l\'image de référence.'], 500);
+        }
+        $refImageBase64 = base64_encode($imageContent);
 
         // Appeler le micro-service Python
         try {

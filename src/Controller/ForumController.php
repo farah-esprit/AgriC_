@@ -32,6 +32,10 @@ class ForumController extends AbstractController
 
         $qb = $em->getRepository(Thread::class)
             ->createQueryBuilder('t')
+            ->leftJoin('t.user', 'u')
+            ->addSelect('u')
+            ->leftJoin('t.responses', 'r')
+            ->addSelect('r')
             ->orderBy('t.createdAt', 'DESC');
 
         if ($title) {
@@ -61,7 +65,7 @@ class ForumController extends AbstractController
             return $this->redirectToRoute('app_home');
         }
 
-        $user = $em->getRepository(User::class)->find($session->get('user_id'));
+        $user = $em->getReference(User::class, $session->get('user_id'));
 
         $thread = new Thread();
         $form = $this->createForm(ThreadType::class, $thread)->handleRequest($request);
@@ -90,7 +94,7 @@ class ForumController extends AbstractController
             throw $this->createNotFoundException();
         }
 
-        $user = $em->getRepository(User::class)->find($session->get('user_id'));
+        $user = $em->getReference(User::class, $session->get('user_id'));
 
         $responseEntity = new ForumResponse();
         $form = $this->createForm(ResponseType::class, $responseEntity)->handleRequest($request);
@@ -100,7 +104,7 @@ class ForumController extends AbstractController
             $responseEntity->setThread($thread);
 
             if ($parentId = $request->request->get('parent_id')) {
-                $parent = $em->getRepository(ForumResponse::class)->find($parentId);
+                $parent = $em->getReference(ForumResponse::class, $parentId);
                 if ($parent) {
                     $responseEntity->setParentResponse($parent);
                 }
@@ -123,7 +127,12 @@ class ForumController extends AbstractController
     {
         $thread = $em->getRepository(Thread::class)->find($id);
 
-        if (!$thread || $thread->getUser()->getUserId() !== $session->get('user_id')) {
+        if (!$thread) {
+            return $this->redirectToRoute('thread_index');
+        }
+
+        $threadUser = $thread->getUser();
+        if (!$threadUser || $threadUser->getUserId() !== $session->get('user_id')) {
             return $this->redirectToRoute('thread_index');
         }
 
@@ -150,7 +159,8 @@ class ForumController extends AbstractController
             return $this->redirectToRoute('thread_index');
         }
 
-        if ($this->isCsrfTokenValid('delete'.$id, $request->request->get('_token'))) {
+        $token = $request->request->get('_token');
+        if ($this->isCsrfTokenValid('delete'.$id, is_string($token) ? $token : null)) {
             $em->remove($thread);
             $em->flush();
         }

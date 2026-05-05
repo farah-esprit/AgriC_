@@ -11,6 +11,9 @@ use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 use Symfony\Component\Validator\Constraints as Assert;
 
+/**
+ * @extends AbstractType<Culture>
+ */
 class CultureType extends AbstractType
 {
     public function buildForm(FormBuilderInterface $builder, array $options): void

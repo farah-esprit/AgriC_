@@ -11,6 +11,7 @@ use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
 use Gedmo\Mapping\Annotation as Gedmo;
+use Symfony\Component\Serializer\Attribute\Ignore;
 
 #[ORM\Entity(repositoryClass: UserRepository::class)]
 #[ORM\Table(name: 'user')]
@@ -50,6 +51,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     private ?string $telephone = null;
 
     #[ORM\Column(type: 'string', length: 255, name: 'motDePasse')]
+    #[Ignore]
     private ?string $motDePasse = null;
 
     /**
@@ -66,12 +68,15 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         message: 'Le mot de passe doit contenir au moins une majuscule, une minuscule, un chiffre et un caractère spécial.',
         groups: ['registration']
     )]
+    #[Ignore]
     private ?string $plainPassword = null;
 
     #[ORM\Column(type: 'string', length: 255, nullable: true)]
+    #[Ignore]
     private ?string $resetToken = null;
 
     #[ORM\Column(type: 'datetime_immutable', nullable: true)]
+    #[Ignore]
     private ?\DateTimeImmutable $resetTokenRequestedAt = null;
 
     #[ORM\Column(type: 'string', length: 50, nullable: true)]
@@ -91,19 +96,24 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column(type: 'datetime', nullable: true, name: 'date_creation')]
     private ?\DateTimeInterface $dateCreation = null;
 
-    #[ORM\OneToMany(mappedBy: 'organisateur', targetEntity: Evenement::class)]
+    /** @var Collection<int, Evenement> */
+    #[ORM\OneToMany(mappedBy: 'organisateur', targetEntity: Evenement::class, cascade: ['remove'])]
     private Collection $evenements;
 
-    #[ORM\OneToMany(mappedBy: 'utilisateur', targetEntity: Reclamation::class)]
+    /** @var Collection<int, Reclamation> */
+    #[ORM\OneToMany(mappedBy: 'utilisateur', targetEntity: Reclamation::class, cascade: ['remove'])]
     private Collection $reclamations;
 
-    #[ORM\OneToMany(mappedBy: 'user', targetEntity: Thread::class)]
+    /** @var Collection<int, Thread> */
+    #[ORM\OneToMany(mappedBy: 'user', targetEntity: Thread::class, cascade: ['remove'])]
     private Collection $threads;
 
-    #[ORM\OneToMany(mappedBy: 'user', targetEntity: Response::class)]
+    /** @var Collection<int, Response> */
+    #[ORM\OneToMany(mappedBy: 'user', targetEntity: Response::class, cascade: ['remove'])]
     private Collection $responses;
 
-    #[ORM\OneToMany(mappedBy: 'user', targetEntity: Commande::class)]
+    /** @var Collection<int, Commande> */
+    #[ORM\OneToMany(mappedBy: 'user', targetEntity: Commande::class, cascade: ['remove'])]
     private Collection $commandes;
 
     public function __construct()
@@ -117,6 +127,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     }
 
     #[ORM\Column(type: 'string', length: 255, nullable: true)]
+    #[Ignore]
     private ?string $totpSecret = null;
 
     #[ORM\Column(type: 'string', length: 255, nullable: true, name: 'face_image_path')]
@@ -266,7 +277,14 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
 
     public function getRoles(): array
     {
-        $roles = [$this->role ?: 'ROLE_USER'];
+        // Symfony attend des rôles préfixés par ROLE_
+        $roleMap = [
+            'ADMIN'        => 'ROLE_ADMIN',
+            'AGRICULTEUR'  => 'ROLE_AGRICULTEUR',
+            'FOURNISSEUR'  => 'ROLE_FOURNISSEUR',
+        ];
+        $role = $this->role ?: 'ROLE_USER';
+        $roles = [$roleMap[$role] ?? $role];
         $roles[] = 'ROLE_USER';
         return array_unique($roles);
     }

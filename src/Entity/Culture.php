@@ -10,6 +10,7 @@ use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity(repositoryClass: CultureRepository::class)]
 #[ORM\Table(name: 'culture')]
+#[ORM\Index(columns: ['idUser'])]
 class Culture
 {
     #[ORM\Id]
@@ -87,7 +88,10 @@ class Culture
     private ?User $user = null;
 
     // ── Relation OneToMany vers Diagnostic ──
-    #[ORM\OneToMany(mappedBy: 'culture', targetEntity: Diagnostic::class, cascade: ['remove'])]
+    /**
+     * @var Collection<int, Diagnostic>
+     */
+    #[ORM\OneToMany(mappedBy: 'culture', targetEntity: Diagnostic::class, cascade: ['remove'], orphanRemoval: true)]
     private Collection $diagnostics;
 
     public function __construct()
@@ -190,6 +194,7 @@ class Culture
         return $this;
     }
 
+    /** @return Collection<int, Diagnostic> */
     public function getDiagnostics(): Collection
     {
         return $this->diagnostics;

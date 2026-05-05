@@ -55,6 +55,10 @@ class CultureImageAnalysisController extends AbstractController
                 return $errorResponse;
             }
 
+            if (!$resultat) {
+                return $this->json(['success' => false, 'message' => 'Erreur lors de l\'analyse.'], Response::HTTP_INTERNAL_SERVER_ERROR);
+            }
+
             return $this->json([
                 'success' => true,
                 'data' => $this->buildPayload($resultat, $culture),
@@ -104,6 +108,10 @@ class CultureImageAnalysisController extends AbstractController
                 return $errorResponse;
             }
 
+            if (!$resultat) {
+                return $this->json(['success' => false, 'message' => 'Erreur lors de l\'analyse.'], Response::HTTP_INTERNAL_SERVER_ERROR);
+            }
+
             return $this->json([
                 'success' => true,
                 'data' => $this->buildPayload($resultat, $culture),
@@ -148,6 +156,9 @@ class CultureImageAnalysisController extends AbstractController
         return $this->findCultureById($raw);
     }
 
+    /**
+     * @param array<string, mixed> $data
+     */
     private function resolveCultureFromPayload(array $data): ?Culture
     {
         return $this->findCultureById($data['idCulture'] ?? null);

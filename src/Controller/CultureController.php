@@ -77,10 +77,17 @@ class CultureController extends AbstractController
         $erreurs = [];
 
         if ($request->isMethod('POST')) {
-            $nom          = trim($request->request->get('nom'));
-            $type         = $request->request->get('type');
-            $superficie   = $request->request->get('superficie');
-            $localisation = trim($request->request->get('localisation'));
+            $nomRaw = $request->request->get('nom');
+            $nom = is_string($nomRaw) ? trim($nomRaw) : '';
+            
+            $typeRaw = $request->request->get('type');
+            $type = is_string($typeRaw) ? $typeRaw : '';
+            
+            $superficieRaw = $request->request->get('superficie');
+            $superficie = is_string($superficieRaw) ? $superficieRaw : (is_numeric($superficieRaw) ? (string)$superficieRaw : '');
+            
+            $localisationRaw = $request->request->get('localisation');
+            $localisation = is_string($localisationRaw) ? trim($localisationRaw) : '';
 
             $constraintString = new Regex([
                 'pattern' => '/^[a-zA-ZÀ-ÿ\s\-]+$/',
@@ -165,10 +172,17 @@ class CultureController extends AbstractController
         $erreurs = [];
 
         if ($request->isMethod('POST')) {
-            $nom          = trim($request->request->get('nom'));
-            $type         = $request->request->get('type');
-            $superficie   = $request->request->get('superficie');
-            $localisation = trim($request->request->get('localisation'));
+            $nomRaw = $request->request->get('nom');
+            $nom = is_string($nomRaw) ? trim($nomRaw) : '';
+
+            $typeRaw = $request->request->get('type');
+            $type = is_string($typeRaw) ? $typeRaw : '';
+
+            $superficieRaw = $request->request->get('superficie');
+            $superficie = is_string($superficieRaw) ? $superficieRaw : (is_numeric($superficieRaw) ? (string)$superficieRaw : '');
+
+            $localisationRaw = $request->request->get('localisation');
+            $localisation = is_string($localisationRaw) ? trim($localisationRaw) : '';
 
             $constraintString = new Regex([
                 'pattern' => '/^[a-zA-ZÀ-ÿ\s\-]+$/',
@@ -219,7 +233,8 @@ class CultureController extends AbstractController
             return $this->redirectToRoute('app_culture_index');
         }
 
-        if ($this->isCsrfTokenValid('delete' . $culture->getIdCulture(), $request->request->get('_token'))) {
+        $token = $request->request->get('_token');
+        if ($this->isCsrfTokenValid('delete' . $culture->getIdCulture(), is_string($token) ? $token : null)) {
             $em->remove($culture);
             $em->flush();
             $this->addFlash('success', 'Culture supprimée avec succès !');

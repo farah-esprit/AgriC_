@@ -11,7 +11,7 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
-use Symfony\Component\Routing\Attribute\ParamConverter;
+use Symfony\Bridge\Doctrine\Attribute\MapEntity;
 
 #[Route('/stock')]
 class StockController extends AbstractController
@@ -33,6 +33,11 @@ class StockController extends AbstractController
 
         if ($form->isSubmitted() && $form->isValid()) {
             $produit = $stock->getProduit();
+
+            if ($produit === null) {
+                $this->addFlash('danger', 'Veuillez sélectionner un produit.');
+                return $this->render('stock/new.html.twig', ['form' => $form->createView()]);
+            }
 
             if ($produit->getStock() !== null) {
                 $this->addFlash('danger', 'Ce produit a déjà un stock associé.');
@@ -57,8 +62,7 @@ class StockController extends AbstractController
     }
 
     #[Route('/{id}/edit', name: 'app_stock_edit', methods: ['GET', 'POST'])]
-    #[ParamConverter('stock', options: ['mapping' => ['id' => 'idStock']])]
-    public function edit(Request $request, Stock $stock, EntityManagerInterface $em): Response
+    public function edit(Request $request, #[MapEntity(mapping: ['id' => 'idStock'])] Stock $stock, EntityManagerInterface $em): Response
     {
        $form = $this->createForm(StockType::class, $stock, ['is_edit' => true]);
         $form->handleRequest($request);
@@ -81,10 +85,10 @@ class StockController extends AbstractController
     }
 
     #[Route('/{id}/delete', name: 'app_stock_delete', methods: ['POST'])]
-    #[ParamConverter('stock', options: ['mapping' => ['id' => 'idStock']])]
-    public function delete(Request $request, Stock $stock, EntityManagerInterface $em): Response
+    public function delete(Request $request, #[MapEntity(mapping: ['id' => 'idStock'])] Stock $stock, EntityManagerInterface $em): Response
     {
-        if ($this->isCsrfTokenValid('delete' . $stock->getIdStock(), $request->request->get('_token'))) {
+        $token = $request->request->get('_token');
+        if ($this->isCsrfTokenValid('delete' . $stock->getIdStock(), is_string($token) ? $token : null)) {
             $em->remove($stock);
             $em->flush();
             $this->addFlash('success', 'Stock supprimé.');

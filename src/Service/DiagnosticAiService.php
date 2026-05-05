@@ -20,6 +20,7 @@ class DiagnosticAiService
         private readonly LoggerInterface $logger,
     ) {}
 
+    /** @return array<string, mixed>|null */
     public function analyserSymptomes(
         string  $symptomes,
         ?string $nomCulture = null,
@@ -50,6 +51,7 @@ class DiagnosticAiService
         }
     }
 
+    /** @return array<string, mixed>|null */
     public function analyserImage(
         string $imagePath,
         ?string $nomCulture = null,
@@ -86,6 +88,7 @@ class DiagnosticAiService
         }
     }
 
+    /** @return array<string, mixed> */
     private function resultatErreur(string $message): array
     {
         return [

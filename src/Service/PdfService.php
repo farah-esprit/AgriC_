@@ -7,7 +7,7 @@ use Dompdf\Options;
 
 class PdfService
 {
-    private $domPdf;
+    private Dompdf $domPdf;
 
     public function __construct()
     {
@@ -23,7 +23,7 @@ class PdfService
     /**
      * @param string $html
      */
-    public function showPdfFile($html)
+    public function showPdfFile(string $html): void
     {
         $this->domPdf->loadHtml($html);
         $this->domPdf->render();
@@ -36,7 +36,7 @@ class PdfService
      * @param string $html
      * @return string
      */
-    public function generateBinaryPDF($html)
+    public function generateBinaryPDF(string $html): string
     {
         $this->domPdf->loadHtml($html);
         $this->domPdf->render();

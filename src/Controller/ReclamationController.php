@@ -12,16 +12,31 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
 use Symfony\Component\Routing\Attribute\Route;
-use Symfony\Component\Routing\Attribute\ParamConverter;
+use Symfony\Bridge\Doctrine\Attribute\MapEntity;
 
 #[Route('/reclamation')]
 class ReclamationController extends AbstractController
 {
     #[Route('/', name: 'app_reclamation_index', methods: ['GET'])]
-    public function index(ReclamationRepository $repo): Response
+    public function index(Request $request, ReclamationRepository $repo): Response
     {
+        $search = $request->query->get('q');
+        $sort = $request->query->get('sort', 'dateCreation');
+        $direction = $request->query->get('direction', 'DESC');
+
+        $reclamations = $repo->findBySearchAndSort($search, $sort, $direction);
+
+        // Récupération des statistiques
+        $statsStatus = $repo->countByStatus();
+        $statsPriority = $repo->countByPriority();
+
         return $this->render('reclamation/index.html.twig', [
-            'reclamations' => $repo->findAll(),
+            'reclamations' => $reclamations,
+            'statsStatus' => $statsStatus,
+            'statsPriority' => $statsPriority,
+            'currentSearch' => $search,
+            'currentSort' => $sort,
+            'currentDirection' => $direction,
         ]);
     }
 
@@ -51,8 +66,7 @@ class ReclamationController extends AbstractController
     }
 
     #[Route('/{idReclamation}', name: 'app_reclamation_show', methods: ['GET'])]
-    #[ParamConverter('reclamation', options: ['mapping' => ['idReclamation' => 'idReclamation']])]
-    public function show(Reclamation $reclamation): Response
+    public function show(#[MapEntity(mapping: ['idReclamation' => 'idReclamation'])] Reclamation $reclamation): Response
     {
         return $this->render('reclamation/show.html.twig', [
             'reclamation' => $reclamation,
@@ -60,8 +74,7 @@ class ReclamationController extends AbstractController
     }
 
     #[Route('/{idReclamation}/edit', name: 'app_reclamation_edit', methods: ['GET', 'POST'])]
-    #[ParamConverter('reclamation', options: ['mapping' => ['idReclamation' => 'idReclamation']])]
-    public function edit(Request $request, Reclamation $reclamation, EntityManagerInterface $em): Response
+    public function edit(Request $request, #[MapEntity(mapping: ['idReclamation' => 'idReclamation'])] Reclamation $reclamation, EntityManagerInterface $em): Response
     {
         $form = $this->createForm(ReclamationType::class, $reclamation)->handleRequest($request);
 
@@ -77,10 +90,10 @@ class ReclamationController extends AbstractController
     }
 
     #[Route('/{idReclamation}', name: 'app_reclamation_delete', methods: ['POST'])]
-    #[ParamConverter('reclamation', options: ['mapping' => ['idReclamation' => 'idReclamation']])]
-    public function delete(Request $request, Reclamation $reclamation, EntityManagerInterface $em): Response
+    public function delete(Request $request, #[MapEntity(mapping: ['idReclamation' => 'idReclamation'])] Reclamation $reclamation, EntityManagerInterface $em): Response
     {
-        if ($this->isCsrfTokenValid('delete'.$reclamation->getIdReclamation(), $request->request->get('_token'))) {
+        $token = $request->request->get('_token');
+        if ($this->isCsrfTokenValid('delete'.$reclamation->getIdReclamation(), is_string($token) ? $token : null)) {
             $em->remove($reclamation);
             $em->flush();
         }

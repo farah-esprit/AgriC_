@@ -6,14 +6,15 @@ use Symfony\Contracts\HttpClient\HttpClientInterface;
 
 class IaService
 {
-    private $client;
+    private HttpClientInterface $client;
 
     public function __construct(HttpClientInterface $client)
     {
         $this->client = $client;
     }
 
-    public function predict($symptomes, $culture)
+    /** @return array<string, mixed> */
+    public function predict(string $symptomes, string $culture): array
     {
         $response = $this->client->request(
             'POST',

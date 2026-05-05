@@ -9,9 +9,9 @@ use Psr\Log\LoggerInterface;
 
 class PredictionService
 {
-    private $commandeRepository;
-    private $projectDir;
-    private $logger;
+    private CommandeRepository $commandeRepository;
+    private string $projectDir;
+    private LoggerInterface $logger;
 
     public function __construct(CommandeRepository $commandeRepository, string $projectDir, LoggerInterface $logger)
     {
@@ -53,7 +53,11 @@ class PredictionService
         
         // On Windows, might need 'python' or 'py'
         $process = new Process(['python', $scriptPath]);
-        $process->setInput(json_encode($data));
+        $encodedData = json_encode($data);
+        if ($encodedData === false) {
+            return $this->calculateHeuristic($data);
+        }
+        $process->setInput($encodedData);
         
         try {
             $process->run();
@@ -80,6 +84,7 @@ class PredictionService
 
     /**
      * Simple fallback if Python/ML fails: Average consumption * 30 days
+     * @param array<int, array<string, mixed>> $data
      */
     private function calculateHeuristic(array $data): float
     {

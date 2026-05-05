@@ -1,0 +1,332 @@
+﻿vendor/bin/phpstan : Note: Using configuration file C:\Users\Admin\Documents\AgriC_ (3)\AgriC_\phpstan.neon.
+Au caractère Ligne:1 : 1
++ vendor/bin/phpstan analyse --no-progress > phpstan_errors.txt 2>&1
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (Note: Using con..._\phpstan.neon.:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+ ------ -------------------------------------------------------------------------------------------------------------- 
+  Line   AnalyticsBundle\Service\PredictionService.php                                                                 
+ ------ -------------------------------------------------------------------------------------------------------------- 
+  12     Property App\AnalyticsBundle\Service\PredictionService::$commandeRepository has no type specified.            
+         ­ƒ¬¬  missingType.property                                                                                      
+  13     Property App\AnalyticsBundle\Service\PredictionService::$projectDir has no type specified.                    
+         ­ƒ¬¬  missingType.property                                                                                      
+  14     Property App\AnalyticsBundle\Service\PredictionService::$logger has no type specified.                        
+         ­ƒ¬¬  missingType.property                                                                                      
+  56     Parameter #1 $input of method Symfony\Component\Process\Process::setInput() expects                           
+         resource|string|Traversable|null, string|false given.                                                         
+         ­ƒ¬¬  argument.type                                                                                             
+  84     Method App\AnalyticsBundle\Service\PredictionService::calculateHeuristic() has parameter $data with no value  
+         type specified in iterable type array.                                                                        
+         ­ƒ¬¬  missingType.iterableValue                                                                                 
+         ­ƒÆí  See: https://phpstan.org/blog/solving-phpstan-no-value-type-specified-in-iterable-type                    
+ ------ -------------------------------------------------------------------------------------------------------------- 
+
+ ------ --------------------------------------------------------------------------------------------------------------- 
+  Line   Controller\AdminController.php                                                                                 
+ ------ --------------------------------------------------------------------------------------------------------------- 
+  214    Parameter #1 $entity of method Gedmo\Loggable\Entity\Repository\LogEntryRepository<Gedmo\Loggable\Entity\LogE  
+         ntry>::getLogEntries() expects Gedmo\Loggable\Entity\LogEntry, App\Entity\User given.                          
+         ­ƒ¬¬  argument.type                                                                                              
+  217    Parameter #1 $entity of method Gedmo\Loggable\Entity\Repository\LogEntryRepository<Gedmo\Loggable\Entity\LogE  
+         ntry>::getLogEntries() expects Gedmo\Loggable\Entity\LogEntry, App\Entity\Profil given.                        
+         ­ƒ¬¬  argument.type                                                                                              
+  258    Cannot call method format() on DateTimeInterface|null.                                                         
+         ­ƒ¬¬  method.nonObject                                                                                           
+  288    Parameter #1 $stream of function fprintf expects resource, resource|false given.                               
+         ­ƒ¬¬  argument.type                                                                                              
+  290    Parameter #1 $stream of function fputcsv expects resource, resource|false given.                               
+         ­ƒ¬¬  argument.type                                                                                              
+  293    Parameter #1 $stream of function fputcsv expects resource, resource|false given.                               
+         ­ƒ¬¬  argument.type                                                                                              
+  303    Parameter #1 $stream of function fclose expects resource, resource|false given.                                
+         ­ƒ¬¬  argument.type                                                                                              
+ ------ --------------------------------------------------------------------------------------------------------------- 
+
+ ------ --------------------------------------------------------------------------------------------------------------- 
+  Line   Controller\AuthController.php                                                                                  
+ ------ --------------------------------------------------------------------------------------------------------------- 
+  66     Parameter #2 $plainPassword of method                                                                          
+         Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface::hashPassword() expects string,            
+         string|null given.                                                                                             
+         ­ƒ¬¬  argument.type                                                                                              
+  81     Parameter #3 $userEmail of method                                                                              
+         SymfonyCasts\Bundle\VerifyEmail\VerifyEmailHelperInterface::generateSignature() expects string, string|null    
+         given.                                                                                                         
+         ­ƒ¬¬  argument.type                                                                                              
+  87     Parameter #1 ...$addresses of method Symfony\Component\Mime\Email::to() expects                                
+         string|Symfony\Component\Mime\Address, string|null given.                                                      
+         ­ƒ¬¬  argument.type                                                                                              
+  216    Parameter #3 $userEmail of method                                                                              
+         SymfonyCasts\Bundle\VerifyEmail\VerifyEmailHelperInterface::validateEmailConfirmation() expects string,        
+         string|null given.                                                                                             
+         ­ƒ¬¬  argument.type                                                                                              
+  253    Parameter #2 $subject of function preg_match expects string, float|int<min, -1>|int<1, max>|string|true given  
+         .                                                                                                              
+         ­ƒ¬¬  argument.type                                                                                              
+  284    Cannot call method getTotpSecret() on App\Entity\User|null.                                                    
+         ­ƒ¬¬  method.nonObject                                                                                           
+  300    Cannot call method getEmail() on App\Entity\User|null.                                                         
+         ­ƒ¬¬  method.nonObject                                                                                           
+  300    Parameter #1 $label of method OTPHP\OTP::setLabel() expects non-empty-string, string|null given.               
+         ­ƒ¬¬  argument.type                                                                                              
+  319    Parameter #1 $otp of method OTPHP\TOTP::verify() expects non-empty-string, bool|float|int|string|null given.   
+         ­ƒ¬¬  argument.type                                                                                              
+  320    Cannot call method setTotpSecret() on App\Entity\User|null.                                                    
+         ­ƒ¬¬  method.nonObject                                                                                           
+  352    Cannot call method getTotpSecret() on App\Entity\User|null.                                                    
+         ­ƒ¬¬  method.nonObject                                                                                           
+  352    Parameter #1 $secret of static method OTPHP\TOTP::createFromSecret() expects non-empty-string, string|null     
+         given.                                                                                                         
+         ­ƒ¬¬  argument.type                                                                                              
+  354    Parameter #1 $otp of method OTPHP\TOTP::verify() expects non-empty-string, bool|float|int|string|null given.   
+         ­ƒ¬¬  argument.type                                                                                              
+  358    Cannot call method getUserId() on App\Entity\User|null.                                                        
+         ­ƒ¬¬  method.nonObject                                                                                           
+  359    Cannot call method getNom() on App\Entity\User|null.                                                           
+         ­ƒ¬¬  method.nonObject                                                                                           
+  360    Cannot call method getRole() on App\Entity\User|null.                                                          
+         ­ƒ¬¬  method.nonObject                                                                                           
+  363    Cannot call method getRoles() on App\Entity\User|null.                                                         
+         ­ƒ¬¬  method.nonObject                                                                                           
+  363    Parameter #1 $user of class Symfony\Component\Security\Core\Authentication\Token\UsernamePasswordToken         
+         constructor expects Symfony\Component\Security\Core\User\UserInterface, App\Entity\User|null given.            
+         ­ƒ¬¬  argument.type                                                                                              
+  367    Cannot call method getNom() on App\Entity\User|null.                                                           
+         ­ƒ¬¬  method.nonObject                                                                                           
+  369    Cannot call method getRole() on App\Entity\User|null.                                                          
+         ­ƒ¬¬  method.nonObject                                                                                           
+ ------ --------------------------------------------------------------------------------------------------------------- 
+
+ ------ ------------------------------------------------------------------------------------------------------- 
+  Line   Controller\CalendrierController.php                                                                    
+ ------ ------------------------------------------------------------------------------------------------------- 
+  48     Parameter #3 $subject of function str_replace expects array<string>|string, string|null given.         
+         ­ƒ¬¬  argument.type                                                                                      
+  66     Parameter #2 $token of method                                                                          
+         Symfony\Bundle\FrameworkBundle\Controller\AbstractController::isCsrfTokenValid() expects string|null,  
+         bool|float|int|string|null given.                                                                      
+         ­ƒ¬¬  argument.type                                                                                      
+ ------ ------------------------------------------------------------------------------------------------------- 
+
+ ------ ------------------------------------------------------------------------------------------------------- 
+  Line   Controller\CommandeController.php                                                                      
+ ------ ------------------------------------------------------------------------------------------------------- 
+  58     Cannot call method getActif() on App\Entity\Produit|null.                                              
+         ­ƒ¬¬  method.nonObject                                                                                   
+  65     Cannot call method getStock() on App\Entity\Produit|null.                                              
+         ­ƒ¬¬  method.nonObject                                                                                   
+  75     Cannot call method getPromo() on App\Entity\Produit|null.                                              
+         ­ƒ¬¬  method.nonObject                                                                                   
+  75     Cannot call method getTauxPromo() on App\Entity\Produit|null.                                          
+         ­ƒ¬¬  method.nonObject                                                                                   
+  76     Cannot call method getPrixPromo() on App\Entity\Produit|null.                                          
+         ­ƒ¬¬  method.nonObject                                                                                   
+  77     Cannot call method getPrix() on App\Entity\Produit|null.                                               
+         ­ƒ¬¬  method.nonObject                                                                                   
+  178    Parameter #2 $token of method                                                                          
+         Symfony\Bundle\FrameworkBundle\Controller\AbstractController::isCsrfTokenValid() expects string|null,  
+         bool|float|int|string|null given.                                                                      
+         ­ƒ¬¬  argument.type                                                                                      
+ ------ ------------------------------------------------------------------------------------------------------- 
+
+ ------ ------------------------------------------------------------------------------------------------------------ 
+  Line   Controller\CultureController.php                                                                            
+ ------ ------------------------------------------------------------------------------------------------------------ 
+  80     Parameter #1 $string of function trim expects string, bool|float|int|string|null given.                     
+         ­ƒ¬¬  argument.type                                                                                           
+  83     Parameter #1 $string of function trim expects string, bool|float|int|string|null given.                     
+         ­ƒ¬¬  argument.type                                                                                           
+  110    Parameter #1 $type of method App\Entity\Culture::setType() expects string|null, bool|float|int|string|null  
+         given.                                                                                                      
+         ­ƒ¬¬  argument.type                                                                                           
+  168    Parameter #1 $string of function trim expects string, bool|float|int|string|null given.                     
+         ­ƒ¬¬  argument.type                                                                                           
+  171    Parameter #1 $string of function trim expects string, bool|float|int|string|null given.                     
+         ­ƒ¬¬  argument.type                                                                                           
+  195    Parameter #1 $type of method App\Entity\Culture::setType() expects string|null, bool|float|int|string|null  
+         given.                                                                                                      
+         ­ƒ¬¬  argument.type                                                                                           
+  222    Parameter #2 $token of method                                                                               
+         Symfony\Bundle\FrameworkBundle\Controller\AbstractController::isCsrfTokenValid() expects string|null,       
+         bool|float|int|string|null given.                                                                           
+         ­ƒ¬¬  argument.type                                                                                           
+ ------ ------------------------------------------------------------------------------------------------------------ 
+
+ ------ --------------------------------------------------------------------------------------------------------------- 
+  Line   Controller\CultureImageAnalysisController.php                                                                  
+ ------ --------------------------------------------------------------------------------------------------------------- 
+  60     Parameter #1 $resultat of method App\Controller\CultureImageAnalysisController::buildPayload() expects array<  
+         string, mixed>, array<string, mixed>|null given.                                                               
+         ­ƒ¬¬  argument.type                                                                                              
+  109    Parameter #1 $resultat of method App\Controller\CultureImageAnalysisController::buildPayload() expects array<  
+         string, mixed>, array<string, mixed>|null given.                                                               
+         ­ƒ¬¬  argument.type                                                                                              
+  151    Method App\Controller\CultureImageAnalysisController::resolveCultureFromPayload() has parameter $data with no  
+         value type specified in iterable type array.                                                                   
+         ­ƒ¬¬  missingType.iterableValue                                                                                  
+         ­ƒÆí  See: https://phpstan.org/blog/solving-phpstan-no-value-type-specified-in-iterable-type                     
+ ------ --------------------------------------------------------------------------------------------------------------- 
+
+ ------ --------------------------------------------------------------------------------------------------------------- 
+  Line   Controller\DiagnosticController.php                                                                            
+ ------ --------------------------------------------------------------------------------------------------------------- 
+  94     Cannot call method getUserId() on App\Entity\User|null.                                                        
+         ­ƒ¬¬  method.nonObject                                                                                           
+  95     Parameter #1 $string of function trim expects string, bool|float|int|string given.                             
+         ­ƒ¬¬  argument.type                                                                                              
+  99     Parameter #1 $symptomes of method App\Entity\Diagnostic::setSymptomes() expects string|null,                   
+         bool|float|int|string|null given.                                                                              
+         ­ƒ¬¬  argument.type                                                                                              
+  101    Parameter #1 $informationsComplementaires of method App\Entity\Diagnostic::setInformationsComplementaires()    
+         expects string|null, bool|float|int|string|null given.                                                         
+         ­ƒ¬¬  argument.type                                                                                              
+  105    If condition is always true.                                                                                   
+         ­ƒ¬¬  if.alwaysTrue                                                                                              
+         ­ƒÆí  Because the type is coming from a PHPDoc, you can turn off this check by setting treatPhpDocTypesAsCertain  
+         : false in your phpstan.neon.                                                                                  
+  116    If condition is always true.                                                                                   
+         ­ƒ¬¬  if.alwaysTrue                                                                                              
+         ­ƒÆí  If Symfony\Component\HttpFoundation\File\File::guessExtension() is impure, add @phpstan-impure PHPDoc tag   
+         above its declaration. Learn more: https://phpstan.org/blog/remembering-and-forgetting-returned-values         
+         ­ƒÆí  If Symfony\Component\HttpFoundation\File\UploadedFile::move() is impure, add @phpstan-impure PHPDoc tag ab  
+         ove its declaration. Learn more: https://phpstan.org/blog/remembering-and-forgetting-returned-values           
+  118    Parameter #3 $symptomes of method App\Service\DiagnosticAiService::analyserImage() expects string|null,        
+         bool|float|int|string|null given.                                                                              
+         ­ƒ¬¬  argument.type                                                                                              
+  120    Parameter #1 $symptomes of method App\Service\DiagnosticAiService::analyserSymptomes() expects string,         
+         bool|float|int|string|null given.                                                                              
+         ­ƒ¬¬  argument.type                                                                                              
+  120    Parameter #3 $informationsComplementaires of method App\Service\DiagnosticAiService::analyserSymptomes()       
+         expects string|null, bool|float|int|string|null given.                                                         
+         ­ƒ¬¬  argument.type                                                                                              
+  124    Parameter #1 $resultat of method App\Entity\Diagnostic::setResultat() expects string|null, string|false        
+         given.                                                                                                         
+         ­ƒ¬¬  argument.type                                                                                              
+  187    Cannot call method getUserId() on App\Entity\User|null.                                                        
+         ­ƒ¬¬  method.nonObject                                                                                           
+  188    Parameter #1 $string of function trim expects string, bool|float|int|string given.                             
+         ­ƒ¬¬  argument.type                                                                                              
+  191    Parameter #1 $symptomes of method App\Entity\Diagnostic::setSymptomes() expects string|null,                   
+         bool|float|int|string|null given.                                                                              
+         ­ƒ¬¬  argument.type                                                                                              
+  193    Parameter #1 $informationsComplementaires of method App\Entity\Diagnostic::setInformationsComplementaires()    
+         expects string|null, bool|float|int|string|null given.                                                         
+         ­ƒ¬¬  argument.type                                                                                              
+  224    Parameter #2 $token of method                                                                                  
+         Symfony\Bundle\FrameworkBundle\Controller\AbstractController::isCsrfTokenValid() expects string|null,          
+         bool|float|int|string|null given.                                                                              
+         ­ƒ¬¬  argument.type                                                                                              
+ ------ --------------------------------------------------------------------------------------------------------------- 
+
+ ------ --------------------------------------------------------------------------------------------------------------- 
+  Line   Controller\EvenementController.php                                                                             
+ ------ --------------------------------------------------------------------------------------------------------------- 
+  68     Parameter #1 $valeur of method App\Entity\NoteEvenement::setValeur() expects int, float|int<1, 5>|string|true  
+         given.                                                                                                         
+         ­ƒ¬¬  argument.type                                                                                              
+  73     Parameter #1 $valeur of method App\Entity\NoteEvenement::setValeur() expects int, float|int<1, 5>|string|true  
+         given.                                                                                                         
+         ­ƒ¬¬  argument.type                                                                                              
+  156    Parameter #2 $token of method                                                                                  
+         Symfony\Bundle\FrameworkBundle\Controller\AbstractController::isCsrfTokenValid() expects string|null,          
+         bool|float|int|string|null given.                                                                              
+         ­ƒ¬¬  argument.type                                                                                              
+ ------ --------------------------------------------------------------------------------------------------------------- 
+
+ ------ --------------------------------------------------------------------------------------------------------------- 
+  Line   Controller\FaceController.php                                                                                  
+ ------ --------------------------------------------------------------------------------------------------------------- 
+  59     Strict comparison using === between string and false will always evaluate to false.                            
+         ­ƒ¬¬  identical.alwaysFalse                                                                                      
+         ­ƒÆí  Because the type is coming from a PHPDoc, you can turn off this check by setting treatPhpDocTypesAsCertain  
+         : false in your phpstan.neon.                                                                                  
+  144    Parameter #1 $string of function base64_encode expects string, string|false given.                             
+         ­ƒ¬¬  argument.type                                                                                              
+ ------ --------------------------------------------------------------------------------------------------------------- 
+
+ ------ ------------------------------------------------------------------------------------------------------- 
+  Line   Controller\ForumController.php                                                                         
+ ------ ------------------------------------------------------------------------------------------------------- 
+  126    Cannot call method getUserId() on App\Entity\User|null.                                                
+         ­ƒ¬¬  method.nonObject                                                                                   
+  153    Parameter #2 $token of method                                                                          
+         Symfony\Bundle\FrameworkBundle\Controller\AbstractController::isCsrfTokenValid() expects string|null,  
+         bool|float|int|string|null given.                                                                      
+         ­ƒ¬¬  argument.type                                                                                      
+ ------ ------------------------------------------------------------------------------------------------------- 
+
+ ------ --------------------------------------------------------------------------------------------------------- 
+  Line   Controller\GoogleController.php                                                                          
+ ------ --------------------------------------------------------------------------------------------------------- 
+  27     Method App\Controller\GoogleController::connectCheckAction() has no return type specified.               
+         ­ƒ¬¬  missingType.return                                                                                   
+  120    Parameter #1 $role of method App\Entity\User::setRole() expects string|null, bool|float|int|string|null  
+         given.                                                                                                   
+         ­ƒ¬¬  argument.type                                                                                        
+  130    Parameter #1 $string of function strtolower expects string, bool|float|int|string|null given.            
+         ­ƒ¬¬  argument.type                                                                                        
+ ------ --------------------------------------------------------------------------------------------------------- 
+
+ ------ ------------------------------------------------------------------------------------------------ 
+  Line   Controller\ProduitController.php                                                                
+ ------ ------------------------------------------------------------------------------------------------ 
+  123    Parameter #3 $subject of function str_replace expects array<string>|string, string|null given.  
+         ­ƒ¬¬  argument.type                                                                               
+ ------ ------------------------------------------------------------------------------------------------ 
+
+ ------ --------------------------------------------------------------------------------------------------------- 
+  Line   Controller\ProfilController.php                                                                          
+ ------ --------------------------------------------------------------------------------------------------------- 
+  115    Parameter #1 $bio of method App\Entity\Profil::setBio() expects string|null, bool|float|int|string|null  
+         given.                                                                                                   
+         ­ƒ¬¬  argument.type                                                                                        
+  144    Parameter #2 $token of method                                                                            
+         Symfony\Bundle\FrameworkBundle\Controller\AbstractController::isCsrfTokenValid() expects string|null,    
+         bool|float|int|string|null given.                                                                        
+         ­ƒ¬¬  argument.type                                                                                        
+ ------ --------------------------------------------------------------------------------------------------------- 
+
+ ------ ------------------------------------------------------------------------------------------------------- 
+  Line   Controller\ReclamationController.php                                                                   
+ ------ ------------------------------------------------------------------------------------------------------- 
+  95     Parameter #2 $token of method                                                                          
+         Symfony\Bundle\FrameworkBundle\Controller\AbstractController::isCsrfTokenValid() expects string|null,  
+         bool|float|int|string|null given.                                                                      
+         ­ƒ¬¬  argument.type                                                                                      
+ ------ ------------------------------------------------------------------------------------------------------- 
+
+ ------ --------------------------------------------------------------------------------------------------------------- 
+  Line   Controller\ResetPasswordController.php                                                                         
+ ------ --------------------------------------------------------------------------------------------------------------- 
+  38     Parameter #1 ...$addresses of method Symfony\Component\Mime\Email::to() expects                                
+         string|Symfony\Component\Mime\Address, bool|float|int|string|null given.                                       
+         ­ƒ¬¬  argument.type                                                                                              
+  81     Parameter #2 $plainPassword of method                                                                          
+         Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface::hashPassword() expects string, float|int  
+         <min, -1>|int<1, max>|string|true given.                                                                       
+         ­ƒ¬¬  argument.type                                                                                              
+ ------ --------------------------------------------------------------------------------------------------------------- 
+
+ ------ ------------------------------------------------------------------------------------------- 
+  Line   Controller\StockAnalyticsController.php                                                    
+ ------ ------------------------------------------------------------------------------------------- 
+  11     Method App\Controller\StockAnalyticsController::dashboard() has no return type specified.  
+         ­ƒ¬¬  missingType.return                                                                     
+ ------ ------------------------------------------------------------------------------------------- 
+
+ ------ ------------------------------------------------------------------------------------------------------- 
+  Line   Controller\StockController.php                                                                         
+ ------ ------------------------------------------------------------------------------------------------------- 
+  37     Cannot call method getStock() on App\Entity\Produit|null.                                              
+         ­ƒ¬¬  method.nonObject                                                                                   
+  85     Parameter #2 $token of method                                                                          
+         Symfony\Bundle\FrameworkBundle\Controller\AbstractController::isCsrfTokenValid() expects string|null,  
+         bool|float|int|string|null given.                                                                      
+         ­ƒ¬¬  argument.type                                                                                      
+ ------ ------------------------------------------------------------------------------------------------------- 
+
+ [ERROR] Found 85 errors                                                                                               
+
+

@@ -2,6 +2,7 @@
 
 namespace App\Controller;
 
+use App\Entity\Culture;
 use App\Entity\Diagnostic;
 use App\Repository\CultureRepository;
 use App\Repository\DiagnosticRepository;
@@ -16,7 +17,7 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
-use Symfony\Component\Routing\Attribute\ParamConverter;
+use Symfony\Bridge\Doctrine\Attribute\MapEntity;
 
 #[Route('/diagnostic')]
 class DiagnosticController extends AbstractController
@@ -83,16 +84,24 @@ class DiagnosticController extends AbstractController
         $erreurs = [];
 
         if ($request->isMethod('POST')) {
-            $symptomes = $request->request->get('symptomes');
-            $cultureId = $request->request->get('idCulture');
-            $infos     = $request->request->get('informationsComplementaires');
-            $culture   = $cultureRepo->find($cultureId);
+            $symptomesRaw = $request->request->get('symptomes');
+            $symptomes = is_string($symptomesRaw) ? $symptomesRaw : null;
+            
+            $idCultureRaw = $request->request->get('idCulture');
+            $culture = $idCultureRaw !== null ? $em->getReference(Culture::class, $idCultureRaw) : null;
+            
+            $infosRaw = $request->request->get('informationsComplementaires');
+            $infos = is_string($infosRaw) ? $infosRaw : null;
 
-            /** @var UploadedFile $imageFile */
+            /** @var UploadedFile|null $imageFile */
             $imageFile = $request->files->get('image');
 
-            if (!$culture || $culture->getUser()->getUserId() !== $userId) $erreurs[] = 'Culture invalide';
-            if (strlen(trim($symptomes ?? '')) < 5) $erreurs[] = 'Symptômes trop courts';
+            if (!$culture || ($culture->getUser() && $culture->getUser()->getUserId() !== $userId)) {
+                $erreurs[] = 'Culture invalide';
+            }
+            if (strlen(trim($symptomes ?? '')) < 5) {
+                $erreurs[] = 'Symptômes trop courts';
+            }
 
             if (empty($erreurs)) {
                 $diagnostic = new Diagnostic();
@@ -113,15 +122,16 @@ class DiagnosticController extends AbstractController
                 }
 
                 // Analyse IA
-                if ($imageFile && isset($newFilename)) {
+                if ($imageFile) {
                     $imagePath = $this->imagesDirectory . '/' . $newFilename;
-                    $result = $aiService->analyserImage($imagePath, $culture?->getNom(), $symptomes);
+                    $result = $aiService->analyserImage($imagePath, $culture?->getNom(), $symptomes ?? '');
                 } else {
-                    $result = $aiService->analyserSymptomes($symptomes, $culture?->getNom(), $infos);
+                    $result = $aiService->analyserSymptomes($symptomes ?? '', $culture?->getNom(), $infos);
                 }
 
                 if ($result) {
-                    $diagnostic->setResultat(json_encode($result));
+                    $encodedResult = json_encode($result);
+                    $diagnostic->setResultat($encodedResult !== false ? $encodedResult : null);
                 }
 
                 $em->persist($diagnostic);
@@ -142,8 +152,7 @@ class DiagnosticController extends AbstractController
     // SHOW
     // =========================
     #[Route('/{id}', name: 'app_diagnostic_show', methods: ['GET'])]
-    #[ParamConverter('diagnostic', options: ['mapping' => ['id' => 'idDiagnostic']])]
-    public function show(Diagnostic $diagnostic, Request $request): Response
+    public function show(#[MapEntity(mapping: ['id' => 'idDiagnostic'])] Diagnostic $diagnostic, Request $request): Response
     {
         $userId = $request->getSession()->get('user_id');
         if (!$diagnostic->getCulture() || !$diagnostic->getCulture()->getUser() || $diagnostic->getCulture()->getUser()->getUserId() !== $userId) {
@@ -165,10 +174,9 @@ class DiagnosticController extends AbstractController
     // EDIT
     // =========================
     #[Route('/{id}/edit', name: 'app_diagnostic_edit', methods: ['GET', 'POST'])]
-    #[ParamConverter('diagnostic', options: ['mapping' => ['id' => 'idDiagnostic']])]
     public function edit(
         Request $request,
-        Diagnostic $diagnostic,
+        #[MapEntity(mapping: ['id' => 'idDiagnostic'])] Diagnostic $diagnostic,
         EntityManagerInterface $em,
         CultureRepository $cultureRepo
     ): Response {
@@ -181,13 +189,21 @@ class DiagnosticController extends AbstractController
         $erreurs = [];
 
         if ($request->isMethod('POST')) {
-            $symptomes = $request->request->get('symptomes');
-            $cultureId = $request->request->get('idCulture');
-            $infos     = $request->request->get('informationsComplementaires');
-            $culture   = $cultureRepo->find($cultureId);
+            $symptomesRaw = $request->request->get('symptomes');
+            $symptomes = is_string($symptomesRaw) ? $symptomesRaw : null;
 
-            if (!$culture || $culture->getUser()->getUserId() !== $userId) $erreurs[] = 'Culture invalide';
-            if (strlen(trim($symptomes ?? '')) < 5) $erreurs[] = 'Symptômes trop courts';
+            $idCultureRaw = $request->request->get('idCulture');
+            $culture = $idCultureRaw !== null ? $em->getReference(Culture::class, $idCultureRaw) : null;
+
+            $infosRaw = $request->request->get('informationsComplementaires');
+            $infos = is_string($infosRaw) ? $infosRaw : null;
+
+            if (!$culture || ($culture->getUser() && $culture->getUser()->getUserId() !== $userId)) {
+                $erreurs[] = 'Culture invalide';
+            }
+            if (strlen(trim($symptomes ?? '')) < 5) {
+                $erreurs[] = 'Symptômes trop courts';
+            }
 
             if (empty($erreurs)) {
                 $diagnostic->setSymptomes($symptomes);
@@ -212,10 +228,9 @@ class DiagnosticController extends AbstractController
     // DELETE
     // =========================
     #[Route('/{id}/delete', name: 'app_diagnostic_delete', methods: ['POST'])]
-    #[ParamConverter('diagnostic', options: ['mapping' => ['id' => 'idDiagnostic']])]
     public function delete(
         Request $request,
-        Diagnostic $diagnostic,
+        #[MapEntity(mapping: ['id' => 'idDiagnostic'])] Diagnostic $diagnostic,
         EntityManagerInterface $em
     ): Response {
         $userId = $request->getSession()->get('user_id');
@@ -224,7 +239,8 @@ class DiagnosticController extends AbstractController
             return $this->redirectToRoute('app_diagnostic_index');
         }
 
-        if ($this->isCsrfTokenValid('delete' . $diagnostic->getIdDiagnostic(), $request->request->get('_token'))) {
+        $token = $request->request->get('_token');
+        if ($this->isCsrfTokenValid('delete' . $diagnostic->getIdDiagnostic(), is_string($token) ? $token : null)) {
             $em->remove($diagnostic);
             $em->flush();
             $this->addFlash('success', 'Diagnostic supprimé.');
@@ -237,8 +253,7 @@ class DiagnosticController extends AbstractController
     // PDF INDIVIDUEL
     // =========================
     #[Route('/{id}/pdf', name: 'app_diagnostic_pdf', methods: ['GET'])]
-    #[ParamConverter('diagnostic', options: ['mapping' => ['id' => 'idDiagnostic']])]
-    public function pdf(Diagnostic $diagnostic, Request $request): Response
+    public function pdf(#[MapEntity(mapping: ['id' => 'idDiagnostic'])] Diagnostic $diagnostic, Request $request): Response
     {
         $userId = $request->getSession()->get('user_id');
         if (!$diagnostic->getCulture() || !$diagnostic->getCulture()->getUser() || $diagnostic->getCulture()->getUser()->getUserId() !== $userId) {

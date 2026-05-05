@@ -21,7 +21,7 @@ class GoogleController extends AbstractController
     {
         return $clientRegistry
             ->getClient('google')
-            ->redirect(['email', 'profile']); 
+            ->redirect(['email', 'profile'], []); 
     }
 
     #[Route('/connect/google/check', name: 'connect_google_check')]
@@ -31,7 +31,7 @@ class GoogleController extends AbstractController
         EntityManagerInterface $em,
         SessionInterface $session,
         TokenStorageInterface $tokenStorage
-    ) {
+    ): Response {
         $client = $clientRegistry->getClient('google');
 
         try {
@@ -39,6 +39,10 @@ class GoogleController extends AbstractController
             $googleUser = $client->fetchUser();
 
             $email = $googleUser->getEmail();
+            if (!$email) {
+                $this->addFlash('error', 'Impossible de récupérer votre email Google.');
+                return $this->redirectToRoute('app_signin');
+            }
             $nom = $googleUser->getLastName();
             $prenom = $googleUser->getFirstName();
 
@@ -105,7 +109,8 @@ class GoogleController extends AbstractController
         }
 
         if ($request->isMethod('POST')) {
-            $role = $request->request->get('role');
+            $roleRaw = $request->request->get('role');
+            $role = is_string($roleRaw) ? strtoupper($roleRaw) : '';
             
             // Sécurité : éviter l'injection de rôles "Admin" etc.
             if (!in_array($role, ['AGRICULTEUR', 'FOURNISSEUR', 'EXPERT'])) {
@@ -126,8 +131,9 @@ class GoogleController extends AbstractController
 
             // Nettoyer la session temporaire Google
             $session->remove('google_new_user');
-
-            $this->addFlash('success', '✅ Bienvenue ! Votre compte a été créé avec le rôle ' . strtolower($role) . '.');
+            
+            $roleLower = strtolower($role);
+            $this->addFlash('success', "✅ Bienvenue ! Votre compte a été créé avec le rôle {$roleLower}.");
 
             // Authentification manuelle
             $session->set('user_id',   $user->getUserId());

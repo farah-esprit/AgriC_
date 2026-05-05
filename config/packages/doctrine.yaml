@@ -36,7 +36,7 @@ doctrine:
       numeric_functions:
         RAND: DoctrineExtensions\Query\Mysql\Rand
       string_functions:
-        SUBSTRING: DoctrineExtensions\Query\Mysql\Substring
+        {}
 
 when@test:
   doctrine:

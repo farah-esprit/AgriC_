@@ -28,7 +28,7 @@
                             </div>
                         {% else %}
 
-                            {{ form_start(form, {'attr': {'id': 'signup-form'}}) }}
+                            {{ form_start(form, {'attr': {'id': 'signup-form', 'data-turbo': 'false'}}) }}
 
                             <div class="mb-3">
                                 {{ form_label(form.nom, 'Nom', {'label_attr': {'class':'form-label fw-semibold'}}) }}

@@ -1,0 +1,637 @@
+parameters:
+	ignoreErrors:
+		-
+			message: '#^Parameter \#1 \$productId of method App\\AnalyticsBundle\\Service\\PredictionService\:\:predictDemand\(\) expects int, int\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/AnalyticsBundle/Service/AnalyticsService.php
+
+		-
+			message: '#^Method App\\AnalyticsBundle\\Service\\PredictionService\:\:calculateHeuristic\(\) has parameter \$data with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/AnalyticsBundle/Service/PredictionService.php
+
+		-
+			message: '#^Parameter \#1 \$input of method Symfony\\Component\\Process\\Process\:\:setInput\(\) expects resource\|string\|Traversable\|null, string\|false given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/AnalyticsBundle/Service/PredictionService.php
+
+		-
+			message: '#^Property App\\AnalyticsBundle\\Service\\PredictionService\:\:\$commandeRepository has no type specified\.$#'
+			identifier: missingType.property
+			count: 1
+			path: src/AnalyticsBundle/Service/PredictionService.php
+
+		-
+			message: '#^Property App\\AnalyticsBundle\\Service\\PredictionService\:\:\$logger has no type specified\.$#'
+			identifier: missingType.property
+			count: 1
+			path: src/AnalyticsBundle/Service/PredictionService.php
+
+		-
+			message: '#^Property App\\AnalyticsBundle\\Service\\PredictionService\:\:\$projectDir has no type specified\.$#'
+			identifier: missingType.property
+			count: 1
+			path: src/AnalyticsBundle/Service/PredictionService.php
+
+		-
+			message: '#^Cannot call method format\(\) on DateTimeInterface\|null\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: src/Controller/AdminController.php
+
+		-
+			message: '#^Parameter \#1 \$entity of method Gedmo\\Loggable\\Entity\\Repository\\LogEntryRepository\<Gedmo\\Loggable\\Entity\\LogEntry\>\:\:getLogEntries\(\) expects Gedmo\\Loggable\\Entity\\LogEntry, App\\Entity\\Profil given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Controller/AdminController.php
+
+		-
+			message: '#^Parameter \#1 \$entity of method Gedmo\\Loggable\\Entity\\Repository\\LogEntryRepository\<Gedmo\\Loggable\\Entity\\LogEntry\>\:\:getLogEntries\(\) expects Gedmo\\Loggable\\Entity\\LogEntry, App\\Entity\\User given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Controller/AdminController.php
+
+		-
+			message: '#^Parameter \#1 \$stream of function fclose expects resource, resource\|false given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Controller/AdminController.php
+
+		-
+			message: '#^Parameter \#1 \$stream of function fprintf expects resource, resource\|false given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Controller/AdminController.php
+
+		-
+			message: '#^Parameter \#1 \$stream of function fputcsv expects resource, resource\|false given\.$#'
+			identifier: argument.type
+			count: 2
+			path: src/Controller/AdminController.php
+
+		-
+			message: '#^Cannot call method getEmail\(\) on App\\Entity\\User\|null\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: src/Controller/AuthController.php
+
+		-
+			message: '#^Cannot call method getNom\(\) on App\\Entity\\User\|null\.$#'
+			identifier: method.nonObject
+			count: 2
+			path: src/Controller/AuthController.php
+
+		-
+			message: '#^Cannot call method getRole\(\) on App\\Entity\\User\|null\.$#'
+			identifier: method.nonObject
+			count: 2
+			path: src/Controller/AuthController.php
+
+		-
+			message: '#^Cannot call method getRoles\(\) on App\\Entity\\User\|null\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: src/Controller/AuthController.php
+
+		-
+			message: '#^Cannot call method getTotpSecret\(\) on App\\Entity\\User\|null\.$#'
+			identifier: method.nonObject
+			count: 2
+			path: src/Controller/AuthController.php
+
+		-
+			message: '#^Cannot call method getUserId\(\) on App\\Entity\\User\|null\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: src/Controller/AuthController.php
+
+		-
+			message: '#^Cannot call method setTotpSecret\(\) on App\\Entity\\User\|null\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: src/Controller/AuthController.php
+
+		-
+			message: '#^Parameter \#1 \$label of method OTPHP\\OTP\:\:setLabel\(\) expects non\-empty\-string, string\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Controller/AuthController.php
+
+		-
+			message: '#^Parameter \#1 \$otp of method OTPHP\\TOTP\:\:verify\(\) expects non\-empty\-string, bool\|float\|int\|string\|null given\.$#'
+			identifier: argument.type
+			count: 2
+			path: src/Controller/AuthController.php
+
+		-
+			message: '#^Parameter \#1 \$secret of static method OTPHP\\TOTP\:\:createFromSecret\(\) expects non\-empty\-string, string\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Controller/AuthController.php
+
+		-
+			message: '#^Parameter \#1 \$user of class Symfony\\Component\\Security\\Core\\Authentication\\Token\\UsernamePasswordToken constructor expects Symfony\\Component\\Security\\Core\\User\\UserInterface, App\\Entity\\User\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Controller/AuthController.php
+
+		-
+			message: '#^Parameter \#1 \.\.\.\$addresses of method Symfony\\Component\\Mime\\Email\:\:to\(\) expects string\|Symfony\\Component\\Mime\\Address, string\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Controller/AuthController.php
+
+		-
+			message: '#^Parameter \#2 \$plainPassword of method Symfony\\Component\\PasswordHasher\\Hasher\\UserPasswordHasherInterface\:\:hashPassword\(\) expects string, string\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Controller/AuthController.php
+
+		-
+			message: '#^Parameter \#2 \$subject of function preg_match expects string, float\|int\<min, \-1\>\|int\<1, max\>\|string\|true given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Controller/AuthController.php
+
+		-
+			message: '#^Parameter \#3 \$userEmail of method SymfonyCasts\\Bundle\\VerifyEmail\\VerifyEmailHelperInterface\:\:generateSignature\(\) expects string, string\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Controller/AuthController.php
+
+		-
+			message: '#^Parameter \#3 \$userEmail of method SymfonyCasts\\Bundle\\VerifyEmail\\VerifyEmailHelperInterface\:\:validateEmailConfirmation\(\) expects string, string\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Controller/AuthController.php
+
+		-
+			message: '#^Parameter \#2 \$token of method Symfony\\Bundle\\FrameworkBundle\\Controller\\AbstractController\:\:isCsrfTokenValid\(\) expects string\|null, bool\|float\|int\|string\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Controller/CalendrierController.php
+
+		-
+			message: '#^Parameter \#3 \$subject of function str_replace expects array\<string\>\|string, string\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Controller/CalendrierController.php
+
+		-
+			message: '#^Cannot call method getActif\(\) on App\\Entity\\Produit\|null\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: src/Controller/CommandeController.php
+
+		-
+			message: '#^Cannot call method getPrix\(\) on App\\Entity\\Produit\|null\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: src/Controller/CommandeController.php
+
+		-
+			message: '#^Cannot call method getPrixPromo\(\) on App\\Entity\\Produit\|null\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: src/Controller/CommandeController.php
+
+		-
+			message: '#^Cannot call method getPromo\(\) on App\\Entity\\Produit\|null\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: src/Controller/CommandeController.php
+
+		-
+			message: '#^Cannot call method getStock\(\) on App\\Entity\\Produit\|null\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: src/Controller/CommandeController.php
+
+		-
+			message: '#^Cannot call method getTauxPromo\(\) on App\\Entity\\Produit\|null\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: src/Controller/CommandeController.php
+
+		-
+			message: '#^Parameter \#2 \$token of method Symfony\\Bundle\\FrameworkBundle\\Controller\\AbstractController\:\:isCsrfTokenValid\(\) expects string\|null, bool\|float\|int\|string\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Controller/CommandeController.php
+
+		-
+			message: '#^Parameter \#1 \$string of function trim expects string, bool\|float\|int\|string\|null given\.$#'
+			identifier: argument.type
+			count: 4
+			path: src/Controller/CultureController.php
+
+		-
+			message: '#^Parameter \#1 \$type of method App\\Entity\\Culture\:\:setType\(\) expects string\|null, bool\|float\|int\|string\|null given\.$#'
+			identifier: argument.type
+			count: 2
+			path: src/Controller/CultureController.php
+
+		-
+			message: '#^Parameter \#2 \$token of method Symfony\\Bundle\\FrameworkBundle\\Controller\\AbstractController\:\:isCsrfTokenValid\(\) expects string\|null, bool\|float\|int\|string\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Controller/CultureController.php
+
+		-
+			message: '#^Method App\\Controller\\CultureImageAnalysisController\:\:resolveCultureFromPayload\(\) has parameter \$data with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Controller/CultureImageAnalysisController.php
+
+		-
+			message: '#^Parameter \#1 \$resultat of method App\\Controller\\CultureImageAnalysisController\:\:buildPayload\(\) expects array\<string, mixed\>, array\<string, mixed\>\|null given\.$#'
+			identifier: argument.type
+			count: 2
+			path: src/Controller/CultureImageAnalysisController.php
+
+		-
+			message: '#^Cannot call method getUserId\(\) on App\\Entity\\User\|null\.$#'
+			identifier: method.nonObject
+			count: 2
+			path: src/Controller/DiagnosticController.php
+
+		-
+			message: '#^If condition is always true\.$#'
+			identifier: if.alwaysTrue
+			count: 2
+			path: src/Controller/DiagnosticController.php
+
+		-
+			message: '#^Parameter \#1 \$informationsComplementaires of method App\\Entity\\Diagnostic\:\:setInformationsComplementaires\(\) expects string\|null, bool\|float\|int\|string\|null given\.$#'
+			identifier: argument.type
+			count: 2
+			path: src/Controller/DiagnosticController.php
+
+		-
+			message: '#^Parameter \#1 \$resultat of method App\\Entity\\Diagnostic\:\:setResultat\(\) expects string\|null, string\|false given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Controller/DiagnosticController.php
+
+		-
+			message: '#^Parameter \#1 \$string of function trim expects string, bool\|float\|int\|string given\.$#'
+			identifier: argument.type
+			count: 2
+			path: src/Controller/DiagnosticController.php
+
+		-
+			message: '#^Parameter \#1 \$symptomes of method App\\Entity\\Diagnostic\:\:setSymptomes\(\) expects string\|null, bool\|float\|int\|string\|null given\.$#'
+			identifier: argument.type
+			count: 2
+			path: src/Controller/DiagnosticController.php
+
+		-
+			message: '#^Parameter \#1 \$symptomes of method App\\Service\\DiagnosticAiService\:\:analyserSymptomes\(\) expects string, bool\|float\|int\|string\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Controller/DiagnosticController.php
+
+		-
+			message: '#^Parameter \#2 \$token of method Symfony\\Bundle\\FrameworkBundle\\Controller\\AbstractController\:\:isCsrfTokenValid\(\) expects string\|null, bool\|float\|int\|string\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Controller/DiagnosticController.php
+
+		-
+			message: '#^Parameter \#3 \$informationsComplementaires of method App\\Service\\DiagnosticAiService\:\:analyserSymptomes\(\) expects string\|null, bool\|float\|int\|string\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Controller/DiagnosticController.php
+
+		-
+			message: '#^Parameter \#3 \$symptomes of method App\\Service\\DiagnosticAiService\:\:analyserImage\(\) expects string\|null, bool\|float\|int\|string\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Controller/DiagnosticController.php
+
+		-
+			message: '#^Parameter \#1 \$valeur of method App\\Entity\\NoteEvenement\:\:setValeur\(\) expects int, float\|int\<1, 5\>\|string\|true given\.$#'
+			identifier: argument.type
+			count: 2
+			path: src/Controller/EvenementController.php
+
+		-
+			message: '#^Parameter \#2 \$token of method Symfony\\Bundle\\FrameworkBundle\\Controller\\AbstractController\:\:isCsrfTokenValid\(\) expects string\|null, bool\|float\|int\|string\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Controller/EvenementController.php
+
+		-
+			message: '#^Parameter \#1 \$string of function base64_encode expects string, string\|false given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Controller/FaceController.php
+
+		-
+			message: '#^Strict comparison using \=\=\= between string and false will always evaluate to false\.$#'
+			identifier: identical.alwaysFalse
+			count: 1
+			path: src/Controller/FaceController.php
+
+		-
+			message: '#^Cannot call method getUserId\(\) on App\\Entity\\User\|null\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: src/Controller/ForumController.php
+
+		-
+			message: '#^Parameter \#2 \$token of method Symfony\\Bundle\\FrameworkBundle\\Controller\\AbstractController\:\:isCsrfTokenValid\(\) expects string\|null, bool\|float\|int\|string\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Controller/ForumController.php
+
+		-
+			message: '#^Method App\\Controller\\GoogleController\:\:connectCheckAction\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: src/Controller/GoogleController.php
+
+		-
+			message: '#^Parameter \#1 \$role of method App\\Entity\\User\:\:setRole\(\) expects string\|null, bool\|float\|int\|string\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Controller/GoogleController.php
+
+		-
+			message: '#^Parameter \#1 \$string of function strtolower expects string, bool\|float\|int\|string\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Controller/GoogleController.php
+
+		-
+			message: '#^Parameter \#3 \$subject of function str_replace expects array\<string\>\|string, string\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Controller/ProduitController.php
+
+		-
+			message: '#^Parameter \#1 \$bio of method App\\Entity\\Profil\:\:setBio\(\) expects string\|null, bool\|float\|int\|string\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Controller/ProfilController.php
+
+		-
+			message: '#^Parameter \#2 \$token of method Symfony\\Bundle\\FrameworkBundle\\Controller\\AbstractController\:\:isCsrfTokenValid\(\) expects string\|null, bool\|float\|int\|string\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Controller/ProfilController.php
+
+		-
+			message: '#^Parameter \#2 \$token of method Symfony\\Bundle\\FrameworkBundle\\Controller\\AbstractController\:\:isCsrfTokenValid\(\) expects string\|null, bool\|float\|int\|string\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Controller/ReclamationController.php
+
+		-
+			message: '#^Parameter \#1 \.\.\.\$addresses of method Symfony\\Component\\Mime\\Email\:\:to\(\) expects string\|Symfony\\Component\\Mime\\Address, bool\|float\|int\|string\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Controller/ResetPasswordController.php
+
+		-
+			message: '#^Parameter \#2 \$plainPassword of method Symfony\\Component\\PasswordHasher\\Hasher\\UserPasswordHasherInterface\:\:hashPassword\(\) expects string, float\|int\<min, \-1\>\|int\<1, max\>\|string\|true given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Controller/ResetPasswordController.php
+
+		-
+			message: '#^Method App\\Controller\\StockAnalyticsController\:\:dashboard\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: src/Controller/StockAnalyticsController.php
+
+		-
+			message: '#^Cannot call method getStock\(\) on App\\Entity\\Produit\|null\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: src/Controller/StockController.php
+
+		-
+			message: '#^Parameter \#2 \$token of method Symfony\\Bundle\\FrameworkBundle\\Controller\\AbstractController\:\:isCsrfTokenValid\(\) expects string\|null, bool\|float\|int\|string\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Controller/StockController.php
+
+		-
+			message: '#^Method App\\Entity\\Culture\:\:getDiagnostics\(\) return type with generic interface Doctrine\\Common\\Collections\\Collection does not specify its types\: TKey, T$#'
+			identifier: missingType.generics
+			count: 1
+			path: src/Entity/Culture.php
+
+		-
+			message: '#^Property App\\Entity\\Culture\:\:\$diagnostics with generic interface Doctrine\\Common\\Collections\\Collection does not specify its types\: TKey, T$#'
+			identifier: missingType.generics
+			count: 1
+			path: src/Entity/Culture.php
+
+		-
+			message: '#^Property App\\Entity\\Evenement\:\:\$notes with generic interface Doctrine\\Common\\Collections\\Collection does not specify its types\: TKey, T$#'
+			identifier: missingType.generics
+			count: 1
+			path: src/Entity/Evenement.php
+
+		-
+			message: '#^Method App\\Entity\\Produit\:\:getCommandes\(\) return type with generic interface Doctrine\\Common\\Collections\\Collection does not specify its types\: TKey, T$#'
+			identifier: missingType.generics
+			count: 1
+			path: src/Entity/Produit.php
+
+		-
+			message: '#^Property App\\Entity\\Produit\:\:\$commandes with generic interface Doctrine\\Common\\Collections\\Collection does not specify its types\: TKey, T$#'
+			identifier: missingType.generics
+			count: 1
+			path: src/Entity/Produit.php
+
+		-
+			message: '#^Method App\\Entity\\Response\:\:getChildResponses\(\) return type with generic interface Doctrine\\Common\\Collections\\Collection does not specify its types\: TKey, T$#'
+			identifier: missingType.generics
+			count: 1
+			path: src/Entity/Response.php
+
+		-
+			message: '#^Property App\\Entity\\Response\:\:\$childResponses with generic interface Doctrine\\Common\\Collections\\Collection does not specify its types\: TKey, T$#'
+			identifier: missingType.generics
+			count: 1
+			path: src/Entity/Response.php
+
+		-
+			message: '#^Method App\\Entity\\Thread\:\:getResponses\(\) return type with generic interface Doctrine\\Common\\Collections\\Collection does not specify its types\: TKey, T$#'
+			identifier: missingType.generics
+			count: 1
+			path: src/Entity/Thread.php
+
+		-
+			message: '#^Property App\\Entity\\Thread\:\:\$responses with generic interface Doctrine\\Common\\Collections\\Collection does not specify its types\: TKey, T$#'
+			identifier: missingType.generics
+			count: 1
+			path: src/Entity/Thread.php
+
+		-
+			message: '#^Property App\\Entity\\User\:\:\$commandes with generic interface Doctrine\\Common\\Collections\\Collection does not specify its types\: TKey, T$#'
+			identifier: missingType.generics
+			count: 1
+			path: src/Entity/User.php
+
+		-
+			message: '#^Property App\\Entity\\User\:\:\$evenements with generic interface Doctrine\\Common\\Collections\\Collection does not specify its types\: TKey, T$#'
+			identifier: missingType.generics
+			count: 1
+			path: src/Entity/User.php
+
+		-
+			message: '#^Property App\\Entity\\User\:\:\$reclamations with generic interface Doctrine\\Common\\Collections\\Collection does not specify its types\: TKey, T$#'
+			identifier: missingType.generics
+			count: 1
+			path: src/Entity/User.php
+
+		-
+			message: '#^Property App\\Entity\\User\:\:\$responses with generic interface Doctrine\\Common\\Collections\\Collection does not specify its types\: TKey, T$#'
+			identifier: missingType.generics
+			count: 1
+			path: src/Entity/User.php
+
+		-
+			message: '#^Property App\\Entity\\User\:\:\$threads with generic interface Doctrine\\Common\\Collections\\Collection does not specify its types\: TKey, T$#'
+			identifier: missingType.generics
+			count: 1
+			path: src/Entity/User.php
+
+		-
+			message: '#^Method App\\EventSubscriber\\CalendarSubscriber\:\:getEventOptions\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/EventSubscriber/CalendarSubscriber.php
+
+		-
+			message: '#^Method App\\EventSubscriber\\CalendarSubscriber\:\:lightenColor\(\) has parameter \$hex with no type specified\.$#'
+			identifier: missingType.parameter
+			count: 1
+			path: src/EventSubscriber/CalendarSubscriber.php
+
+		-
+			message: '#^Parameter \#1 \$title of class CalendarBundle\\Entity\\Event constructor expects string, string\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/EventSubscriber/CalendarSubscriber.php
+
+		-
+			message: '#^Parameter \#2 \$start of class CalendarBundle\\Entity\\Event constructor expects DateTimeInterface, DateTimeInterface\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/EventSubscriber/CalendarSubscriber.php
+
+		-
+			message: '#^Class App\\Form\\CommandeType extends generic class Symfony\\Component\\Form\\AbstractType but does not specify its types\: TData$#'
+			identifier: missingType.generics
+			count: 1
+			path: src/Form/CommandeType.php
+
+		-
+			message: '#^Class App\\Form\\CultureType extends generic class Symfony\\Component\\Form\\AbstractType but does not specify its types\: TData$#'
+			identifier: missingType.generics
+			count: 1
+			path: src/Form/CultureType.php
+
+		-
+			message: '#^Class App\\Form\\DiagnosticType extends generic class Symfony\\Component\\Form\\AbstractType but does not specify its types\: TData$#'
+			identifier: missingType.generics
+			count: 1
+			path: src/Form/DiagnosticType.php
+
+		-
+			message: '#^Class App\\Form\\EvenementType extends generic class Symfony\\Component\\Form\\AbstractType but does not specify its types\: TData$#'
+			identifier: missingType.generics
+			count: 1
+			path: src/Form/EvenementType.php
+
+		-
+			message: '#^Class App\\Form\\LoginType extends generic class Symfony\\Component\\Form\\AbstractType but does not specify its types\: TData$#'
+			identifier: missingType.generics
+			count: 1
+			path: src/Form/LoginType.php
+
+		-
+			message: '#^Class App\\Form\\PaymentType extends generic class Symfony\\Component\\Form\\AbstractType but does not specify its types\: TData$#'
+			identifier: missingType.generics
+			count: 1
+			path: src/Form/PaymentType.php
+
+		-
+			message: '#^Class App\\Form\\ProduitType extends generic class Symfony\\Component\\Form\\AbstractType but does not specify its types\: TData$#'
+			identifier: missingType.generics
+			count: 1
+			path: src/Form/ProduitType.php
+
+		-
+			message: '#^Class App\\Form\\ProfilType extends generic class Symfony\\Component\\Form\\AbstractType but does not specify its types\: TData$#'
+			identifier: missingType.generics
+			count: 1
+			path: src/Form/ProfilType.php
+
+		-
+			message: '#^Class App\\Form\\ReclamationType extends generic class Symfony\\Component\\Form\\AbstractType but does not specify its types\: TData$#'
+			identifier: missingType.generics
+			count: 1
+			path: src/Form/ReclamationType.php
+
+		-
+			message: '#^Class App\\Form\\RegistrationType extends generic class Symfony\\Component\\Form\\AbstractType but does not specify its types\: TData$#'
+			identifier: missingType.generics
+			count: 1
+			path: src/Form/RegistrationType.php
+
+		-
+			message: '#^Class App\\Form\\ResponseType extends generic class Symfony\\Component\\Form\\AbstractType but does not specify its types\: TData$#'
+			identifier: missingType.generics
+			count: 1
+			path: src/Form/ResponseType.php
+
+		-
+			message: '#^Method App\\Repository\\EvenementRepository\:\:findBySearchAndSort\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: src/Repository/EvenementRepository.php
+
+		-
+			message: '#^Method App\\Repository\\ReclamationRepository\:\:countByPriority\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Repository/ReclamationRepository.php
+
+		-
+			message: '#^Method App\\Repository\\ReclamationRepository\:\:countByStatus\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Repository/ReclamationRepository.php
+
+		-
+			message: '#^Method App\\Repository\\ReclamationRepository\:\:findBySearchAndSort\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: src/Repository/ReclamationRepository.php
+
+		-
+			message: '#^Method App\\Service\\CalendarAiService\:\:generateSuggestions\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Service/CalendarAiService.php
+
+		-
+			message: '#^Call to method getMessage\(\) on an unknown class Symfony\\Contracts\\HttpClient\\Exception\\ConnectException\.$#'
+			identifier: class.notFound
+			count: 2
+			path: src/Service/PlantNetService.php
+
+		-
+			message: '#^Call to method getTraceAsString\(\) on an unknown class Symfony\\Contracts\\HttpClient\\Exception\\ConnectException\.$#'
+			identifier: class.notFound
+			count: 1
+			path: src/Service/PlantNetService.php

@@ -9,7 +9,7 @@ final class StockAnalyticsControllerTest extends WebTestCase
     public function testIndex(): void
     {
         $client = static::createClient();
-        $client->request('GET', '/stock/analytics');
+        $client->request('GET', '/stock/dashboard');
 
         self::assertResponseIsSuccessful();
     }

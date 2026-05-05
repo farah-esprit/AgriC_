@@ -17,6 +17,9 @@ use Symfony\Component\Validator\Constraints\NotBlank;
 use Symfony\Component\Validator\Constraints\NotNull;
 use Symfony\Component\Validator\Constraints\Positive;
 
+/**
+ * @extends AbstractType<Commande>
+ */
 class CommandeType extends AbstractType
 {
     public function buildForm(FormBuilderInterface $builder, array $options): void

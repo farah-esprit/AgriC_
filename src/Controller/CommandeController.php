@@ -12,8 +12,8 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
-use Symfony\Component\Routing\Attribute\ParamConverter;
-use App\Service\CommandeMailer;
+use Symfony\Bridge\Doctrine\Attribute\MapEntity;
+
 
 #[Route('/commande')]
 class CommandeController extends AbstractController
@@ -36,7 +36,7 @@ class CommandeController extends AbstractController
     public function index(CommandeRepository $commandeRepository): Response
     {
         return $this->render('commande/index.html.twig', [
-            'commandes' => $commandeRepository->findAll(),
+            'commandes' => $commandeRepository->findAllWithRelations(),
         ]);
     }
 
@@ -44,8 +44,7 @@ class CommandeController extends AbstractController
     public function new(
         Request $request,
         EntityManagerInterface $em,
-        UserRepository $userRepository,
-        CommandeMailer $commandeMailer
+        UserRepository $userRepository
     ): Response {
 
         $commande = new Commande();
@@ -56,7 +55,14 @@ class CommandeController extends AbstractController
 
             $produit = $commande->getProduit();
 
-            if (!$produit->getActif()) {
+            if ($produit === null) {
+                $this->addFlash('danger', '❌ Produit non sélectionné');
+                return $this->render('commande/new.html.twig', [
+                    'form' => $form->createView()
+                ]);
+            }
+
+            if ($produit->getActif() === false) {
                 $this->addFlash('danger', '❌ Produit indisponible');
                 return $this->render('commande/new.html.twig', [
                     'form' => $form->createView()
@@ -97,13 +103,7 @@ class CommandeController extends AbstractController
             $em->persist($commande);
             $em->flush();
 
-            try {
-                $commandeMailer->sendConfirmation($commande);
-                $commandeMailer->sendNewOrderNotificationToAdmins($commande);
-                $this->addFlash('success', '✅ Commande ajoutée + emails de confirmation envoyés !');
-            } catch (\Throwable $e) {
-                $this->addFlash('warning', '⚠️ Commande ajoutée, mais les emails n\'ont pas pu être envoyés.');
-            }
+            $this->addFlash('success', '✅ Commande ajoutée !');
 
             return $this->redirectToRoute('app_commande_index');
         }
@@ -114,13 +114,11 @@ class CommandeController extends AbstractController
     }
 
     #[Route('/{id}/edit', name: 'app_commande_edit', methods: ['GET', 'POST'])]
-    #[ParamConverter('commande', options: ['mapping' => ['id' => 'idCommande']])]
     public function edit(
         Request $request,
-        Commande $commande,
+        #[MapEntity(mapping: ['id' => 'idCommande'])] Commande $commande,
         EntityManagerInterface $em,
-        UserRepository $userRepository,
-        CommandeMailer $commandeMailer
+        UserRepository $userRepository
     ): Response {
         $ancienneQuantite = $commande->getQuantiteCommandee();
 
@@ -166,9 +164,7 @@ class CommandeController extends AbstractController
 
             $em->flush();
 
-            try {
-                $commandeMailer->sendStatutUpdate($commande);
-            } catch (\Throwable $e) {}
+
 
             $this->addFlash('success', '✅ Commande modifiée');
             return $this->redirectToRoute('app_commande_index');
@@ -181,13 +177,13 @@ class CommandeController extends AbstractController
     }
 
     #[Route('/{id}/delete', name: 'app_commande_delete', methods: ['POST'])]
-    #[ParamConverter('commande', options: ['mapping' => ['id' => 'idCommande']])]
     public function delete(
         Request $request,
-        Commande $commande,
+        #[MapEntity(mapping: ['id' => 'idCommande'])] Commande $commande,
         EntityManagerInterface $em
     ): Response {
-        if ($this->isCsrfTokenValid('delete' . $commande->getIdCommande(), $request->request->get('_token'))) {
+        $token = $request->request->get('_token');
+        if ($this->isCsrfTokenValid('delete' . $commande->getIdCommande(), is_string($token) ? $token : null)) {
 
             $produit = $commande->getProduit();
 

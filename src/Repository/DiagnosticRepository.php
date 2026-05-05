@@ -6,6 +6,9 @@ use App\Entity\Diagnostic;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
+/**
+ * @extends ServiceEntityRepository<Diagnostic>
+ */
 class DiagnosticRepository extends ServiceEntityRepository
 {
     public function __construct(ManagerRegistry $registry)
@@ -25,7 +28,9 @@ class DiagnosticRepository extends ServiceEntityRepository
             ->getSingleScalarResult();
     }
 
-    // 📊 Nombre par culture
+    /**
+     * @return array<int, mixed>
+     */
     public function countParCulture(): array
     {
         return $this->createQueryBuilder('d')
@@ -36,7 +41,9 @@ class DiagnosticRepository extends ServiceEntityRepository
             ->getResult();
     }
 
-    // 📊 Nombre par mois
+    /**
+     * @return array<int, mixed>
+     */
     public function countParMois(): array
     {
         return $this->createQueryBuilder('d')
@@ -47,20 +54,25 @@ class DiagnosticRepository extends ServiceEntityRepository
             ->getResult();
     }
 
-    // 🔍 Recherche globale
+    /**
+     * @return Diagnostic[]
+     */
     public function search(string $query): array
     {
+        $escapedQuery = addcslashes($query, '%_');
         return $this->createQueryBuilder('d')
             ->where('d.symptomes LIKE :q')
             ->orWhere('d.informationsComplementaires LIKE :q')
             ->orWhere('d.dateDiagnostic LIKE :q')
-            ->setParameter('q', "%$query%")
+            ->setParameter('q', "%$escapedQuery%")
             ->orderBy('d.dateDiagnostic', 'DESC')
             ->getQuery()
             ->getResult();
     }
 
-    // 🔍 Filtrer par culture
+    /**
+     * @return Diagnostic[]
+     */
     public function filterByCulture(int $idCulture): array
     {
         return $this->createQueryBuilder('d')
@@ -71,7 +83,9 @@ class DiagnosticRepository extends ServiceEntityRepository
             ->getResult();
     }
 
-    // 📅 Diagnostics récents
+    /**
+     * @return Diagnostic[]
+     */
     public function getRecents(int $limit = 5): array
     {
         return $this->createQueryBuilder('d')
@@ -81,7 +95,9 @@ class DiagnosticRepository extends ServiceEntityRepository
             ->getResult();
     }
 
-    // 📅 Filtrer par intervalle de dates
+    /**
+     * @return Diagnostic[]
+     */
     public function filterByDateRange(string $dateDebut, string $dateFin): array
     {
         return $this->createQueryBuilder('d')
@@ -92,7 +108,10 @@ class DiagnosticRepository extends ServiceEntityRepository
             ->getQuery()
             ->getResult();
     }
-public function findFiltered(?string $search, ?string $cultureId, ?string $dateDebut, ?string $dateFin): array
+    /**
+     * @return Diagnostic[]
+     */
+    public function findFiltered(?string $search, ?string $cultureId, ?string $dateDebut, ?string $dateFin): array
 {
     $qb = $this->createQueryBuilder('d')
         ->leftJoin('d.culture', 'c')
@@ -100,8 +119,9 @@ public function findFiltered(?string $search, ?string $cultureId, ?string $dateD
         ->orderBy('d.dateDiagnostic', 'DESC');
 
     if ($search) {
+        $escapedSearch = addcslashes($search, '%_');
         $qb->andWhere('d.symptomes LIKE :search OR d.informationsComplementaires LIKE :search')
-           ->setParameter('search', '%' . $search . '%');
+           ->setParameter('search', '%' . $escapedSearch . '%');
     }
 
     if ($cultureId) {
@@ -122,7 +142,10 @@ public function findFiltered(?string $search, ?string $cultureId, ?string $dateD
     return $qb->getQuery()->getResult();
 }
 
-public function findFilteredByUser(int $userId, ?string $search, ?string $cultureId, ?string $dateDebut, ?string $dateFin): array
+    /**
+     * @return Diagnostic[]
+     */
+    public function findFilteredByUser(int $userId, ?string $search, ?string $cultureId, ?string $dateDebut, ?string $dateFin): array
 {
     $qb = $this->createQueryBuilder('d')
         ->join('d.culture', 'c')
@@ -132,8 +155,9 @@ public function findFilteredByUser(int $userId, ?string $search, ?string $cultur
         ->orderBy('d.dateDiagnostic', 'DESC');
 
     if ($search) {
+        $escapedSearch = addcslashes($search, '%_');
         $qb->andWhere('(d.symptomes LIKE :search OR d.informationsComplementaires LIKE :search)')
-           ->setParameter('search', '%' . $search . '%');
+           ->setParameter('search', '%' . $escapedSearch . '%');
     }
 
     if ($cultureId) {
@@ -153,7 +177,10 @@ public function findFilteredByUser(int $userId, ?string $search, ?string $cultur
 
     return $qb->getQuery()->getResult();
 }
-public function getStatsByUser(int $userId): array
+    /**
+     * @return array<string, mixed>
+     */
+    public function getStatsByUser(int $userId): array
 {
     $parCulture = $this->createQueryBuilder('d')
         ->select('IDENTITY(d.culture) as idCulture, COUNT(d.idDiagnostic) as total')
@@ -183,7 +210,9 @@ public function getStatsByUser(int $userId): array
     ];
 }
 
-    // 🚀 Derniers diagnostics par culture
+    /**
+     * @return Diagnostic[]
+     */
     public function findLatestByCulture(int $idCulture, int $limit = 5): array
     {
         return $this->createQueryBuilder('d')

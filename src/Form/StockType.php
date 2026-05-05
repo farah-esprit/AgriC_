@@ -14,6 +14,9 @@ use Symfony\Component\Validator\Constraints\NotBlank;
 use Symfony\Component\Validator\Constraints\NotNull;
 use Symfony\Component\Validator\Constraints\PositiveOrZero;
 
+/**
+ * @extends AbstractType<Stock>
+ */
 class StockType extends AbstractType
 {
     public function buildForm(FormBuilderInterface $builder, array $options): void
@@ -51,7 +54,7 @@ class StockType extends AbstractType
                 'label'        => 'Produit associé',
                 'placeholder'  => '-- Choisir un produit --',
                 'disabled'     => $isEdit,
-                'query_builder' => function (ProduitRepository $repo) use ($isEdit, $options) {
+                'query_builder' => function (ProduitRepository $repo) use ($isEdit) {
                     $qb = $repo->createQueryBuilder('p')
                         ->leftJoin('p.stock', 's')
                         ->orderBy('p.nom', 'ASC');

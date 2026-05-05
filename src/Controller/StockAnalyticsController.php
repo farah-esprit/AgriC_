@@ -6,10 +6,12 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\Routing\Annotation\Route;
 use App\AnalyticsBundle\Service\AnalyticsService;
 
+use Symfony\Component\HttpFoundation\Response;
+
 class StockAnalyticsController extends AbstractController
 {
     #[Route('/stock/dashboard', name: 'stock_dashboard')]
-    public function dashboard(AnalyticsService $analyticsService)
+    public function dashboard(AnalyticsService $analyticsService): Response
     {
         $stats = $analyticsService->getDashboardStats();
 

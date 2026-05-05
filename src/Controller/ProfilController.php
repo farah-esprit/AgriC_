@@ -12,6 +12,7 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
+use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
 
 class ProfilController extends AbstractController
 {
@@ -111,7 +112,8 @@ class ProfilController extends AbstractController
             }
 
             // ✅ Bio
-            $profil->setBio($request->request->get('bio'));
+            $bioRaw = $request->request->get('bio');
+            $profil->setBio(is_string($bioRaw) ? $bioRaw : null);
 
             $em->persist($profil);
             $em->flush();
@@ -133,13 +135,15 @@ class ProfilController extends AbstractController
     public function delete(
         Request $request,
         EntityManagerInterface $em,
-        SessionInterface $session
+        SessionInterface $session,
+        TokenStorageInterface $tokenStorage
     ): Response {
         if (!$session->get('user_id')) {
             return $this->redirectToRoute('app_signin');
         }
 
-        if (!$this->isCsrfTokenValid('delete_account', $request->request->get('_token'))) {
+        $token = $request->request->get('_token');
+        if (!$this->isCsrfTokenValid('delete_account', is_string($token) ? $token : null)) {
             return $this->redirectToRoute('user_profil');
         }
 
@@ -159,6 +163,7 @@ class ProfilController extends AbstractController
         }
 
         $em->flush();
+        $tokenStorage->setToken(null);
         $session->clear();
 
         return $this->redirectToRoute('app_signin');

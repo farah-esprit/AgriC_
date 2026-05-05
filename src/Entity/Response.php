@@ -11,6 +11,9 @@ use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity(repositoryClass: ResponseRepository::class)]
 #[ORM\Table(name: 'response')]
+#[ORM\Index(columns: ['thread_id'])]
+#[ORM\Index(columns: ['user_id'])]
+#[ORM\Index(columns: ['parent_response_id'])]
 class Response
 {
     #[ORM\Id]
@@ -37,7 +40,8 @@ class Response
     #[ORM\JoinColumn(nullable: true)]
     private ?Response $parentResponse = null;
 
-    #[ORM\OneToMany(mappedBy: 'parentResponse', targetEntity: self::class, cascade: ['remove'])]
+    /** @var Collection<int, Response> */
+    #[ORM\OneToMany(mappedBy: 'parentResponse', targetEntity: self::class, cascade: ['remove'], orphanRemoval: true)]
     private Collection $childResponses;
 
     #[ORM\Column(type: 'integer')]
@@ -71,6 +75,7 @@ class Response
     }
 
     public function getParentResponse(): ?Response { return $this->parentResponse; }
+    /** @return Collection<int, Response> */
     public function getChildResponses(): Collection { return $this->childResponses; }
     public function getLikeCount(): ?int { return $this->likeCount; }
 

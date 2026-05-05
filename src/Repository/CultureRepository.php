@@ -6,6 +6,9 @@ use App\Entity\Culture;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
+/**
+ * @extends ServiceEntityRepository<Culture>
+ */
 class CultureRepository extends ServiceEntityRepository
 {
     public function __construct(ManagerRegistry $registry)
@@ -69,6 +72,7 @@ class CultureRepository extends ServiceEntityRepository
     }
 
     // 📊 Nombre de cultures par type pour un utilisateur
+    /** @return array<array{type: string|null, total: int}> */
     public function countParType(int $userId): array
     {
         return $this->createQueryBuilder('c')
@@ -82,18 +86,21 @@ class CultureRepository extends ServiceEntityRepository
     }
 
     // 🔍 Recherche globale par utilisateur
+    /** @return \Doctrine\ORM\Query<null, Culture> */
     public function search(string $query, int $userId)
     {
+        $escapedQuery = addcslashes($query, '%_');
         return $this->createQueryBuilder('c')
             ->where('c.user = :userId')
             ->andWhere('(c.nom LIKE :q OR c.localisation LIKE :q OR c.type LIKE :q)')
             ->setParameter('userId', $userId)
-            ->setParameter('q', "%$query%")
+            ->setParameter('q', "%$escapedQuery%")
             ->orderBy('c.idCulture', 'DESC')
             ->getQuery();
     }
 
     // 🔍 Filtrer par type pour un utilisateur
+    /** @return \Doctrine\ORM\Query<null, Culture> */
     public function filterByType(string $type, int $userId)
     {
         return $this->createQueryBuilder('c')
@@ -105,6 +112,7 @@ class CultureRepository extends ServiceEntityRepository
     }
 
     // 🔽🔼 Trier par superficie pour un utilisateur
+    /** @return \Doctrine\ORM\Query<null, Culture> */
     public function orderBySuperficie(int $userId, string $order = 'DESC')
     {
         $order = strtoupper($order) === 'ASC' ? 'ASC' : 'DESC';
@@ -117,6 +125,7 @@ class CultureRepository extends ServiceEntityRepository
     }
 
     // 📄 Liste globale paginable par utilisateur
+    /** @return \Doctrine\ORM\Query<null, Culture> */
     public function findAllByUser(int $userId)
     {
         return $this->createQueryBuilder('c')
@@ -127,7 +136,8 @@ class CultureRepository extends ServiceEntityRepository
     }
 
     // 📅 Bonus : cultures récentes
-    public function findLatest(int $limit = 10): array
+    /** @return Culture[] */
+    public function findLatest(int $limit = 5): array
     {
         return $this->createQueryBuilder('c')
             ->orderBy('c.idCulture', 'DESC')

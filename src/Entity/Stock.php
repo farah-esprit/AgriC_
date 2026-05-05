@@ -8,6 +8,7 @@ use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity(repositoryClass: StockRepository::class)]
 #[ORM\Table(name: 'stock')]
+#[ORM\Index(columns: ['id_produit'])]
 class Stock
 {
     #[ORM\Id]
@@ -34,6 +35,11 @@ class Stock
     #[ORM\JoinColumn(name: 'id_produit', referencedColumnName: 'id_produit')]
     #[Assert\NotBlank(message: 'Le produit est obligatoire.')]
     private ?Produit $produit = null;
+
+    /**
+     * @var float|null Not persisted, used for analytics
+     */
+    public ?float $predictedDemand = null;
 
     public function getIdStock(): ?int { return $this->idStock; }
     public function getQuantite(): ?int { return $this->quantite; }

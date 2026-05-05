@@ -11,6 +11,8 @@ use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity(repositoryClass: ThreadRepository::class)]
 #[ORM\Table(name: 'thread')]
+#[ORM\Index(columns: ['category'])]
+#[ORM\Index(columns: ['user_id'])]
 class Thread
 {
     #[ORM\Id]
@@ -50,7 +52,8 @@ class Thread
     #[ORM\Column(type: 'integer')]
     private ?int $likeCount = 0;
 
-    #[ORM\OneToMany(mappedBy: 'thread', targetEntity: Response::class, cascade: ['remove'])]
+    /** @var Collection<int, Response> */
+    #[ORM\OneToMany(mappedBy: 'thread', targetEntity: Response::class, cascade: ['remove'], orphanRemoval: true)]
     private Collection $responses;
 
     public function __construct()
@@ -92,6 +95,7 @@ class Thread
     public function getTags(): ?string { return $this->tags; }
     public function getAttachments(): ?string { return $this->attachments; }
     public function getLikeCount(): ?int { return $this->likeCount; }
+    /** @return Collection<int, Response> */
     public function getResponses(): Collection { return $this->responses; }
 
     public function setTitle(?string $title): self { $this->title = $title; return $this; }

@@ -11,6 +11,9 @@ use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
+/**
+ * @extends AbstractType<Reclamation>
+ */
 class ReclamationType extends AbstractType
 {
     public function buildForm(FormBuilderInterface $builder, array $options): void
@@ -24,10 +27,9 @@ class ReclamationType extends AbstractType
                 'label' => 'Description',
                 'attr' => ['class' => 'form-control', 'rows' => 5],
             ])
-            ->add('dateCreation', DateType::class, [
-                'label' => 'Date',
-                'widget' => 'single_text', // 🔥 compatible HTML5 + flatpickr
-                'input' => 'string',
+            ->add('dateCreation', \Symfony\Component\Form\Extension\Core\Type\DateTimeType::class, [
+                'label' => 'Date de création',
+                'widget' => 'single_text',
                 'attr' => ['class' => 'form-control'],
             ])
             ->add('statut', ChoiceType::class, [

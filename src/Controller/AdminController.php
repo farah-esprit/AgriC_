@@ -2,10 +2,9 @@
 
 namespace App\Controller;
 
-use App\Entity\Admin;
 use App\Entity\User;
 use App\Entity\Profil;
-use App\Form\AdminProfileType;
+use App\Form\UserEditType;
 use Doctrine\ORM\EntityManagerInterface;
 use Gedmo\Loggable\Entity\LogEntry;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -16,25 +15,33 @@ use Symfony\Component\HttpFoundation\Session\SessionInterface;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Routing\Attribute\Route;
-use Symfony\Component\String\Slugger\SluggerInterface;
-use Symfony\Component\HttpFoundation\File\Exception\FileException;
 use Symfony\UX\Chartjs\Builder\ChartBuilderInterface;
 use Symfony\UX\Chartjs\Model\Chart;
 
 class AdminController extends AbstractController
 {
+    /**
+     * Vérifie que l'utilisateur connecté est bien un admin.
+     */
+    private function isAdmin(SessionInterface $session): bool
+    {
+        return $session->get('user_id') && $session->get('user_role') === 'ADMIN';
+    }
+
     #[Route('/admin/dashboard', name: 'admin_dashboard')]
     public function dashboard(
         SessionInterface $session,
         EntityManagerInterface $em
     ): Response {
-        if (!$session->get('admin_id')) {
+        if (!$this->isAdmin($session)) {
             return $this->redirectToRoute('app_signin');
         }
 
         $users   = $em->getRepository(User::class)->findAll();
-        $total   = count($users);
-        $actifs  = count(array_filter($users, fn($u) => $u->getEtatCompte() === 'ACTIF'));
+        // Exclure les admins du comptage des utilisateurs classiques
+        $nonAdmins = array_filter($users, fn($u) => $u->getRole() !== 'ADMIN');
+        $total   = count($nonAdmins);
+        $actifs  = count(array_filter($nonAdmins, fn($u) => $u->getEtatCompte() === 'ACTIF'));
         $bloques = $total - $actifs;
 
         return $this->render('admin/dashboard.html.twig', [
@@ -50,53 +57,34 @@ class AdminController extends AbstractController
         Request $request,
         EntityManagerInterface $em,
         SessionInterface $session,
-        UserPasswordHasherInterface $passwordHasher,
-        SluggerInterface $slugger
+        UserPasswordHasherInterface $passwordHasher
     ): Response {
-        if (!$session->get('admin_id')) {
-            return $this->redirectToRoute('admin_login');
-        }
-
-        $admin = $em->getRepository(Admin::class)->find($session->get('admin_id'));
-
-        if (!$admin) {
-            $this->addFlash('error', 'Admin introuvable.');
+        if (!$this->isAdmin($session)) {
             return $this->redirectToRoute('app_signin');
         }
 
-        $form = $this->createForm(AdminProfileType::class, $admin);
+        /** @var User|null $admin */
+        $admin = $em->getRepository(User::class)->find($session->get('user_id'));
+
+        if (!$admin) {
+            $this->addFlash('error', 'Utilisateur introuvable.');
+            return $this->redirectToRoute('app_signin');
+        }
+
+        $form = $this->createForm(UserEditType::class, $admin);
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
-            $plainPassword = $form->get('plainPassword')->getData();
+            $newPassword = $form->get('newPassword')->getData();
 
-            if ($plainPassword) {
-                $hashedPassword = $passwordHasher->hashPassword($admin, $plainPassword);
-                $admin->setPassword($hashedPassword);
-            }
-
-            /** @var \Symfony\Component\HttpFoundation\File\UploadedFile $photoFile */
-            $photoFile = $form->get('photoFile')->getData();
-            if ($photoFile) {
-                $originalFilename = pathinfo($photoFile->getClientOriginalName(), PATHINFO_FILENAME);
-                $safeFilename = $slugger->slug($originalFilename);
-                $newFilename = $safeFilename.'-'.uniqid().'.'.$photoFile->guessExtension();
-
-                try {
-                    $photoFile->move(
-                        $this->getParameter('kernel.project_dir').'/public/uploads/admins',
-                        $newFilename
-                    );
-                    $admin->setPhoto($newFilename);
-                } catch (FileException $e) {
-                    $this->addFlash('error', 'Erreur lors du téléchargement de l\'image.');
-                }
+            if ($newPassword) {
+                $hashedPassword = $passwordHasher->hashPassword($admin, $newPassword);
+                $admin->setMotDePasse($hashedPassword);
             }
 
             $em->flush();
 
-            $session->set('admin_nom',    $admin->getNom());
-            $session->set('admin_prenom', $admin->getPrenom());
+            $session->set('user_name', $admin->getNom());
 
             $this->addFlash('success', '✅ Profil mis à jour avec succès.');
             return $this->redirectToRoute('admin_profile');
@@ -114,11 +102,16 @@ class AdminController extends AbstractController
         SessionInterface $session,
         ChartBuilderInterface $chartBuilder
     ): Response {
-        if (!$session->get('admin_id')) {
+        if (!$this->isAdmin($session)) {
             return $this->redirectToRoute('app_signin');
         }
 
-        $users = $em->getRepository(User::class)->findAll();
+        // Récupérer seulement les non-admins
+        $users = array_filter(
+            $em->getRepository(User::class)->findAll(),
+            fn($u) => $u->getRole() !== 'ADMIN'
+        );
+        $users = array_values($users);
 
         // --- Stats pour les graphiques ---
         $roleCount = ['AGRICULTEUR' => 0, 'FOURNISSEUR' => 0, 'Autre' => 0];
@@ -194,9 +187,9 @@ class AdminController extends AbstractController
         ]);
 
         return $this->render('admin/users.html.twig', [
-            'users'     => $users,
-            'pieChart'  => $pieChart,
-            'lineChart' => $lineChart,
+            'users'        => $users,
+            'pieChart'     => $pieChart,
+            'lineChart'    => $lineChart,
             'totalUsers'   => count($users),
             'activeUsers'  => count(array_filter($users, fn($u) => $u->getEtatCompte() === 'ACTIF')),
             'blockedUsers' => count(array_filter($users, fn($u) => $u->getEtatCompte() !== 'ACTIF')),
@@ -209,7 +202,7 @@ class AdminController extends AbstractController
         EntityManagerInterface $em,
         SessionInterface $session
     ): JsonResponse {
-        if (!$session->get('admin_id')) {
+        if (!$this->isAdmin($session)) {
             return new JsonResponse(['error' => 'Non autorisé'], 403);
         }
 
@@ -218,14 +211,17 @@ class AdminController extends AbstractController
             return new JsonResponse(['error' => 'Utilisateur introuvable'], 404);
         }
 
-        $logs = $em->getRepository(LogEntry::class)->getLogEntries($user);
-        
+        /** @var \Gedmo\Loggable\Entity\Repository\LogEntryRepository<object> $logRepo */
+        $logRepo = $em->getRepository(LogEntry::class);
+        /** @phpstan-ignore-next-line */
+        $logs = $logRepo->getLogEntries($user);
+
         $profil = $em->getRepository(Profil::class)->findOneBy(['userId' => $id]);
-        $profilLogs = $profil ? $em->getRepository(LogEntry::class)->getLogEntries($profil) : [];
+        /** @phpstan-ignore-next-line */
+        $profilLogs = $profil ? $logRepo->getLogEntries($profil) : [];
 
         $allLogs = array_merge($logs, $profilLogs);
-        
-        // Trier les logs par date (du plus récent au plus ancien)
+
         usort($allLogs, function ($a, $b) {
             return $b->getLoggedAt() <=> $a->getLoggedAt();
         });
@@ -250,21 +246,21 @@ class AdminController extends AbstractController
             $data = $log->getData() ?? [];
             $fields = [];
             foreach ($data as $field => $value) {
-                // Pour éviter d'afficher des logs internes non pertinents
                 if (!isset($fieldLabels[$field]) && $field !== 'telephone') continue;
-                
+
                 $fields[] = [
-                    'champ'    => $fieldLabels[$field] ?? ucfirst($field),
+                    'champ'    => $fieldLabels[$field],
                     'nouvelle' => $value,
                 ];
             }
-            
+
             if (empty($fields) && $log->getAction() !== 'create') {
-                continue; // Ne pas afficher si aucun champ suivi n'a changé
+                continue;
             }
 
+            $loggedAt = $log->getLoggedAt();
             $history[] = [
-                'date'    => $log->getLoggedAt()->format('d/m/Y à H:i'),
+                'date'    => $loggedAt ? $loggedAt->format('d/m/Y à H:i') : 'N/A',
                 'action'  => $actionLabels[$log->getAction()] ?? $log->getAction(),
                 'version' => $log->getVersion(),
                 'champs'  => $fields,
@@ -279,25 +275,28 @@ class AdminController extends AbstractController
         EntityManagerInterface $em,
         SessionInterface $session
     ): StreamedResponse {
-        if (!$session->get('admin_id')) {
-            // StreamedResponse ne peut pas faire de redirect — on redirige via Response classique
+        if (!$this->isAdmin($session)) {
             return new StreamedResponse(function () {
                 header('Location: ' . $this->generateUrl('app_signin'));
             });
         }
 
-        $users = $em->getRepository(User::class)->findAll();
+        $users = array_filter(
+            $em->getRepository(User::class)->findAll(),
+            fn($u) => $u->getRole() !== 'ADMIN'
+        );
 
         $response = new StreamedResponse(function () use ($users) {
             $handle = fopen('php://output', 'w');
+            if ($handle === false) {
+                return;
+            }
 
             // BOM UTF-8 pour Excel
             fprintf($handle, chr(0xEF) . chr(0xBB) . chr(0xBF));
 
-            // En-têtes colonnes
             fputcsv($handle, ['Nom', 'Email', 'Téléphone', 'Rôle', 'État', 'Date création'], ';');
 
-            // Données
             foreach ($users as $user) {
                 fputcsv($handle, [
                     $user->getNom(),
@@ -324,7 +323,7 @@ class AdminController extends AbstractController
         EntityManagerInterface $em,
         SessionInterface $session
     ): Response {
-        if (!$session->get('admin_id')) {
+        if (!$this->isAdmin($session)) {
             return $this->redirectToRoute('app_signin');
         }
 
@@ -338,7 +337,7 @@ class AdminController extends AbstractController
             $action = ($newStatus === 'BLOQUE') ? 'bloqué' : 'activé';
             $this->addFlash('success', "✅ Compte de {$user->getNom()} {$action} avec succès.");
         } else {
-            $this->addFlash('error', '❌ Votre compte est désactivé pour le moment .');
+            $this->addFlash('error', '❌ Utilisateur introuvable.');
         }
 
         return $this->redirectToRoute('admin_users');

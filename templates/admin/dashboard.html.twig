@@ -260,12 +260,10 @@
     <div class="dash-header">
         <div>
             <h2 class="dash-title">Tableau de bord</h2>
-            <div class="dash-subtitle">Aperçu général de l'activité. Bienvenue, <strong>{{ app.session.get('admin_prenom') }} {{ app.session.get('admin_nom') }}</strong>.</div>
+            <div class="dash-subtitle">Aperçu général de l'activité. Bienvenue, <strong>{{ app.session.get('user_name') }}</strong>.</div>
         </div>
         <div class="badge-status">
             <i class="fas fa-circle" style="font-size: 0.5rem;"></i> En ligne
-        </div>
-    </div>
         </div>
     </div>
 
@@ -370,7 +368,7 @@
                         <div class="info-icon"><i class="fas fa-envelope"></i></div>
                         <div>
                             <div style="font-size:0.8rem; color:#64748b; font-weight:700; text-transform:uppercase;">Email Connecté</div>
-                            <div>{{ app.session.get('admin_email') ?? 'admin@agriconnect.com' }}</div>
+                            <div>{{ app.session.get('user_email') ?? 'admin@agriconnect.com' }}</div>
                         </div>
                     </li>
                     <li>

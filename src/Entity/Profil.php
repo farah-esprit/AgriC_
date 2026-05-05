@@ -8,6 +8,7 @@ use Gedmo\Mapping\Annotation as Gedmo;
 
 #[ORM\Entity(repositoryClass: ProfilRepository::class)]
 #[ORM\Table(name: 'profil')]
+#[ORM\Index(columns: ['user_id'])]
 #[Gedmo\Loggable]
 class Profil
 {
@@ -28,17 +29,18 @@ class Profil
     #[Gedmo\Versioned]
     private ?string $image = null;
 
-    #[ORM\Column(type: 'integer', nullable: true)]
-    private ?int $userId = null;
+    #[ORM\OneToOne(targetEntity: User::class)]
+    #[ORM\JoinColumn(name: 'user_id', referencedColumnName: 'user_id', nullable: true)]
+    private ?User $user = null;
 
     public function getId(): ?int { return $this->id; }
     public function getBio(): ?string { return $this->bio; }
     public function getTelephone(): ?string { return $this->telephone; }
     public function getImage(): ?string { return $this->image; }
-    public function getUserId(): ?int { return $this->userId; }
+    public function getUser(): ?User { return $this->user; }
 
     public function setBio(?string $bio): self { $this->bio = $bio; return $this; }
     public function setTelephone(?string $telephone): self { $this->telephone = $telephone; return $this; }
     public function setImage(?string $image): self { $this->image = $image; return $this; }
-    public function setUserId(?int $userId): self { $this->userId = $userId; return $this; }
+    public function setUser(?User $user): self { $this->user = $user; return $this; }
 }

@@ -2,7 +2,7 @@
 
 namespace App\Controller;
 
-use App\Entity\Admin;
+
 use App\Entity\User;
 use App\Form\LoginType;
 use App\Form\RegistrationType;
@@ -61,9 +61,17 @@ class AuthController extends AbstractController
                 ]);
             }
 
+            $plainPassword = $user->getPlainPassword();
+            if ($plainPassword === null) {
+                $this->addFlash('error', 'Le mot de passe est obligatoire.');
+                return $this->render('auth/signup.html.twig', [
+                    'form' => $form->createView(),
+                ]);
+            }
+
             $hashedPassword = $passwordHasher->hashPassword(
                 $user,
-                $user->getPlainPassword()
+                $plainPassword
             );
             $user->setMotDePasse($hashedPassword);
             $user->setEtatCompte('INACTIF');
@@ -74,17 +82,22 @@ class AuthController extends AbstractController
             $em->persist($user);
             $em->flush();
 
+            $userEmail = $user->getEmail();
+            if ($userEmail === null) {
+                 throw new \LogicException('User email cannot be null at this stage.');
+            }
+
             // -- Envoi de l'email de vérification --
             $signatureComponents = $verifyEmailHelper->generateSignature(
                 'app_verify_email',
                 (string) $user->getUserId(),
-                $user->getEmail(),
+                $userEmail,
                 ['id' => $user->getUserId()]
             );
 
             $email = (new TemplatedEmail())
                 ->from('agriconnect3a6@gmail.com')
-                ->to($user->getEmail())
+                ->to($userEmail)
                 ->subject('AgriConnect - Confirmation de votre compte')
                 ->htmlTemplate('auth/confirmation_email.html.twig')
                 ->context([
@@ -135,29 +148,29 @@ class AuthController extends AbstractController
             $email    = $data['email'];
             $password = $data['password'];
 
-            // Vérifier admin d'abord
-            $admin = $em->getRepository(Admin::class)->findOneBy(['email' => $email]);
-            if ($admin && $passwordHasher->isPasswordValid($admin, $password)) {
-                $session->set('admin_id',     $admin->getId());
-                $session->set('admin_nom',    $admin->getNom());
-                $session->set('admin_prenom', $admin->getPrenom());
-                $session->set('admin_email',  $admin->getEmail());
-                $session->set('user_type',    'ADMIN');
-
-                // --- Injection du Token Security Symfony pour satisfaire le Web Profiler ---
-                $token = new UsernamePasswordToken($admin, 'main', $admin->getRoles());
-                $tokenStorage->setToken($token);
-                $session->set('_security_main', serialize($token));
-
-                $this->addFlash('success', '✅ Connexion admin réussie ! Bienvenue ' . $admin->getPrenom());
-                return $this->redirectToRoute('admin_dashboard');
-            }
-
-            // Sinon vérifier utilisateur
+            // Chercher l'utilisateur (admin ou pas) dans la table user
             $user = $em->getRepository(User::class)->findOneBy(['email' => $email]);
+
             if ($user && $passwordHasher->isPasswordValid($user, $password)) {
+                // Vérifier si l'utilisateur est admin
+                if ($user->getRole() === 'ADMIN') {
+                    $session->set('user_id',    $user->getUserId());
+                    $session->set('user_name',  $user->getNom());
+                    $session->set('user_role',  'ADMIN');
+                    $session->set('user_email', $user->getEmail());
+                    $session->set('user_type',  'ADMIN');
+
+                    $token = new UsernamePasswordToken($user, 'main', $user->getRoles());
+                    $tokenStorage->setToken($token);
+                    $session->set('_security_main', serialize($token));
+
+                    $this->addFlash('success', '✅ Connexion admin réussie ! Bienvenue ' . $user->getNom());
+                    return $this->redirectToRoute('admin_dashboard');
+                }
+
+                // Utilisateur normal
                 if ($user->getEtatCompte() !== 'ACTIF') {
-                    $this->addFlash('error', "❌ Adresse ou mot de passe incorrect.");
+                    $this->addFlash('error', "❌ Votre compte est désactivé pour le moment.");
                     return $this->redirectToRoute('app_signin');
                 }
 
@@ -172,7 +185,6 @@ class AuthController extends AbstractController
                 $session->set('user_role', $user->getRole());
                 $session->set('user_type', 'USER');
 
-                // --- Injection du Token Security Symfony pour satisfaire le Web Profiler ---
                 $token = new UsernamePasswordToken($user, 'main', $user->getRoles());
                 $tokenStorage->setToken($token);
                 $session->set('_security_main', serialize($token));
@@ -213,8 +225,14 @@ class AuthController extends AbstractController
             return $this->redirectToRoute('app_signup');
         }
 
+        $userEmail = $user->getEmail();
+        if ($userEmail === null) {
+            $this->addFlash('error', 'Email utilisateur introuvable.');
+            return $this->redirectToRoute('app_signup');
+        }
+
         try {
-            $verifyEmailHelper->validateEmailConfirmation($request->getUri(), (string) $user->getUserId(), $user->getEmail());
+            $verifyEmailHelper->validateEmailConfirmation($request->getUri(), (string) $user->getUserId(), $userEmail);
         } catch (VerifyEmailExceptionInterface $e) {
             $this->addFlash('error', $e->getReason());
             return $this->redirectToRoute('app_signup');
@@ -251,7 +269,7 @@ class AuthController extends AbstractController
         // (Note: La vérification SMS via API est gérée en frontend, le frontend appelle cette soumission que lors du succès)
         if ($request->isMethod('POST')) {
             $phone = $request->request->get('phone');
-            if ($phone && preg_match('/^[0-9]{8}$/', $phone)) {
+            if (is_string($phone) && preg_match('/^[0-9]{8}$/', $phone)) {
                 $user->setTelephone('+216' . $phone);
                 $user->setIsPhoneVerified(true);
                 $user->setEtatCompte('ACTIF');
@@ -282,10 +300,15 @@ class AuthController extends AbstractController
         }
 
         $user = $em->getRepository(User::class)->find($userId);
-            if ($user->getTotpSecret()) {
-                $this->addFlash('info', 'La 2FA est déjà activée pour votre compte.');
-                return $this->redirectToRoute('user_profil'); // Assuming their route is 'user_profil'
-            }
+        if (!$user) {
+            $this->addFlash('error', 'Utilisateur introuvable.');
+            return $this->redirectToRoute('app_signin');
+        }
+
+        if ($user->getTotpSecret()) {
+            $this->addFlash('info', 'La 2FA est déjà activée pour votre compte.');
+            return $this->redirectToRoute('user_profil'); // Assuming their route is 'user_profil'
+        }
 
         // Generate a new TOTP secret if not present in session for the setup
         $secret = $session->get('pending_2fa_secret');
@@ -298,7 +321,10 @@ class AuthController extends AbstractController
             $totp = TOTP::createFromSecret($secret);
         }
         
-        $totp->setLabel($user->getEmail());
+        $userEmail = $user->getEmail();
+        if ($userEmail !== null && $userEmail !== '') {
+            $totp->setLabel($userEmail);
+        }
         $totp->setIssuer('AgriConnect');
         
         $qrCodeUri = $totp->getProvisioningUri();
@@ -317,7 +343,7 @@ class AuthController extends AbstractController
 
         if ($request->isMethod('POST')) {
             $code = $request->request->get('code');
-            if ($totp->verify($code)) {
+            if (is_string($code) && $code !== '' && $totp->verify($code)) {
                 $user->setTotpSecret($secret);
                 $em->flush();
                 $session->remove('pending_2fa_secret');
@@ -347,12 +373,19 @@ class AuthController extends AbstractController
         }
 
         $user = $em->getRepository(User::class)->find($userId);
+        if (!$user) {
+            return $this->redirectToRoute('app_signin');
+        }
 
         if ($request->isMethod('POST')) {
             $code = $request->request->get('code');
-            $totp = TOTP::createFromSecret($user->getTotpSecret());
+            $secret = $user->getTotpSecret();
+            if ($secret === null || $secret === '') {
+                return $this->redirectToRoute('app_signin');
+            }
+            $totp = TOTP::createFromSecret($secret);
 
-            if ($totp->verify($code)) {
+            if (is_string($code) && $code !== '' && $totp->verify($code)) {
                 // Validation réussie, on connecte définitivement l'utilisateur
                 $session->remove('pending_login_user_id');
 

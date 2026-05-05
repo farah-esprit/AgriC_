@@ -15,7 +15,7 @@ services:
       string $mailFromName: '%mail_from_name%'
       string $googleClientId: '%env(GOOGLE_CLIENT_ID)%'
       string $googleClientSecret: '%env(GOOGLE_CLIENT_SECRET)%'
-      string $googleOauthRefreshToken: '%env(GOOGLE_OAUTH_REFRESH_TOKEN)%'
+
 
   App\:
     resource: '../src/'

@@ -21,4 +21,5 @@ return [
     CalendarBundle\CalendarBundle::class => ['all' => true],
     Flasher\Symfony\FlasherSymfonyBundle::class => ['all' => true],
     App\AnalyticsBundle\AnalyticsBundle::class => ['all' => true],
+    AhmedBhs\DoctrineDoctor\DoctrineDoctorBundle::class => ['dev' => true],
 ];

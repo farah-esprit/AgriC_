@@ -10,6 +10,7 @@ use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity(repositoryClass: ProduitRepository::class)]
 #[ORM\Table(name: 'produit')]
+#[ORM\Index(columns: ['categorie'])]
 class Produit
 {
     #[ORM\Id]
@@ -47,10 +48,11 @@ class Produit
     #[ORM\Column(type: 'float', nullable: true)]
     private ?float $tauxPromo = null;
 
-    #[ORM\OneToMany(mappedBy: 'produit', targetEntity: Commande::class)]
+    /** @var Collection<int, Commande> */
+    #[ORM\OneToMany(mappedBy: 'produit', targetEntity: Commande::class, cascade: ['remove'])]
     private Collection $commandes;
 
-    #[ORM\OneToOne(mappedBy: 'produit', targetEntity: Stock::class)]
+    #[ORM\OneToOne(mappedBy: 'produit', targetEntity: Stock::class, cascade: ['remove'])]
     private ?Stock $stock = null;
 
     public function __construct()
@@ -67,6 +69,7 @@ class Produit
     public function getImagePath(): ?string { return $this->imagePath; }
     public function getPromo(): ?bool { return $this->promo; }
     public function getTauxPromo(): ?float { return $this->tauxPromo; }
+    /** @return Collection<int, Commande> */
     public function getCommandes(): Collection { return $this->commandes; }
     public function getStock(): ?Stock { return $this->stock; }
 

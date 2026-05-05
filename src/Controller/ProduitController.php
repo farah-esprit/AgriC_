@@ -12,7 +12,7 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
-use Symfony\Component\Routing\Attribute\ParamConverter;
+use Symfony\Bridge\Doctrine\Attribute\MapEntity;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 
 #[Route('/produit')]
@@ -88,12 +88,13 @@ class ProduitController extends AbstractController
                         [
                             'auth_basic' => [$sid, $token],
                             'body'       => [
-                                'From' => $_ENV['TWILIO_FROM'],
-                                'To'   => $_ENV['TWILIO_TO'],
+                                'From' => $_ENV['TWILIO_WHATSAPP_FROM'],
+                                'To'   => $_ENV['TWILIO_WHATSAPP_TO'],
                                 'Body' => $message,
                             ],
                         ]
                     );
+                    $this->addFlash('info', '📱 Notification WhatsApp envoyée !');
                 } catch (\Exception $e) {
                     // WhatsApp échoue → on continue quand même
                 }
@@ -119,7 +120,7 @@ class ProduitController extends AbstractController
                 "%s,%s,%s,%s,%s,%s,%s,%s\n",
                 $produit->getIdProduit(),
                 $produit->getNom(),
-                str_replace(',', ' ', $produit->getDescription()),
+                str_replace(',', ' ', $produit->getDescription() ?? ''),
                 $produit->getPrix(),
                 $produit->getCategorie(),
                 $produit->getPromo() ? 'Oui' : 'Non',
@@ -135,8 +136,7 @@ class ProduitController extends AbstractController
     }
 
     #[Route('/{id}/edit', name: 'app_produit_edit', methods: ['GET', 'POST'])]
-    #[ParamConverter('produit', options: ['mapping' => ['id' => 'idProduit']])]
-    public function edit(Request $request, Produit $produit, EntityManagerInterface $entityManager): Response
+    public function edit(Request $request, #[MapEntity(mapping: ['id' => 'idProduit'])] Produit $produit, EntityManagerInterface $entityManager): Response
     {
         $form = $this->createForm(ProduitType::class, $produit);
         $form->handleRequest($request);
@@ -165,10 +165,9 @@ class ProduitController extends AbstractController
     }
 
     #[Route('/{id}/delete', name: 'app_produit_delete', methods: ['POST'])]
-    #[ParamConverter('produit', options: ['mapping' => ['id' => 'idProduit']])]
-    public function delete(Request $request, Produit $produit, EntityManagerInterface $entityManager): Response
+    public function delete(Request $request, #[MapEntity(mapping: ['id' => 'idProduit'])] Produit $produit, EntityManagerInterface $entityManager): Response
     {
-        if ($this->isCsrfTokenValid('delete' . $produit->getIdProduit(), $request->request->get('_token'))) {
+        if ($this->isCsrfTokenValid('delete' . $produit->getIdProduit(), (string) $request->request->get('_token'))) {
             $stock = $produit->getStock();
             if ($stock) {
                 $entityManager->remove($stock);

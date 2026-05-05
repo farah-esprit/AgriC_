@@ -45,7 +45,7 @@ class CalendrierController extends AbstractController
 
         $activity->setIsConfirmed(true);
         // On change le titre pour enlever le "(IA)"
-        $title = str_replace(' (IA)', '', $activity->getTitle());
+        $title = str_replace(' (IA)', '', $activity->getTitle() ?? '');
         $activity->setTitle($title);
         
         $em->flush();
@@ -63,7 +63,8 @@ class CalendrierController extends AbstractController
             return $this->redirectToRoute('app_calendrier_index');
         }
 
-        if ($this->isCsrfTokenValid('delete'.$activity->getId(), $request->request->get('_token'))) {
+        $token = $request->request->get('_token');
+        if ($this->isCsrfTokenValid('delete'.$activity->getId(), is_string($token) ? $token : null)) {
             $em->remove($activity);
             $em->flush();
             $this->addFlash('info', 'Activité supprimée.');

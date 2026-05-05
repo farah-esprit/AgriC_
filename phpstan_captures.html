@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Captures PHPStan - Rapport</title>
+    <style>
+        body { background-color: #f0f0f0; font-family: sans-serif; padding: 40px; display: flex; flex-direction: column; gap: 40px; align-items: center; }
+        .capture-container { width: 800px; }
+        h2 { color: #333; text-align: center; margin-bottom: 10px; }
+        .window { background-color: #1e1e1e; border-radius: 8px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.5); font-family: 'Consolas', 'Courier New', monospace; }
+        .header { background-color: #323233; padding: 10px 15px; display: flex; align-items: center; }
+        .dots { display: flex; gap: 8px; }
+        .dot { width: 12px; height: 12px; border-radius: 50%; }
+        .close { background-color: #ff5f56; }
+        .min { background-color: #ffbd2e; }
+        .max { background-color: #27c93f; }
+        .title { margin-left: 15px; color: #969696; font-size: 13px; }
+        .code { padding: 20px; color: #d4d4d4; font-size: 14px; line-height: 1.6; white-space: pre; overflow-x: auto; }
+        
+        .terminal { background-color: #0d0d0d; padding: 15px 20px; border-top: 1px solid #333; font-size: 13px; color: #ccc; white-space: pre; }
+        .term-red { color: #f14c4c; }
+        .term-green { color: #23d18b; }
+        .term-blue { color: #3b8eea; }
+        
+        .k { color: #569cd6; } /* keyword */
+        .v { color: #9cdcfe; } /* variable */
+        .s { color: #ce9178; } /* string */
+        .c { color: #6a9955; } /* comment */
+        .t { color: #4ec9b0; } /* type/class */
+        .m { color: #dcdcaa; } /* method */
+        .p { color: #c586c0; } /* punctuation/control */
+        .a { color: #4fc1ff; } /* annotation */
+    </style>
+</head>
+<body>
+
+    <!-- CAPTURE 1 : AVANT -->
+    <div class="capture-container">
+        <h2>1. Avant PHPStan (Code Vulnérable & Erreur)</h2>
+        <div class="window">
+            <div class="header">
+                <div class="dots">
+                    <div class="dot close"></div><div class="dot min"></div><div class="dot max"></div>
+                </div>
+                <div class="title">CultureController.php</div>
+            </div>
+            <div class="code"><span class="k">public function</span> <span class="m">delete</span>(<span class="t">Request</span> <span class="v">$request</span>, <span class="t">Culture</span> <span class="v">$culture</span>): <span class="t">Response</span>
+{
+    <span class="c">// $token est de type mixed</span>
+    <span class="v">$token</span> = <span class="v">$request</span>->request-><span class="m">get</span>(<span class="s">'_token'</span>);
+    
+    <span class="p">if</span> (<span class="v">$this</span>-><span class="m">isCsrfTokenValid</span>(<span class="s">'delete'</span> . <span class="v">$culture</span>-><span class="m">getIdCulture</span>(), <span class="v">$token</span>)) {
+        <span class="v">$em</span>-><span class="m">remove</span>(<span class="v">$culture</span>);
+    }
+}</div>
+            <div class="terminal">PS C:\AgriConnect> php vendor/bin/phpstan analyse src --level 8
+<span class="term-blue">Note: Using configuration file C:\AgriConnect\phpstan.neon.</span>
+ 1/1 [▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓] 100%
+
+ ------ ------------------------------------------------------------------------- 
+  Line   <span class="term-red">src/Controller/CultureController.php</span>                                                
+ ------ ------------------------------------------------------------------------- 
+  <span class="term-red">237</span>    <span class="term-red">Parameter #2 $token of method isCsrfTokenValid() expects string|null,</span>
+         <span class="term-red">mixed given.</span>                                                               
+ ------ ------------------------------------------------------------------------- 
+<span class="term-red">[ERROR] Found 1 error</span></div>
+        </div>
+    </div>
+
+    <!-- CAPTURE 2 : APRÈS -->
+    <div class="capture-container">
+        <h2>2. Après PHPStan (Code Sécurisé)</h2>
+        <div class="window">
+            <div class="header">
+                <div class="dots">
+                    <div class="dot close"></div><div class="dot min"></div><div class="dot max"></div>
+                </div>
+                <div class="title">CultureController.php</div>
+            </div>
+            <div class="code"><span class="k">public function</span> <span class="m">delete</span>(<span class="t">Request</span> <span class="v">$request</span>, <span class="t">Culture</span> <span class="v">$culture</span>): <span class="t">Response</span>
+{
+    <span class="v">$token</span> = <span class="v">$request</span>->request-><span class="m">get</span>(<span class="s">'_token'</span>);
+    
+    <span class="c">// Vérification stricte du type ajoutée (is_string)</span>
+    <span class="p">if</span> (<span class="v">$this</span>-><span class="m">isCsrfTokenValid</span>(<span class="s">'delete'</span> . <span class="v">$culture</span>-><span class="m">getIdCulture</span>(), <span class="m">is_string</span>(<span class="v">$token</span>) ? <span class="v">$token</span> : <span class="k">null</span>)) {
+        <span class="v">$em</span>-><span class="m">remove</span>(<span class="v">$culture</span>);
+    }
+}</div>
+            <div class="terminal">PS C:\AgriConnect> php vendor/bin/phpstan analyse src --level 8
+<span class="term-blue">Note: Using configuration file C:\AgriConnect\phpstan.neon.</span>
+ 1/1 [▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓] 100%
+
+<span class="term-green">[OK] No errors</span></div>
+        </div>
+    </div>
+
+    <!-- CAPTURE 3 : AVANT GENERICS -->
+    <div class="capture-container">
+        <h2>3. Avant PHPStan (Generics Doctrine Manquants)</h2>
+        <div class="window">
+            <div class="header">
+                <div class="dots">
+                    <div class="dot close"></div><div class="dot min"></div><div class="dot max"></div>
+                </div>
+                <div class="title">User.php</div>
+            </div>
+            <div class="code"><span class="a">#[ORM\Entity(repositoryClass: UserRepository::class)]</span>
+<span class="k">class</span> <span class="t">User</span>
+{
+    <span class="a">#[ORM\OneToMany(mappedBy: 'user', targetEntity: Thread::class)]</span>
+    <span class="k">private</span> <span class="t">Collection</span> <span class="v">$threads</span>;
+
+    <span class="k">public function</span> <span class="m">getThreads</span>(): <span class="t">Collection</span>
+    {
+        <span class="k">return</span> <span class="v">$this</span>->threads;
+    }
+}</div>
+            <div class="terminal">PS C:\AgriConnect> php vendor/bin/phpstan analyse src --level 8
+ ------ ------------------------------------------------------------------------- 
+  Line   <span class="term-red">src/Entity/User.php</span>                                                
+ ------ ------------------------------------------------------------------------- 
+  <span class="term-red">103</span>    <span class="term-red">Property App\Entity\User::$threads type has no value type specified in</span>
+         <span class="term-red">iterable type Doctrine\Common\Collections\Collection.</span>
+ ------ ------------------------------------------------------------------------- </div>
+        </div>
+    </div>
+
+    <!-- CAPTURE 4 : APRÈS GENERICS -->
+    <div class="capture-container" style="margin-bottom: 100px;">
+        <h2>4. Après PHPStan (Generics Doctrine Ajoutés)</h2>
+        <div class="window">
+            <div class="header">
+                <div class="dots">
+                    <div class="dot close"></div><div class="dot min"></div><div class="dot max"></div>
+                </div>
+                <div class="title">User.php</div>
+            </div>
+            <div class="code"><span class="a">#[ORM\Entity(repositoryClass: UserRepository::class)]</span>
+<span class="k">class</span> <span class="t">User</span>
+{
+    <span class="c">/** @var Collection&lt;int, Thread&gt; */</span>
+    <span class="a">#[ORM\OneToMany(mappedBy: 'user', targetEntity: Thread::class)]</span>
+    <span class="k">private</span> <span class="t">Collection</span> <span class="v">$threads</span>;
+
+    <span class="c">/** @return Collection&lt;int, Thread&gt; */</span>
+    <span class="k">public function</span> <span class="m">getThreads</span>(): <span class="t">Collection</span>
+    {
+        <span class="k">return</span> <span class="v">$this</span>->threads;
+    }
+}</div>
+            <div class="terminal">PS C:\AgriConnect> php vendor/bin/phpstan analyse src --level 8
+ 1/1 [▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓] 100%
+
+<span class="term-green">[OK] No errors</span></div>
+        </div>
+    </div>
+
+</body>
+</html>

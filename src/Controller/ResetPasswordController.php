@@ -3,7 +3,6 @@
 namespace App\Controller;
 
 use App\Entity\User;
-use App\Entity\Admin;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -20,15 +19,10 @@ class ResetPasswordController extends AbstractController
     public function request(Request $request, EntityManagerInterface $em, MailerInterface $mailer): Response
     {
         if ($request->isMethod('POST')) {
-            $email = $request->request->get('email');
+            $emailRaw = $request->request->get('email');
+            $email = is_string($emailRaw) ? $emailRaw : '';
 
-            $user = $em->getRepository(User::class)->findOneBy(['email' => $email]);
-            $admin = null;
-            if (!$user) {
-                $admin = $em->getRepository(Admin::class)->findOneBy(['email' => $email]);
-            }
-
-            $account = $user ?? $admin;
+            $account = $em->getRepository(User::class)->findOneBy(['email' => $email]);
 
             if ($account) {
                 // Génération d'un token aléatoire
@@ -63,13 +57,7 @@ class ResetPasswordController extends AbstractController
     #[Route('/reinitialiser-mot-de-passe/{token}', name: 'app_reset_password')]
     public function reset(string $token, Request $request, EntityManagerInterface $em, UserPasswordHasherInterface $passwordHasher): Response
     {
-        $user = $em->getRepository(User::class)->findOneBy(['resetToken' => $token]);
-        $admin = null;
-        if (!$user) {
-            $admin = $em->getRepository(Admin::class)->findOneBy(['resetToken' => $token]);
-        }
-
-        $account = $user ?? $admin;
+        $account = $em->getRepository(User::class)->findOneBy(['resetToken' => $token]);
 
         if (!$account) {
             $this->addFlash('error', 'Lien de réinitialisation invalide ou expiré.');
@@ -84,7 +72,8 @@ class ResetPasswordController extends AbstractController
         }
 
         if ($request->isMethod('POST')) {
-            $password = $request->request->get('password');
+            $passwordRaw = $request->request->get('password');
+            $password = is_string($passwordRaw) ? $passwordRaw : '';
             $confirmPassword = $request->request->get('confirm_password');
 
             if (empty($password) || $password !== $confirmPassword) {
@@ -93,11 +82,7 @@ class ResetPasswordController extends AbstractController
                 // Mise à jour du mot de passe
                 $hashedPassword = $passwordHasher->hashPassword($account, $password);
                 
-                if ($account instanceof User) {
-                    $account->setMotDePasse($hashedPassword);
-                } else {
-                    $account->setPassword($hashedPassword);
-                }
+                $account->setMotDePasse($hashedPassword);
 
                 // Invalidation du token
                 $account->setResetToken(null);

@@ -1,0 +1,25 @@
+includes:
+    - vendor/phpstan/phpstan-symfony/extension.neon
+    - vendor/phpstan/phpstan-doctrine/extension.neon
+
+parameters:
+    level: 8
+    paths:
+        - src
+        - tests
+    excludePaths:
+        []
+    symfony:
+        containerXmlPath: var/cache/dev/App_KernelDevDebugContainer.xml
+    doctrine:
+        objectManagerLoader: tests/object-manager.php
+    ignoreErrors:
+        - '#class Stripe\\Stripe not found#'
+        - '#class Stripe\\PaymentIntent not found#'
+        - '#class Symfony\\Contracts\\HttpClient\\Exception\\ConnectException not found#'
+        - '#on an unknown class Stripe\\Stripe#'
+        - '#on an unknown class Stripe\\PaymentIntent#'
+        -
+            message: '#Call to function method_exists\(\) with .Symfony\\\\Component\\\\Dotenv\\\\Dotenv. and .bootEnv. will always evaluate to true.#'
+            path: tests/bootstrap.php
+    reportUnmatchedIgnoredErrors: false

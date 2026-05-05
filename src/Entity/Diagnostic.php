@@ -8,6 +8,8 @@ use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity(repositoryClass: DiagnosticRepository::class)]
 #[ORM\Table(name: 'diagnostic')]
+#[ORM\Index(columns: ['idCulture'])]
+#[ORM\Index(columns: ['idUser'])]
 class Diagnostic
 {
     #[ORM\Id]

@@ -20,6 +20,9 @@ use Symfony\Component\Validator\Constraints\Positive;
 use Symfony\Component\Validator\Constraints\Range;
 use Symfony\Component\Validator\Constraints\Regex;
 
+/**
+ * @extends AbstractType<Produit>
+ */
 class ProduitType extends AbstractType
 {
     public function buildForm(FormBuilderInterface $builder, array $options): void

@@ -16,6 +16,7 @@ class CalendarAiService
 
     /**
      * Génère des suggestions pour une culture donnée si elles n'existent pas déjà.
+     * @return Activity[]
      */
     public function generateSuggestions(Culture $culture): array
     {
@@ -77,7 +78,9 @@ class CalendarAiService
 
         if (!$dateSemis || !$cycle) return null;
 
-        $dateRecolte = (clone $dateSemis)->modify("+$cycle days");
+        /** @var \DateTime $dateRecolte */
+        $dateRecolte = clone $dateSemis;
+        $dateRecolte->modify("+$cycle days");
         
         // On ne suggère que si la date est dans le futur et proche (ou si on n'a pas encore suggéré)
         if ($dateRecolte < new \DateTime()) return null;
@@ -101,8 +104,13 @@ class CalendarAiService
     private function hasRecentActivity(Culture $culture, string $type, \DateTimeInterface $date): bool
     {
         $repo = $this->em->getRepository(Activity::class);
-        $dayStart = (clone $date)->setTime(0, 0, 0);
-        $dayEnd = (clone $date)->setTime(23, 59, 59);
+        /** @var \DateTime $dayStart */
+        $dayStart = clone $date;
+        $dayStart->setTime(0, 0, 0);
+        
+        /** @var \DateTime $dayEnd */
+        $dayEnd = clone $date;
+        $dayEnd->setTime(23, 59, 59);
 
         $existing = $repo->createQueryBuilder('a')
             ->where('a.culture = :culture')

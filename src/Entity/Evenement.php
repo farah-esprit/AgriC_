@@ -48,13 +48,21 @@ class Evenement
     #[Assert\Positive(message: 'La capacité doit être un nombre positif.')]
     private ?int $capaciteMax = null;
 
-    #[ORM\ManyToOne(targetEntity: User::class, inversedBy: 'evenements')]
     #[ORM\JoinColumn(name: 'organisateur_id', referencedColumnName: 'user_id', nullable: true)]
     private ?User $organisateur = null;
 
     /** @var Collection<int, NoteEvenement> */
     #[ORM\OneToMany(mappedBy: 'evenement', targetEntity: NoteEvenement::class, orphanRemoval: true)]
     private Collection $notes;
+
+    #[ORM\Column(type: 'string', length: 255, nullable: true)]
+    private ?string $statut = 'EN_ATTENTE';
+
+    #[ORM\Column(type: 'text', nullable: true)]
+    private ?string $raisonRejet = null;
+
+    #[ORM\Column(type: 'string', length: 255, nullable: true)]
+    private ?string $imageUrl = null;
 
     public function __construct()
     {
@@ -69,6 +77,12 @@ class Evenement
     public function getLieu(): ?string { return $this->lieu; }
     public function getCapaciteMax(): ?int { return $this->capaciteMax; }
     public function getOrganisateur(): ?User { return $this->organisateur; }
+    public function getStatut(): ?string { return $this->statut; }
+    public function setStatut(?string $statut): self { $this->statut = $statut; return $this; }
+    public function getRaisonRejet(): ?string { return $this->raisonRejet; }
+    public function setRaisonRejet(?string $raisonRejet): self { $this->raisonRejet = $raisonRejet; return $this; }
+    public function getImageUrl(): ?string { return $this->imageUrl; }
+    public function setImageUrl(?string $imageUrl): self { $this->imageUrl = $imageUrl; return $this; }
 
     public function setIdEvenement(?int $idEvenement): self { $this->idEvenement = $idEvenement; return $this; }
     public function setTitre(?string $titre): self { $this->titre = $titre; return $this; }

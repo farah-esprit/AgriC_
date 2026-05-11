@@ -46,6 +46,20 @@ class EvenementType extends AbstractType
                 'label'    => 'Capacité maximale',
                 'required' => false,
                 'attr'     => ['class' => 'form-control', 'placeholder' => 'Nombre de places'],
+            ])
+            ->add('imageUrl', TextType::class, [
+                'label'    => 'URL de l\'image',
+                'required' => false,
+                'attr'     => ['class' => 'form-control', 'placeholder' => 'Lien vers une image'],
+            ])
+            ->add('statut', \Symfony\Component\Form\Extension\Core\Type\ChoiceType::class, [
+                'label' => 'Statut',
+                'choices' => [
+                    'En attente' => 'EN_ATTENTE',
+                    'Approuvé' => 'APPROUVE',
+                    'Rejeté' => 'REJETE',
+                ],
+                'attr' => ['class' => 'form-control'],
             ]);
     }
 

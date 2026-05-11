@@ -58,6 +58,17 @@ class ReclamationType extends AbstractType
                     'Autre' => 'Autre',
                 ],
                 'attr' => ['class' => 'form-select'],
+            ])
+            ->add('reponseAdmin', TextareaType::class, [
+                'label' => 'Réponse de l\'administrateur',
+                'required' => false,
+                'attr' => ['class' => 'form-control', 'rows' => 3],
+            ])
+            ->add('dateReponse', \Symfony\Component\Form\Extension\Core\Type\DateType::class, [
+                'label' => 'Date de réponse',
+                'widget' => 'single_text',
+                'required' => false,
+                'attr' => ['class' => 'form-control'],
             ]);
     }
 

@@ -46,11 +46,12 @@ class CommandeType extends AbstractType
                 'label'       => 'Statut',
                 'placeholder' => '-- Choisir un statut --',
                 'choices'     => [
-                    'En attente' => 'En attente',
-                    'Payée'      => 'Payée',
-                    'Expédiée'   => 'Expédiée',
-                    'Livrée'     => 'Livrée',
-                    'Annulée'    => 'Annulée',
+                    'En attente' => 'EN_ATTENTE',
+                    'Validée'    => 'VALIDEE',
+                    'Payée'      => 'PAYEE',
+                    'Expédiée'   => 'EXPEDIEE',
+                    'Livrée'     => 'LIVREE',
+                    'Annulée'    => 'ANNULEE',
                 ],
                 'constraints' => [
                     new NotBlank(message: 'Le statut est obligatoire.'),

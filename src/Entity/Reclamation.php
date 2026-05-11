@@ -42,9 +42,14 @@ class Reclamation
     #[Assert\Choice(choices: ["Problème technique", "Question", "Suggestion", "Autre"], message: "Le type choisi est invalide.")]
     private ?string $type = null;
 
-    #[ORM\ManyToOne(targetEntity: User::class, inversedBy: 'reclamations')]
     #[ORM\JoinColumn(name: 'id_utilisateur', referencedColumnName: 'user_id', nullable: true)]
     private ?User $utilisateur = null;
+
+    #[ORM\Column(type: 'text', nullable: true)]
+    private ?string $reponseAdmin = null;
+
+    #[ORM\Column(type: 'string', length: 255, nullable: true)]
+    private ?string $dateReponse = null;
 
     public function __construct()
     {
@@ -59,6 +64,10 @@ class Reclamation
     public function getPriorite(): ?string { return $this->priorite; }
     public function getType(): ?string { return $this->type; }
     public function getUtilisateur(): ?User { return $this->utilisateur; }
+    public function getReponseAdmin(): ?string { return $this->reponseAdmin; }
+    public function setReponseAdmin(?string $reponseAdmin): self { $this->reponseAdmin = $reponseAdmin; return $this; }
+    public function getDateReponse(): ?string { return $this->dateReponse; }
+    public function setDateReponse(?string $dateReponse): self { $this->dateReponse = $dateReponse; return $this; }
 
     public function setIdReclamation(?int $idReclamation): self { $this->idReclamation = $idReclamation; return $this; }
     public function setObjet(?string $objet): self { $this->objet = $objet; return $this; }
